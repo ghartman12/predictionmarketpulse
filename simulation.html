@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>Weather Trader | Learn Prediction Markets</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{background:#0f172a;color:#e2e8f0}
+    body{font-family:system-ui,-apple-system,sans-serif;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+    
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes priceUp{0%{color:#34d399;transform:scale(1.1)}100%{transform:scale(1)}}
+    @keyframes priceDown{0%{color:#f87171;transform:scale(1.1)}100%{transform:scale(1)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+    @keyframes tradePulse{0%{opacity:.6}50%{opacity:1}100%{opacity:.6}}
+    @keyframes countPop{0%{transform:scale(1)}50%{transform:scale(1.3);color:#34d399}100%{transform:scale(1)}}
+    @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideDown{from{max-height:300px;opacity:1}to{max-height:0;opacity:0}}
+    .fade-in{animation:fadeIn .25s ease-out}
+    .slide-in{animation:slideUp .3s ease-out}
+    .price-up{animation:priceUp .4s ease-out}
+    .price-down{animation:priceDown .4s ease-out}
+    .pulse{animation:pulse 1.5s ease-in-out infinite}
+    .trade-flash{animation:tradePulse .6s ease-out}
+    .count-pop{animation:countPop .4s ease-out}
+    
+    /* Top Bar */
+    .top-bar{background:rgba(15,23,42,.98);border-bottom:1px solid rgba(255,255,255,.06);padding:12px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+    .logo{font-size:16px;font-weight:600;color:#f1f5f9;display:flex;align-items:center;gap:8px}
+    .progress-pills{display:flex;gap:4px}
+    .pill{width:24px;height:6px;border-radius:3px;background:rgba(255,255,255,.1)}
+    .pill.done{background:#6366f1}
+    .pill.active{background:#6366f1;animation:pulse 1.5s infinite}
+    
+    /* Main */
+    .main{flex:1;display:flex;flex-direction:column;padding:12px 16px;max-width:500px;margin:0 auto;width:100%}
+    
+    /* Banners */
+    .news-banner{background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(251,191,36,.05));border:1px solid rgba(251,191,36,.2);border-radius:10px;padding:12px 14px;margin-bottom:12px}
+    .news-banner .label{font-size:9px;font-weight:600;color:#fbbf24;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+    .news-banner h3{font-size:13px;color:#f1f5f9;line-height:1.3;margin-bottom:2px}
+    .news-banner p{font-size:11px;color:#94a3b8;line-height:1.3}
+    
+    .instruction{background:linear-gradient(135deg,rgba(99,102,241,.1),rgba(99,102,241,.05));border:1px solid rgba(99,102,241,.2);border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:center}
+    .instruction h3{font-size:14px;color:#f1f5f9;margin-bottom:4px}
+    .instruction p{font-size:12px;color:#94a3b8}
+    
+    /* Market */
+    .market{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px;margin-bottom:12px}
+    .market-question{font-size:14px;font-weight:500;color:#94a3b8;text-align:center;margin-bottom:12px}
+    .prices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+    .price-card{border-radius:10px;padding:12px;text-align:center}
+    .price-card.yes{background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(59,130,246,.03));border:1px solid rgba(59,130,246,.15)}
+    .price-card.no{background:linear-gradient(135deg,rgba(239,68,68,.1),rgba(239,68,68,.03));border:1px solid rgba(239,68,68,.15)}
+    .price-card .label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+    .price-card.yes .label{color:#60a5fa}
+    .price-card.no .label{color:#f87171}
+    .price-card .price{font-size:28px;font-weight:700;font-family:ui-monospace,monospace;line-height:1.1}
+    .price-card.yes .price{color:#3b82f6}
+    .price-card.no .price{color:#ef4444}
+    .price-card .sub{font-size:10px;color:#64748b;margin-top:2px}
+    .prob-bar{height:6px;background:#1e293b;border-radius:3px;overflow:hidden}
+    .prob-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#60a5fa);transition:width .4s ease-out}
+    
+    /* Portfolio Row */
+    .portfolio{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(0,0,0,.25);border-radius:8px;margin-bottom:10px;font-size:12px}
+    .portfolio .positions{display:flex;gap:12px}
+    .portfolio .pos-item{display:flex;align-items:center;gap:4px}
+    .portfolio .pos-label{color:#94a3b8;font-size:11px}
+    .portfolio .pos-val{font-weight:700;font-family:ui-monospace,monospace;font-size:16px;color:#f1f5f9}
+    .portfolio .pos-val.yes{color:#3b82f6}
+    .portfolio .pos-val.no{color:#ef4444}
+    .portfolio .total{text-align:right}
+    .portfolio .total-val{font-size:16px;font-weight:700;font-family:ui-monospace,monospace}
+    .portfolio .total-val.pos{color:#34d399}
+    .portfolio .total-val.neg{color:#f87171}
+    .portfolio .pnl{font-size:10px;color:#64748b}
+    .portfolio .pnl.pos{color:#34d399}
+    .portfolio .pnl.neg{color:#f87171}
+    
+    /* Position Cards — now interactive with sell controls */
+    #positions-area{display:flex;gap:8px;margin-bottom:10px;contain:layout style}
+    .position-card{flex:1;border-radius:10px;padding:12px}
+    .position-card.yes{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2)}
+    .position-card.no{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2)}
+    .pos-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .pos-type{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+    .position-card.yes .pos-type{color:#60a5fa}
+    .position-card.no .pos-type{color:#f87171}
+    .pos-pnl{font-size:12px;font-weight:600;font-family:ui-monospace,monospace}
+    .pos-pnl.pos{color:#34d399}
+    .pos-pnl.neg{color:#f87171}
+    .pos-details{display:flex;justify-content:space-between;font-size:11px;color:#94a3b8;margin-bottom:8px}
+    .pos-val-text{color:#64748b}
+    
+    /* Sell button on position card */
+    .sell-trigger{width:100%;padding:7px;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;transition:background .15s,color .15s,opacity .15s}
+    .position-card.yes .sell-trigger{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.25)}
+    .position-card.yes .sell-trigger:hover{background:rgba(59,130,246,.25)}
+    .position-card.no .sell-trigger{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+    .position-card.no .sell-trigger:hover{background:rgba(239,68,68,.25)}
+    
+    /* Sell Panel — slides in below the position card area */
+    .sell-panel{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px;margin-bottom:12px;overflow:hidden}
+    .sell-panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .sell-panel-title{font-size:13px;font-weight:600;color:#f1f5f9}
+    .sell-panel-close{background:none;border:none;color:#64748b;cursor:pointer;font-size:18px;padding:0 4px;line-height:1}
+    .sell-panel-close:hover{color:#94a3b8}
+    .sell-shares-input-area{margin-bottom:14px}
+    .shares-stepper{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px}
+    .stepper-btn{min-width:36px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#e2e8f0;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s,opacity .15s;line-height:1;padding:0 8px}
+    .stepper-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25)}
+    .stepper-btn:active{transform:scale(.95)}
+    .stepper-display{text-align:center;min-width:100px}
+    .stepper-value{font-size:28px;font-weight:700;font-family:ui-monospace,monospace;color:#f1f5f9;display:block;line-height:1.1}
+    .stepper-label{font-size:11px;color:#64748b;display:block;margin-top:2px}
+    .sell-slider{width:100%;margin:8px 0;accent-color:#6366f1;height:6px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,.1);border-radius:3px;outline:none}
+    .sell-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#6366f1;cursor:pointer;border:2px solid #818cf8}
+    .sell-slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#6366f1;cursor:pointer;border:2px solid #818cf8}
+    .sell-presets{display:flex;gap:6px;justify-content:center;margin-top:10px}
+    .sell-preset-btn{flex:1;max-width:80px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:6px 0;color:#94a3b8;font-size:12px;font-weight:500;cursor:pointer;transition:background .15s,color .15s,opacity .15s;text-align:center}
+    .sell-preset-btn:hover{background:rgba(255,255,255,.1);color:#e2e8f0}
+    .sell-preview{margin-bottom:12px}
+    .sell-preview-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
+    .sell-preview-row.fee{border-top:1px solid rgba(255,255,255,.06);margin-top:6px;padding-top:8px;font-size:11px;color:#64748b}
+    .sell-preview-label{color:#94a3b8}
+    .sell-preview-val{color:#f1f5f9;font-family:ui-monospace,monospace}
+    .sell-preview-val.pos{color:#34d399}
+    .sell-preview-val.neg{color:#f87171}
+    .sell-confirm-btn{width:100%;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,color .15s,opacity .15s}
+    .sell-confirm-btn.yes{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff}
+    .sell-confirm-btn.no{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+    .sell-confirm-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+    .sell-confirm-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;filter:none}
+    
+    /* Sell Tip */
+    .sell-tip{background:linear-gradient(135deg,rgba(52,211,153,.1),rgba(52,211,153,.05));border:1px solid rgba(52,211,153,.2);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#6ee7b7;display:flex;align-items:center;gap:10px}
+    .sell-tip .icon{font-size:18px}
+    .sell-tip .dismiss{margin-left:auto;background:none;border:none;color:#6ee7b7;opacity:.6;cursor:pointer;font-size:16px}
+    
+    /* Buy Area — simplified, no tabs */
+    .trade-area{margin-top:auto;padding-bottom:env(safe-area-inset-bottom,20px)}
+    .amount-row{display:flex;gap:6px;justify-content:center;margin-bottom:10px}
+    .amt-btn{flex:1;max-width:85px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:8px 0;color:#94a3b8;font-size:12px;font-weight:500;cursor:pointer;transition:background .15s,color .15s,opacity .15s}
+    .amt-btn:hover{background:rgba(255,255,255,.08)}
+    .amt-btn.active{background:rgba(99,102,241,.2);border-color:rgba(99,102,241,.4);color:#c7d2fe}
+    
+    .side-toggle{display:flex;background:rgba(255,255,255,.05);border-radius:8px;padding:3px;margin-bottom:12px}
+    .side-btn{flex:1;padding:10px 16px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,color .15s,opacity .15s;background:transparent;color:#64748b}
+    .side-btn:hover{color:#94a3b8}
+    .side-btn.yes.selected{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff}
+    .side-btn.no.selected{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+    
+    .trade-preview{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px;margin-bottom:12px}
+    .preview-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
+    .preview-row.fee{border-top:1px solid rgba(255,255,255,.06);margin-top:6px;padding-top:8px;font-size:11px;color:#64748b}
+    .preview-label{color:#94a3b8}
+    .preview-val{color:#f1f5f9;font-family:ui-monospace,monospace}
+    .preview-val.pos{color:#34d399}
+    .preview-val.neg{color:#f87171}
+    
+    .confirm-btn{width:100%;border:none;border-radius:10px;padding:14px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:background .15s,color .15s,opacity .15s}
+    .confirm-btn:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+    .confirm-btn:disabled{opacity:.4;cursor:not-allowed}
+    .confirm-btn.yes{background:linear-gradient(135deg,#3b82f6,#2563eb)}
+    .confirm-btn.no{background:linear-gradient(135deg,#ef4444,#dc2626)}
+    
+    .secondary-btn{width:100%;border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:14px;background:transparent;color:#94a3b8;font-size:14px;font-weight:500;cursor:pointer;transition:background .15s,color .15s,opacity .15s;margin-top:10px}
+    .secondary-btn:hover{background:rgba(255,255,255,.05);color:#f1f5f9;border-color:rgba(255,255,255,.3)}
+    .secondary-btn.success{border-color:rgba(16,185,129,.4);color:#34d399}
+    .secondary-btn.success:hover{background:rgba(16,185,129,.1)}
+    
+    .skip-row{text-align:center;margin-top:12px}
+    .skip-link{color:#64748b;font-size:13px;cursor:pointer;text-decoration:none;padding:6px}
+    .skip-link:hover{color:#94a3b8;text-decoration:underline}
+    
+    .next-btn{width:100%;border:none;border-radius:10px;padding:14px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;transition:background .15s,color .15s,opacity .15s}
+    .next-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+    .next-btn.primary{background:linear-gradient(135deg,#6366f1,#4f46e5)}
+    .next-btn.success{background:linear-gradient(135deg,#10b981,#059669)}
+    
+    /* Modals */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+    .modal-box{background:linear-gradient(180deg,#1e293b,#0f172a);border-radius:20px;padding:32px 28px;max-width:380px;width:100%;border:1px solid rgba(255,255,255,.08);text-align:center}
+    .modal-box .emoji{font-size:48px;margin-bottom:16px}
+    .modal-box h2{font-size:20px;font-weight:600;color:#f1f5f9;margin-bottom:8px}
+    .modal-box p{color:#94a3b8;font-size:14px;line-height:1.6;margin-bottom:24px}
+    .modal-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+    .btn-p{background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;border-radius:10px;padding:14px 28px;color:#fff;font-size:15px;font-weight:600;cursor:pointer}
+    .btn-p:hover{filter:brightness(1.1)}
+    .btn-s{background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:14px 20px;color:#94a3b8;font-size:14px;cursor:pointer}
+    .btn-s:hover{background:rgba(255,255,255,.05)}
+    .dots{display:flex;gap:6px;justify-content:center;margin-top:20px}
+    .dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.15)}
+    .dot.active{background:#6366f1;width:16px}
+    
+    /* Results */
+    .results-box{background:rgba(255,255,255,.03);border-radius:12px;padding:16px;margin:16px 0;text-align:left}
+    .result-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px}
+    .result-row.subtotal{border-top:1px solid rgba(255,255,255,.1);margin-top:10px;padding-top:10px;font-weight:500}
+    .result-row.pnl-row{background:rgba(255,255,255,.03);margin:10px -16px -16px;padding:14px 16px;border-radius:0 0 12px 12px}
+    .result-label{color:#94a3b8}
+    .result-val{font-family:ui-monospace,monospace;color:#e2e8f0}
+    .result-val.pos{color:#34d399}
+    .result-val.neg{color:#f87171}
+    .result-val.pnl-big{font-size:18px;font-weight:700}
+    .insight{background:rgba(99,102,241,.1);border-radius:10px;padding:12px 14px;margin-bottom:20px;font-size:13px;color:#c7d2fe;line-height:1.5;text-align:left}
+    
+    .hidden{display:none!important}
+  </style>
+</head>
+<body>
+
+<div id="app-wrapper" style="background:#0f172a;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column">
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <div class="logo">🌧️ Weather Trader</div>
+  <div class="progress-pills">
+    <div class="pill" id="p0"></div>
+    <div class="pill" id="p1"></div>
+    <div class="pill" id="p2"></div>
+    <div class="pill" id="p3"></div>
+    <div class="pill" id="p4"></div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+  <!-- Banner Area -->
+  <div id="banner-area">
+    <div class="instruction" id="instruction">
+      <h3>🎯 Make Your Opening Prediction</h3>
+      <p>Market starts at 50/50. What's your gut feeling—will it rain?</p>
+    </div>
+  </div>
+  
+  <!-- Market Display -->
+  <div class="market">
+    <div class="market-question">Will it rain in Philadelphia tomorrow?</div>
+    <div class="prices">
+      <div class="price-card yes">
+        <div class="label">Yes · Rain</div>
+        <div class="price" id="yp">$0.50</div>
+        <div class="sub"><span id="ypr">50</span>% chance</div>
+      </div>
+      <div class="price-card no">
+        <div class="label">No · Dry</div>
+        <div class="price" id="np">$0.50</div>
+        <div class="sub"><span id="npr">50</span>% chance</div>
+      </div>
+    </div>
+    <div class="prob-bar"><div class="prob-fill" id="pf" style="width:50%"></div></div>
+  </div>
+  
+  <!-- Portfolio -->
+  <div class="portfolio">
+    <div class="positions">
+      <div class="pos-item" style="flex-direction:column;align-items:flex-start;gap:1px"><span class="pos-label">Cash</span><span class="pos-val" id="cv">$100</span></div>
+    </div>
+    <div class="total">
+      <div class="pnl pos" id="pnl" style="margin-bottom:1px"><span style="color:#94a3b8;font-weight:400">P&L </span>+$0</div>
+      <div class="total-val pos" id="pv"><span style="color:#94a3b8;font-size:10px;font-weight:400">Current Value </span>$100</div>
+    </div>
+  </div>
+  
+  <!-- Position Cards (with inline sell buttons) -->
+  <div id="positions-area" class="hidden">
+    <div class="position-card yes hidden" id="yes-position">
+      <div class="pos-header">
+        <span class="pos-type">YES Position</span>
+        <span class="pos-pnl pos" id="yes-pnl">+$0</span>
+      </div>
+      <div class="pos-details">
+        <span><span id="yes-qty">0</span> contracts</span>
+        <span class="pos-val-text">Worth <span id="yes-worth">$0</span></span>
+      </div>
+      <button class="sell-trigger" id="sell-yes-btn" onclick="openSellPanel('yes')">Sell</button>
+    </div>
+    <div class="position-card no hidden" id="no-position">
+      <div class="pos-header">
+        <span class="pos-type">NO Position</span>
+        <span class="pos-pnl pos" id="no-pnl">+$0</span>
+      </div>
+      <div class="pos-details">
+        <span><span id="no-qty">0</span> contracts</span>
+        <span class="pos-val-text">Worth <span id="no-worth">$0</span></span>
+      </div>
+      <button class="sell-trigger" id="sell-no-btn" onclick="openSellPanel('no')">Sell</button>
+    </div>
+  </div>
+  
+  <!-- Sell Panel (appears below positions when selling) -->
+  <div class="sell-panel hidden" id="sell-panel">
+    <div class="sell-panel-header">
+      <span class="sell-panel-title" id="sell-panel-title">Sell YES contracts</span>
+      <button class="sell-panel-close" onclick="closeSellPanel()">×</button>
+    </div>
+    <div class="sell-shares-input-area">
+      <div class="shares-stepper">
+        <button class="stepper-btn" id="sell-minus1" onclick="adjustSellShares(-1)">−</button>
+        <div class="stepper-display">
+          <span class="stepper-value" id="sell-qty-input">25</span>
+          <span class="stepper-label" id="sell-qty-label">of 49 contracts</span>
+        </div>
+        <button class="stepper-btn" id="sell-plus1" onclick="adjustSellShares(1)">+</button>
+      </div>
+      <input type="range" class="sell-slider" id="sell-slider" min="1" max="49" value="25">
+      <div class="sell-presets">
+        <button class="sell-preset-btn" onclick="setSellSharesPreset(0.25)">¼</button>
+        <button class="sell-preset-btn" onclick="setSellSharesPreset(0.5)">Half</button>
+        <button class="sell-preset-btn" onclick="setSellSharesPreset(1)">All</button>
+      </div>
+    </div>
+    <div class="sell-preview">
+      <div class="sell-preview-row"><span class="sell-preview-label">You receive</span><span class="sell-preview-val" id="sell-proceeds-out">$12.13</span></div>
+      <div class="sell-preview-row"><span class="sell-preview-label">Profit on sale</span><span class="sell-preview-val pos" id="sell-pnl-out">+$2.13</span></div>
+      <div class="sell-preview-row fee"><span class="sell-preview-label">Fee</span><span class="sell-preview-val" id="sell-fee-out">$0.38</span></div>
+    </div>
+    <button class="sell-confirm-btn yes" id="sell-confirm-btn" onclick="confirmSell()">Sell 25 YES</button>
+  </div>
+  
+  <!-- Sell Tip -->
+  <div class="sell-tip hidden" id="sell-tip">
+    <span class="icon">💡</span>
+    <span id="sell-tip-text">Your position is up! Tap Sell on your position card to lock in profit.</span>
+    <button class="dismiss" onclick="dismissTip()">×</button>
+  </div>
+  
+  <!-- Trade Area (Buy only now) -->
+  <div class="trade-area">
+    <div id="trade-controls">
+      <div class="amount-row">
+        <button class="amt-btn" data-amt="10" onclick="setAmt(10)">$10</button>
+        <button class="amt-btn active" data-amt="25" onclick="setAmt(25)">$25</button>
+        <button class="amt-btn" data-amt="50" onclick="setAmt(50)">$50</button>
+        <button class="amt-btn" data-amt="100" onclick="setAmt(100)">All</button>
+      </div>
+      <div class="side-toggle">
+        <button class="side-btn yes selected" id="side-yes" onclick="selectSide('yes')">YES</button>
+        <button class="side-btn no" id="side-no" onclick="selectSide('no')">NO</button>
+      </div>
+      <div class="trade-preview" id="trade-preview">
+        <div class="preview-row"><span class="preview-label">You pay</span><span class="preview-val" id="preview-pay">$25.00</span></div>
+        <div class="preview-row"><span class="preview-label">You get</span><span class="preview-val" id="preview-get">50 contracts</span></div>
+        <div class="preview-row"><span class="preview-label" id="preview-profit-label">If rain (profit)</span><span class="preview-val pos" id="preview-profit">+$24.25</span></div>
+        <div class="preview-row fee"><span class="preview-label">Fee</span><span class="preview-val" id="preview-fee">$0.75</span></div>
+      </div>
+      <button class="confirm-btn yes" id="confirm-btn" onclick="confirmTrade()">Buy YES</button>
+      <button class="secondary-btn" id="advance-btn" style="display:none" onclick="advance()">Next Update →</button>
+      <div class="skip-row" id="skip-row" style="display:none">
+        <a class="skip-link" id="skip-result-link" onclick="skipToResult()">Skip to result</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;padding:16px;font-size:11px;color:#64748b;max-width:500px;margin:0 auto">
+  3% fee for illustrative purposes. Real-world fees vary by platform and contract price.
+</div>
+
+<!-- Tutorial Modal -->
+<div class="modal" id="tm">
+  <div class="modal-box fade-in">
+    <div class="emoji">🌤️</div>
+    <h2>Weather Trader</h2>
+    <p>Learn how prediction markets work by trading on a simple question: Will it rain tomorrow?</p>
+    <div class="modal-btns">
+      <button class="btn-p" onclick="startGame()">Start Trading</button>
+      <button class="btn-s" onclick="showHow()">How it works</button>
+    </div>
+  </div>
+</div>
+
+<!-- How It Works Modal -->
+<div class="modal hidden" id="hm">
+  <div class="modal-box fade-in">
+    <div class="emoji" id="he">💰</div>
+    <h2 id="ht">How Contracts Work</h2>
+    <p id="hc">YES contracts pay $1 if it rains. NO contracts pay $1 if it stays dry. Current price = market's probability estimate.</p>
+    <div class="modal-btns">
+      <button class="btn-p" onclick="nextHow()">Next</button>
+    </div>
+    <div class="dots" id="hd"></div>
+  </div>
+</div>
+
+<!-- Resolution Modal -->
+<div class="modal hidden" id="rm">
+  <div class="modal-box fade-in">
+    <div class="emoji" id="re" style="font-size:56px">🌧️</div>
+    <h2 id="rt">It Rained!</h2>
+    <div class="results-box">
+      <div class="result-row"><span class="result-label">Started with</span><span class="result-val">$100.00</span></div>
+      <div class="result-row" id="row-spent"><span class="result-label">Spent on contracts</span><span class="result-val neg" id="net-spent">-$0.00</span></div>
+      <div class="result-row" id="row-fees"><span class="result-label">Fees paid</span><span class="result-val neg" id="fees-paid">-$0.00</span></div>
+      <div class="result-row" id="row-sells"><span class="result-label">Proceeds from sells</span><span class="result-val pos" id="sell-proceeds">+$0.00</span></div>
+      <div class="result-row" id="row-payout"><span class="result-label">Contract payout</span><span class="result-val pos" id="resolution-payout">+$0.00</span></div>
+      <div class="result-row subtotal"><span class="result-label">Final portfolio</span><span class="result-val" id="fv">$100.00</span></div>
+      <div class="result-row pnl-row"><span class="result-label">Profit/Loss</span><span class="result-val pnl-big pos" id="pnl-final">+$0.00</span></div>
+    </div>
+    <div class="insight" id="insight">💡 The market predicted 72% rain—and it rained!</div>
+    <button class="btn-p" onclick="reset()">Play Again</button>
+  </div>
+</div>
+
+<script>
+var amt=25,FEE_RATE=0.03,tradeSide='yes';
+var sellSide='yes', sellShareCount=1; // Sell panel state
+var S={cash:100,yS:0,nS:0,yCost:0,nCost:0,step:0,phase:'opening',tipShown:false,totalFees:0,tradeCount:0,grossSellProceeds:0,netSpent:0};
+
+var EV_POOL=[
+// --- RAIN LIKELY (positive moves) ---
+{h:"Storm clouds spotted 200 miles west",d:"Low-pressure system approaching the coast.",move:18},
+{h:"Humidity jumps to 78%",d:"Significant moisture building in the atmosphere.",move:14},
+{h:"NWS forecasts 65% rain chance",d:"Official National Weather Service update.",move:22},
+{h:"Barometric pressure dropping fast",d:"Sharp pressure drop often precedes storms.",move:18},
+{h:"Southwest winds bringing coastal moisture",d:"Wind shift completing the rain setup.",move:15},
+{h:"Radar shows precipitation 50 miles out",d:"Rain bands visible and moving this direction.",move:20},
+{h:"Dew point surges to 68°F",d:"High dew point means the air is nearly saturated.",move:12},
+{h:"Morning fog is unusually thick",d:"Heavy fog often precedes afternoon rain.",move:10},
+{h:"Neighboring county reports heavy rain",d:"The system is already producing rain nearby.",move:16},
+{h:"Upper-level trough deepening",d:"Atmospheric disturbance strengthening overhead.",move:14},
+{h:"Flash flood watch issued for the area",d:"NWS expects significant rainfall in the next 24 hours.",move:20},
+{h:"Cloud cover reaches 95%",d:"Nearly total overcast—sun completely blocked.",move:12},
+// --- RAIN UNLIKELY (negative moves) ---
+{h:"High-pressure ridge building in",d:"Clear skies and stable air moving into the region.",move:-18},
+{h:"Humidity drops to 28%",d:"Dry air mass settling over the area.",move:-14},
+{h:"NWS lowers rain chance to 20%",d:"Updated forecast shows drier conditions ahead.",move:-22},
+{h:"Morning sunshine breaking through",d:"Clear skies early suggest a dry day ahead.",move:-12},
+{h:"Wind shifts to the north",d:"Northerly winds typically bring drier air.",move:-15},
+{h:"Barometric pressure rising steadily",d:"Rising pressure signals clearing weather.",move:-16},
+{h:"Satellite shows cloud break approaching",d:"A gap in the clouds is moving toward the area.",move:-14},
+{h:"Dew point drops to 35°F",d:"Very dry air—rain would evaporate before reaching the ground.",move:-18},
+{h:"Jet stream shifts north",d:"Storm track moving away from the area.",move:-20},
+{h:"Neighboring areas report clear skies",d:"Surrounding regions are dry and sunny.",move:-12},
+{h:"Upper-level ridge strengthening",d:"Atmospheric pattern favoring continued dry weather.",move:-16},
+{h:"UV index forecast unusually high",d:"Strong sunshine expected—no clouds to block it.",move:-10},
+// --- MIXED / SMALL MOVES ---
+{h:"Scattered clouds moving in",d:"Some clouds developing but unclear if they'll produce rain.",move:8},
+{h:"Temperature inversion detected",d:"Warm air aloft could trap or block moisture.",move:-8},
+{h:"Conflicting forecast models",d:"Some models show rain, others show dry. Uncertainty is high.",move:5},
+{h:"Overnight temperatures cooler than expected",d:"Could mean more moisture—or just a passing cold front.",move:6},
+{h:"Wind speed picking up",d:"Could push weather systems through faster.",move:-6},
+{h:"Atmospheric moisture levels holding steady",d:"No major change in conditions—market waits for a signal.",move:4}
+];
+
+function pickEvents(){
+  // Shuffle and pick 5 events, ensuring a mix of directions
+  var pool = EV_POOL.slice();
+  var positive = pool.filter(function(e){ return e.move > 10; });
+  var negative = pool.filter(function(e){ return e.move < -10; });
+  var small = pool.filter(function(e){ return Math.abs(e.move) <= 10; });
+  
+  // Shuffle each group
+  function shuffle(arr){
+    for(var i=arr.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=arr[i];arr[i]=arr[j];arr[j]=t;}
+    return arr;
+  }
+  shuffle(positive); shuffle(negative); shuffle(small);
+  
+  // Pick a random scenario structure
+  var structures = [
+    [2,2,1], // 2 rain, 2 dry, 1 mixed — balanced
+    [3,1,1], // 3 rain, 1 dry, 1 mixed — leans rain
+    [1,3,1], // 1 rain, 3 dry, 1 mixed — leans dry
+    [3,2,0], // 3 rain, 2 dry — no mixed
+    [2,3,0], // 2 rain, 3 dry — slight dry lean
+    [4,1,0], // 4 rain, 1 dry — strong rain
+    [1,4,0], // 1 rain, 4 dry — strong dry
+  ];
+  var struct = structures[Math.floor(Math.random()*structures.length)];
+  
+  var picked = [];
+  for(var i=0;i<struct[0]&&i<positive.length;i++) picked.push(positive[i]);
+  for(var i=0;i<struct[1]&&i<negative.length;i++) picked.push(negative[i]);
+  for(var i=0;i<struct[2]&&i<small.length;i++) picked.push(small[i]);
+  
+  // Fill any gaps
+  while(picked.length < 5){
+    picked.push(pool[Math.floor(Math.random()*pool.length)]);
+  }
+  
+  // Shuffle the final order
+  shuffle(picked);
+  return picked;
+}
+
+var EV = pickEvents();
+
+var HOW=[
+{e:'💰',t:'Contracts Pay $1 If Right',c:'YES contracts pay $1 if rain, $0 if dry. NO contracts pay $1 if dry, $0 if rain. Buy what you believe!'},
+{e:'📊',t:'Price = Probability',c:'If YES costs $0.60, the market thinks 60% chance of rain. Think it\'s higher? Buy YES. Lower? Buy NO.'},
+{e:'💸',t:'Trading Costs Money',c:'This simulation uses a 3% fee for illustration. Real-world fees vary by platform and contract price.'},
+{e:'📰',t:'Trade on News',c:'You\'ll see 5 weather updates. Prices will move as the market reacts. Watch, learn, and trade!'}
+];
+
+function el(i){return document.getElementById(i)}
+
+var currentYesPrice = 0.50;
+
+var _rendering = false;
+function render(){
+  if(_rendering) return; // Prevent any possible re-entry
+  _rendering = true;
+  
+  var yP=currentYesPrice,nP=1-yP;
+  el('yp').textContent='$'+yP.toFixed(2);
+  el('np').textContent='$'+nP.toFixed(2);
+  el('ypr').textContent=Math.round(yP*100);
+  el('npr').textContent=Math.round(nP*100);
+  el('pf').style.width=(yP*100)+'%';
+  
+  // Buy preview calculations
+  var effectiveAmt = amt === 100 ? S.cash : Math.min(amt, S.cash);
+  if(effectiveAmt <= 0){
+    // No cash — show zeroes
+    el('preview-pay').textContent='$0.00';
+    el('preview-get').textContent='0 '+(tradeSide==='yes'?'YES':'NO')+' contracts';
+    el('preview-profit').textContent='$0.00';
+    el('preview-profit').className='preview-val';
+    el('preview-fee').textContent='$0.00';
+    el('preview-profit-label').textContent=tradeSide==='yes'?'If rain (profit)':'If dry (profit)';
+  } else {
+    var fee=effectiveAmt*FEE_RATE;
+    var netAmt=effectiveAmt-fee;
+    var yShares=netAmt/yP,nShares=netAmt/nP;
+    var yProfit=(yShares-effectiveAmt),nProfit=(nShares-effectiveAmt);
+    
+    // Update buy preview
+    el('preview-pay').textContent='$'+effectiveAmt.toFixed(2);
+    var shares=tradeSide==='yes'?yShares:nShares;
+    el('preview-get').textContent=Math.round(shares)+' '+(tradeSide==='yes'?'YES':'NO')+' contracts';
+    var profit=tradeSide==='yes'?yProfit:nProfit;
+    el('preview-profit').textContent=(profit>=0?'+':'')+profit.toFixed(2);
+    el('preview-profit').className='preview-val '+(profit>=0?'pos':'neg');
+    el('preview-fee').textContent='$'+fee.toFixed(2);
+    el('preview-profit-label').textContent=tradeSide==='yes'?'If rain (profit)':'If dry (profit)';
+  }
+  
+  // Portfolio value and position worth
+  // Position cards always show current market value (what you'd get if you sold now)
+  var yWorth = S.yS * yP;
+  var nWorth = S.nS * nP;
+  
+  var pv;
+  if(S.step >= 5){
+    // After final update: portfolio shows expected resolution value
+    // YES contracts pay $1 if rain (likely when yP > 0.5), NO contracts pay $1 if dry
+    var likelyRain = yP > 0.5;
+    var expectedPayout = likelyRain ? S.yS : S.nS;
+    pv = S.cash + expectedPayout;
+  } else {
+    // During game: show market value
+    pv = S.cash + yWorth + nWorth;
+  }
+  var pnl=pv-100;
+  el('cv').textContent='$'+S.cash.toFixed(2);
+  el('pv').innerHTML='<span style="color:#94a3b8;font-size:10px;font-weight:400">Current Value </span>$'+pv.toFixed(2);
+  el('pv').className='total-val '+(pnl>=0?'pos':'neg');
+  el('pnl').innerHTML='<span style="color:#94a3b8;font-weight:400">P&L </span>'+(pnl>=0?'+$':'-$')+Math.abs(pnl).toFixed(2);
+  el('pnl').className='pnl '+(pnl>=0?'pos':'neg');
+  
+  // Progress pills
+  for(var i=0;i<5;i++){
+    var p=el('p'+i);
+    p.className='pill'+(i<S.step?' done':'')+(i===S.step&&S.phase==='news'?' active':'');
+  }
+  
+  // Position cards
+  var hasYes=S.yS>0.5, hasNo=S.nS>0.5;
+  var hasPos=hasYes||hasNo;
+  el('positions-area').classList.toggle('hidden',!hasPos);
+  
+  if(hasYes){
+    var yPnl=yWorth-S.yCost;
+    el('yes-position').classList.remove('hidden');
+    el('yes-qty').textContent=S.yS.toFixed(0);
+    el('yes-worth').textContent='$'+yWorth.toFixed(2);
+    el('yes-pnl').textContent=(yPnl>=0?'+$':'-$')+Math.abs(yPnl).toFixed(2);
+    el('yes-pnl').className='pos-pnl '+(yPnl>=0?'pos':'neg');
+    
+    if(yPnl>5&&!S.tipShown&&S.step>=2){
+      el('sell-tip').classList.remove('hidden');
+      el('sell-tip-text').textContent='Your YES contracts are up! Tap Sell to lock in profit.';
+      S.tipShown=true;
+    }
+  }else{
+    el('yes-position').classList.add('hidden');
+    // Close sell panel if it was open for this side
+    if(sellSide==='yes' && !el('sell-panel').classList.contains('hidden')) closeSellPanel();
+  }
+  
+  if(hasNo){
+    var nPnl=nWorth-S.nCost;
+    el('no-position').classList.remove('hidden');
+    el('no-qty').textContent=S.nS.toFixed(0);
+    el('no-worth').textContent='$'+nWorth.toFixed(2);
+    el('no-pnl').textContent=(nPnl>=0?'+$':'-$')+Math.abs(nPnl).toFixed(2);
+    el('no-pnl').className='pos-pnl '+(nPnl>=0?'pos':'neg');
+    
+    if(nPnl>5&&!S.tipShown&&S.step>=2){
+      el('sell-tip').classList.remove('hidden');
+      el('sell-tip-text').textContent='Your NO contracts are up! Tap Sell to lock in profit.';
+      S.tipShown=true;
+    }
+  }else{
+    el('no-position').classList.add('hidden');
+    if(sellSide==='no' && !el('sell-panel').classList.contains('hidden')) closeSellPanel();
+  }
+  
+  // Update "All" button to always show remaining cash
+  document.querySelectorAll('.amt-btn').forEach(function(b){
+    if(b.dataset.amt==='100'){
+      var cash = S.cash.toFixed(2);
+      b.textContent = 'All · $' + cash;
+      // Dim it if no cash left
+      b.style.opacity = S.cash < 1 ? '.4' : '';
+    }
+    // Dim fixed amounts that exceed available cash
+    var btnAmt = parseInt(b.dataset.amt);
+    if(btnAmt !== 100){
+      b.style.opacity = btnAmt > S.cash ? '.4' : '';
+    }
+  });
+  
+  // Disable buy if not enough cash
+  var canBuy = effectiveAmt > 0 && effectiveAmt <= S.cash;
+  el('confirm-btn').disabled = !canBuy;
+  
+  // Update sell panel text if open (no slider manipulation — just text)
+  if(!el('sell-panel').classList.contains('hidden')) updateSellPreviewText();
+  
+  _rendering = false;
+}
+
+// --- SELL PANEL LOGIC ---
+// IMPORTANT: renderSellPreview() must NEVER set slider.value to avoid oninput loops.
+// Only openSellPanel() and direct user actions (slider drag, buttons) set the slider.
+
+function getTotalShares(side){
+  return Math.round(side === 'yes' ? S.yS : S.nS);
+}
+
+function openSellPanel(side){
+  sellSide = side;
+  var total = getTotalShares(side);
+  sellShareCount = Math.max(1, Math.round(total / 2));
+  
+  el('sell-panel-title').textContent = 'Sell ' + side.toUpperCase() + ' contracts';
+  var slider = el('sell-slider');
+  slider.max = total;
+  slider.value = sellShareCount;
+  el('sell-panel').classList.remove('hidden');
+  updateSellPreviewText();
+}
+
+function closeSellPanel(){
+  console.log('closeSellPanel called');
+  el('sell-panel').classList.add('hidden');
+}
+
+function userSetSellShares(n){
+  var total = getTotalShares(sellSide);
+  sellShareCount = Math.max(1, Math.min(n, total));
+  el('sell-slider').value = sellShareCount;
+  updateSellPreviewText();
+}
+
+function adjustSellShares(delta){
+  userSetSellShares(sellShareCount + delta);
+}
+
+function setSellSharesPreset(fraction){
+  var total = getTotalShares(sellSide);
+  var n = fraction === 1 ? total : Math.max(1, Math.round(total * fraction));
+  userSetSellShares(n);
+}
+
+// Pure text update — no slider manipulation, no side effects
+function updateSellPreviewText(){
+  var yP = currentYesPrice, nP = 1 - yP;
+  var totalShares = sellSide === 'yes' ? S.yS : S.nS;
+  var price = sellSide === 'yes' ? yP : nP;
+  var costBasis = sellSide === 'yes' ? S.yCost : S.nCost;
+  var total = Math.round(totalShares);
+  
+  var sharesToSell = sellShareCount;
+  var grossValue = sharesToSell * price;
+  var fee = grossValue * FEE_RATE;
+  var netProceeds = grossValue - fee;
+  
+  var costPortion = totalShares > 0 ? costBasis * (sharesToSell / totalShares) : 0;
+  var salePnl = netProceeds - costPortion;
+  
+  el('sell-qty-input').textContent = sharesToSell;
+  el('sell-qty-label').textContent = 'of ' + total + ' contracts';
+  el('sell-proceeds-out').textContent = '$' + netProceeds.toFixed(2);
+  el('sell-pnl-out').textContent = (salePnl >= 0 ? '+$' : '-$') + Math.abs(salePnl).toFixed(2);
+  el('sell-pnl-out').className = 'sell-preview-val ' + (salePnl >= 0 ? 'pos' : 'neg');
+  el('sell-fee-out').textContent = '$' + fee.toFixed(2);
+  
+  el('sell-confirm-btn').textContent = 'Sell ' + sharesToSell + ' ' + sellSide.toUpperCase();
+  el('sell-confirm-btn').className = 'sell-confirm-btn ' + sellSide;
+  el('sell-confirm-btn').disabled = sharesToSell < 1;
+}
+
+var _selling = false;
+function confirmSell(){
+  if(_selling) return;
+  _selling = true;
+  
+  var yP = currentYesPrice, nP = 1 - yP;
+  var isYes = sellSide === 'yes';
+  var totalShares = isYes ? S.yS : S.nS;
+  var price = isYes ? yP : nP;
+  
+  var sharesToSell = Math.min(sellShareCount, Math.round(totalShares));
+  if(sharesToSell < 1) { _selling = false; return; }
+  
+  var grossValue = sharesToSell * price;
+  var fee = grossValue * FEE_RATE;
+  var netProceeds = grossValue - fee;
+  var sellFraction = sharesToSell / totalShares;
+  
+  S.cash += netProceeds;
+  S.grossSellProceeds += grossValue;
+  S.totalFees += fee;
+  S.tradeCount++;
+  
+  var soldOut = false;
+  if(isYes){
+    S.yS = Math.max(0, S.yS - sharesToSell);
+    S.yCost = S.yS > 0.5 ? S.yCost * (1 - sellFraction) : 0;
+    if(S.yS < 0.5) { S.yS = 0; soldOut = true; }
+  } else {
+    S.nS = Math.max(0, S.nS - sharesToSell);
+    S.nCost = S.nS > 0.5 ? S.nCost * (1 - sellFraction) : 0;
+    if(S.nS < 0.5) { S.nS = 0; soldOut = true; }
+  }
+  
+  if(soldOut){
+    closeSellPanel();
+  } else {
+    // Clamp share count
+    var newTotal = getTotalShares(sellSide);
+    sellShareCount = Math.min(sellShareCount, newTotal);
+  }
+  
+  el('sell-tip').classList.add('hidden');
+  render();
+  
+  if(!soldOut){
+    updateSellPreviewText();
+    var card = el(isYes ? 'yes-position' : 'no-position');
+    card.classList.remove('trade-flash');
+    void card.offsetWidth;
+    card.classList.add('trade-flash');
+    setTimeout(function(){ card.classList.remove('trade-flash'); }, 600);
+  }
+  
+  _selling = false;
+}
+
+// --- BUY LOGIC ---
+
+function setAmt(v){
+  amt = v;
+  document.querySelectorAll('.amt-btn').forEach(function(b){
+    b.classList.toggle('active', parseInt(b.dataset.amt) === v);
+  });
+  render();
+}
+
+function selectSide(side){
+  tradeSide = side;
+  el('side-yes').classList.toggle('selected', side === 'yes');
+  el('side-no').classList.toggle('selected', side === 'no');
+  el('confirm-btn').textContent = 'Buy ' + side.toUpperCase();
+  el('confirm-btn').className = 'confirm-btn ' + side;
+  render();
+}
+
+function confirmTrade(){
+  var effectiveAmt = amt === 100 ? S.cash : Math.min(amt, S.cash);
+  trade(tradeSide === 'yes', effectiveAmt);
+}
+
+function trade(yes, amount){
+  if(amount > S.cash || amount <= 0) return;
+  var fee = amount * FEE_RATE;
+  var netAmt = amount - fee;
+  var price = yes ? currentYesPrice : (1 - currentYesPrice);
+  var shares = netAmt / price;
+  S.cash -= amount;
+  S.netSpent += netAmt;
+  S.totalFees += fee;
+  S.tradeCount++;
+  if(yes){ S.yS += shares; S.yCost += netAmt; }
+  else { S.nS += shares; S.nCost += netAmt; }
+  render();
+  
+  // Animate
+  var card = el(yes ? 'yes-position' : 'no-position');
+  var qty = el(yes ? 'yes-qty' : 'no-qty');
+  card.classList.remove('trade-flash');
+  qty.classList.remove('count-pop');
+  void card.offsetWidth;
+  card.classList.add('trade-flash');
+  qty.classList.add('count-pop');
+  setTimeout(function(){
+    card.classList.remove('trade-flash');
+    qty.classList.remove('count-pop');
+  }, 600);
+  
+  if(S.phase === 'opening'){
+    S.phase = 'transition';
+    updateUI();
+    setTimeout(function(){
+      S.phase = 'news';
+      S.step = 1;
+      processNews();
+    }, 1500);
+  }
+}
+
+// --- UI & GAME FLOW ---
+
+function updateUI(){
+  var ba = el('banner-area'), tc = el('trade-controls');
+  
+  if(S.phase === 'opening'){
+    ba.innerHTML = '<div class="instruction"><h3>🎯 Make Your Opening Prediction</h3><p>Market starts at 50/50. What\'s your gut feeling—will it rain?</p></div>';
+    tc.classList.remove('hidden');
+    el('confirm-btn').style.display = 'block';
+    el('confirm-btn').textContent = 'Buy ' + tradeSide.toUpperCase();
+    el('confirm-btn').className = 'confirm-btn ' + tradeSide;
+    el('advance-btn').style.display = 'none';
+    el('skip-row').style.display = 'none';
+  } else if(S.phase === 'transition'){
+    ba.innerHTML = '<div class="instruction fade-in"><h3>✅ Position Taken!</h3><p>Now let\'s see what the weather data reveals...</p></div>';
+    tc.classList.add('hidden');
+  } else if(S.phase === 'news'){
+    var ev = EV[S.step-1];
+    ba.innerHTML = '<div class="news-banner fade-in"><div class="label">Update '+S.step+' of 5</div><h3>'+ev.h+'</h3><p>'+ev.d+'</p></div>';
+    tc.classList.remove('hidden');
+    el('confirm-btn').style.display = 'block';
+    el('confirm-btn').textContent = 'Buy ' + tradeSide.toUpperCase();
+    el('confirm-btn').className = 'confirm-btn ' + tradeSide;
+    el('advance-btn').style.display = 'block';
+    if(S.step >= 5){
+      el('advance-btn').textContent = '☀️ See What Happened';
+      el('advance-btn').className = 'secondary-btn success';
+      el('skip-row').style.display = 'none';
+    } else {
+      el('advance-btn').textContent = 'Next Update →';
+      el('advance-btn').className = 'secondary-btn';
+      el('skip-row').style.display = 'block';
+    }
+  }
+}
+
+function processNews(){
+  var ev = EV[S.step-1];
+  var oldPrice = currentYesPrice;
+  currentYesPrice = Math.min(0.95, Math.max(0.05, currentYesPrice + ev.move/100));
+  var wentUp = currentYesPrice > oldPrice;
+  updateUI(); render();
+  el('yp').classList.add(wentUp?'price-up':'price-down');
+  el('np').classList.add(wentUp?'price-down':'price-up');
+  setTimeout(function(){ el('yp').classList.remove('price-up','price-down'); el('np').classList.remove('price-up','price-down'); }, 400);
+}
+
+function advance(){
+  if(S.phase === 'opening'){
+    S.phase = 'news'; S.step = 1; processNews();
+  } else if(S.step >= 5){
+    resolve();
+  } else {
+    S.step++; processNews();
+  }
+}
+
+function skip(){
+  if(S.phase === 'opening'){ S.phase = 'news'; S.step = 1; processNews(); }
+  else if(S.step >= 5){ resolve(); }
+  else { advance(); }
+}
+
+function skipToResult(){
+  while(S.step < 5){
+    S.step++;
+    var ev = EV[S.step-1];
+    currentYesPrice = Math.min(0.95, Math.max(0.05, currentYesPrice + ev.move/100));
+  }
+  resolve();
+}
+
+function resolve(){
+  var yP = currentYesPrice;
+  var rained = yP > 0.5 ? Math.random() < 0.85 : Math.random() < 0.3;
+  var resolutionPayout = rained ? S.yS : S.nS;
+  var finalValue = S.cash + resolutionPayout;
+  var pnl = finalValue - 100;
+  
+  el('re').textContent = rained ? '🌧️' : '☀️';
+  el('rt').textContent = rained ? 'It Rained!' : 'It Stayed Dry!';
+  
+  el('row-spent').style.display = S.netSpent > 0 ? '' : 'none';
+  el('row-fees').style.display = S.totalFees > 0 ? '' : 'none';
+  el('row-sells').style.display = S.grossSellProceeds > 0 ? '' : 'none';
+  el('row-payout').style.display = resolutionPayout > 0 ? '' : 'none';
+  
+  el('net-spent').textContent = '-$' + S.netSpent.toFixed(2);
+  el('fees-paid').textContent = '-$' + S.totalFees.toFixed(2);
+  el('sell-proceeds').textContent = '+$' + S.grossSellProceeds.toFixed(2);
+  el('resolution-payout').textContent = '+$' + resolutionPayout.toFixed(2);
+  el('fv').textContent = '$' + finalValue.toFixed(2);
+  el('pnl-final').textContent = (pnl >= 0 ? '+$' : '-$') + Math.abs(pnl).toFixed(2);
+  el('pnl-final').className = 'result-val pnl-big ' + (pnl >= 0 ? 'pos' : 'neg');
+  
+  // Insight
+  var pct = Math.round(yP * 100);
+  var hadYes = S.yS > 0.5;
+  var hadNo = S.nS > 0.5;
+  var hadBoth = hadYes && hadNo;
+  var hadMoreYes = S.yS > S.nS;
+  var hadMoreNo = S.nS > S.yS;
+  var tradedWithMarket = (rained && hadMoreYes) || (!rained && hadMoreNo);
+  var tradedAgainstMarket = (rained && hadMoreNo) || (!rained && hadMoreYes);
+  var soldEarly = S.grossSellProceeds > 0;
+  var totalSpent = S.netSpent + S.totalFees;
+  var msg = '';
+  
+  if(hadBoth){
+    // --- HELD BOTH SIDES ---
+    if(pnl >= 0){
+      msg = 'You bought both YES and NO at different times and ended up with +$'+Math.abs(pnl).toFixed(2)+'. This works when you buy one side cheap, the price moves in your favor, then you buy the other side at its new lower price. You didn\'t need to predict the outcome—you profited from the price movement itself.';
+    } else if(Math.abs(pnl) < 5){
+      msg = 'You bought contracts on both sides, so one side was always going to pay out. You spent $'+totalSpent.toFixed(2)+' total and got back $'+resolutionPayout.toFixed(2)+'—nearly break-even. Holding both sides reduces your risk, but it also caps your upside since you\'re paying for both outcomes.';
+    } else {
+      msg = 'You spent $'+totalSpent.toFixed(2)+' buying both YES and NO contracts, but only got $'+resolutionPayout.toFixed(2)+' back. One side always pays out when you hold both—but if you spent more on both sides combined than that $'+resolutionPayout.toFixed(2)+' payout, the loss is locked in. Hedging works best when you buy the second side after a big price move, not at similar prices.';
+    }
+  } else if(pnl >= 0){
+    // --- WINNER SCENARIOS ---
+    if(!rained && hadMoreNo && pct >= 70){
+      var noAvgPrice = S.nS > 0 ? (S.nCost / S.nS) : (1-yP);
+      msg = 'The market priced rain at '+pct+'%—but it stayed dry. Your NO contracts paid $1 each, and you bought them at an average of $'+noAvgPrice.toFixed(2)+'. That\'s the math behind prediction markets: when you disagree with the price and you\'re right, the gap between what you paid and $1 is your profit.';
+    } else if(rained && hadMoreYes && pct <= 30){
+      var yesAvgPrice = S.yS > 0 ? (S.yCost / S.yS) : yP;
+      msg = 'Rain was priced at just '+pct+'%, meaning most traders didn\'t expect it. But you bought YES at an average of $'+yesAvgPrice.toFixed(2)+', and when it rained, each contract paid $1. That\'s a $'+(1-yesAvgPrice).toFixed(2)+' profit per contract. When you spot something the market is underpricing, the payoff can be huge.';
+    } else if(soldEarly && resolutionPayout < 5){
+      msg = 'You sold your contracts before the final result for $'+S.grossSellProceeds.toFixed(2)+'. You didn\'t need to wait for the outcome—you bought at one price and sold at a higher price as the market moved. On real platforms like Kalshi and Polymarket, this is how many traders operate: profit from price changes, not just final results.';
+    } else if(tradedWithMarket){
+      var totalContracts = hadMoreYes ? S.yS : S.nS;
+      var costBasis = hadMoreYes ? S.yCost : S.nCost;
+      var avgBuyPrice = totalContracts > 0 ? costBasis / totalContracts : (hadMoreYes ? yP : 1-yP);
+      var profitPerContract = 1 - avgBuyPrice;
+      if(avgBuyPrice >= 0.70){
+        msg = 'You bought '+(hadMoreYes?'YES':'NO')+' at an average of $'+avgBuyPrice.toFixed(2)+' per contract, and it paid off. Each contract paid $1, so you earned about $'+profitPerContract.toFixed(2)+' per contract. That\'s the tradeoff with likely outcomes: you win more often, but the profit per contract is smaller because the price is already high.';
+      } else {
+        msg = 'You bought '+(hadMoreYes?'YES':'NO')+' at an average of $'+avgBuyPrice.toFixed(2)+' per contract. Each contract paid out $1, so you earned about $'+profitPerContract.toFixed(2)+' per contract. The lower the price you buy at, the more you profit per contract—but lower prices mean the market thinks it\'s less likely to happen.';
+      }
+    } else {
+      msg = 'You earned +$'+Math.abs(pnl).toFixed(2)+' this round. You risked $'+totalSpent.toFixed(2)+' to make that return. On real prediction markets, experienced traders think about every trade this way: how much am I risking vs. how much can I gain? That ratio is what separates good trades from lucky ones.';
+    }
+  } else {
+    // --- LOSER SCENARIOS ---
+    if(soldEarly && resolutionPayout < 1){
+      msg = 'You sold some contracts for $'+S.grossSellProceeds.toFixed(2)+' during the game, but your remaining contracts didn\'t pay out. Selling lets you take money off the table before the outcome is decided. The tradeoff: you might sell too early and miss a bigger payout, or hold too long and lose everything.';
+    } else if(tradedAgainstMarket && pct >= 70 && hadMoreNo && rained){
+      var noAvgPriceL = S.nS > 0 ? (S.nCost / S.nS) : (1-yP);
+      msg = 'You bought NO contracts at an average price of $'+noAvgPriceL.toFixed(2)+', but it rained—so they all paid $0. By the end, the market had rain at '+pct+'%. The rising price was a signal that rain was becoming more likely. In prediction markets, prices reflect real information—watching how they move can help you decide when to hold and when to cut your losses.';
+    } else if(tradedAgainstMarket && pct <= 30 && hadMoreYes && !rained){
+      var yesAvgPriceL = S.yS > 0 ? (S.yCost / S.yS) : yP;
+      msg = 'You bought YES contracts at an average price of $'+yesAvgPriceL.toFixed(2)+', but it stayed dry—so they all paid $0. By the end, the market had rain at just '+pct+'%. The falling price was a signal that rain was becoming less likely. Watching price trends can help you decide whether to hold your position or sell before it\'s too late.';
+    } else if(tradedWithMarket && !rained && pct >= 70){
+      var yesAvgLoss = S.yS > 0 ? (S.yCost / S.yS) : yP;
+      msg = 'Rain was priced at '+pct+'%, so it looked very likely—but it stayed dry. You paid an average of $'+yesAvgLoss.toFixed(2)+' per YES contract, and they all went to $0. This is why prediction markets exist: even at '+pct+'%, someone was willing to sell you that contract because they saw a '+Math.round(100-pct)+'% chance of profit on the other side.';
+    } else if(tradedWithMarket && rained && pct <= 30){
+      var noAvgLoss = S.nS > 0 ? (S.nCost / S.nS) : (1-yP);
+      msg = 'The market priced rain at just '+pct+'%—a long shot—but it happened. You paid an average of $'+noAvgLoss.toFixed(2)+' per NO contract, and they all went to $0. Even a '+Math.round(100-pct)+'% probability means a '+pct+'% chance of being wrong. That uncertainty is what creates the market.';
+    } else {
+      msg = 'Your contracts paid $0 this round—you lost $'+Math.abs(pnl).toFixed(2)+'. Every contract is all-or-nothing: $1 if you\'re right, $0 if you\'re wrong. But here\'s the flip side: whoever was on the other end of your trade just made money. In prediction markets, every dollar lost by one trader is gained by another.';
+    }
+  }
+  
+  if(S.tradeCount > 3) msg += ' ('+S.tradeCount+' trades this round)';
+  
+  el('insight').textContent = '💡 ' + msg;
+  closeSellPanel();
+  el('rm').classList.remove('hidden');
+}
+
+function reset(){
+  S = {cash:100, yS:0, nS:0, yCost:0, nCost:0, step:0, phase:'opening', tipShown:false, totalFees:0, tradeCount:0, grossSellProceeds:0, netSpent:0};
+  currentYesPrice = 0.50;
+  EV = pickEvents();
+  amt = 25;
+  tradeSide = 'yes';
+  sellShareCount = 1;
+  document.querySelectorAll('.amt-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.amt === '25'); });
+  el('side-yes').classList.add('selected'); el('side-no').classList.remove('selected');
+  el('confirm-btn').textContent = 'Buy YES';
+  el('confirm-btn').className = 'confirm-btn yes';
+  el('rm').classList.add('hidden'); el('tm').classList.remove('hidden');
+  el('sell-tip').classList.add('hidden');
+  closeSellPanel();
+  render(); updateUI();
+}
+
+function dismissTip(){ el('sell-tip').classList.add('hidden'); }
+
+function startGame(){ el('tm').classList.add('hidden'); render(); updateUI(); }
+
+var howStep = 0;
+function showHow(){ el('tm').classList.add('hidden'); el('hm').classList.remove('hidden'); howStep = 0; renderHow(); }
+function renderHow(){
+  var h = HOW[howStep]; el('he').textContent = h.e; el('ht').textContent = h.t; el('hc').textContent = h.c;
+  var d = ''; for(var i = 0; i < HOW.length; i++) d += '<div class="dot '+(i === howStep ? 'active' : '')+'"></div>'; el('hd').innerHTML = d;
+}
+function nextHow(){
+  if(howStep < HOW.length-1){ howStep++; renderHow(); }
+  else { el('hm').classList.add('hidden'); render(); updateUI(); }
+}
+
+render(); updateUI();
+
+// Slider event — only fires on actual user drag, not programmatic .value changes
+el('sell-slider').addEventListener('input', function(){
+  var v = parseInt(this.value);
+  if(v !== sellShareCount){
+    sellShareCount = v;
+    updateSellPreviewText();
+  }
+});
+</script>
+</div>
+</body>
+</html>
