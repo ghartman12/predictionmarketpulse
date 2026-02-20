@@ -1038,5 +1038,16 @@ el('sell-slider').addEventListener('input', function(){
 });
 </script>
 </div>
+<script>
+(function(){
+  function reportHeight(){
+    var h = document.body.scrollHeight;
+    window.parent.postMessage({type:'sim-height',height:h},'*');
+  }
+  new MutationObserver(reportHeight).observe(document.body,{childList:true,subtree:true,attributes:true});
+  window.addEventListener('resize',reportHeight);
+  reportHeight();
+})();
+</script>
 </body>
 </html>
