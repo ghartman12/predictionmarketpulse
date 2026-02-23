@@ -1342,7 +1342,7 @@
                 header: true,
                 skipEmptyLines: 'greedy',
                 complete: function(results) {
-                    partnershipsData = results.data.filter(row => row.Partnership && row.Partnership.trim());
+                    partnershipsData = results.data.filter(row => row.Partnership && row.Partnership.trim() && String(row.Published || '').trim().toLowerCase() === 'yes');
                     renderTracker();
                 },
                 error: function(err) {
