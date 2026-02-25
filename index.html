@@ -833,6 +833,40 @@
             box-shadow: 0 0 0 3px rgba(99,102,241,0.08);
         }
 
+        /* Guided question chips */
+        .graph-questions {
+            display: flex; flex-wrap: wrap; gap: 0.4rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border-light);
+            border-radius: 0.75rem;
+            backdrop-filter: blur(12px);
+        }
+        .dark .graph-questions {
+            background: rgba(30,41,59,0.85);
+            border-color: rgba(99,102,241,0.15);
+        }
+        .graph-chip {
+            padding: 0.3rem 0.7rem;
+            border: 1.5px solid var(--color-border-light);
+            border-radius: 999px;
+            background: var(--color-bg-secondary);
+            color: var(--color-text-secondary);
+            font-size: 0.75rem; font-weight: 600;
+            cursor: pointer; white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        .graph-chip:hover {
+            border-color: var(--color-primary); color: var(--color-primary);
+            background: rgba(99,102,241,0.05);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.08);
+        }
+        .graph-chip.active {
+            background: var(--color-primary); color: #fff;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.18);
+        }
+
         /* Legend — floating pill inside container */
         .network-legend {
             position: absolute; bottom: 1rem; left: 1rem; z-index: 10;
@@ -916,6 +950,8 @@
             .network-svg .edge-particle { display: none; }
             .network-svg .connection-badge { display: none; }
             .network-svg .hub-halo { display: none; }
+            .graph-questions { gap: 0.3rem; padding: 0.4rem 0.6rem; }
+            .graph-chip { font-size: 0.65rem; padding: 0.25rem 0.55rem; }
         }
     </style>
 </head>
@@ -1531,6 +1567,16 @@
                     </button>
                 </div>
 
+                <div class="graph-questions" id="graphQuestions">
+                    <button class="graph-chip" data-question="mostConnected">Most Connected</button>
+                    <button class="graph-chip" data-question="polymarket">Polymarket's Network</button>
+                    <button class="graph-chip" data-question="kalshi">Kalshi's Network</button>
+                    <button class="graph-chip" data-question="operational">Operational Infrastructure</button>
+                    <button class="graph-chip" data-question="acquisition">Acquisition Activity</button>
+                    <button class="graph-chip" data-question="data">Data Partnerships</button>
+                    <button class="graph-chip" data-question="tradfi">Traditional Finance</button>
+                </div>
+
                 <div class="network-container" id="networkContainer">
                     <div class="network-orb-1"></div>
                     <div class="network-orb-2"></div>
@@ -2006,6 +2052,125 @@
         let selectedNode = null;
         let showAllNodes = true; // true = show all nodes including peripheral
         const hiddenNodeTypes = new Set();
+        let activeGuidedQuestion = null;
+
+        const GUIDED_QUESTIONS = {
+            mostConnected: {
+                action() {
+                    const sorted = [...graphNodes].sort((a, b) => b.connections - a.connections);
+                    const topIds = new Set(sorted.slice(0, 5).map(n => n.id));
+                    graphG.selectAll('.node-group')
+                        .classed('highlighted', n => topIds.has(n.id))
+                        .classed('dimmed', n => !topIds.has(n.id))
+                        .each(function(n) {
+                            const shape = d3.select(this).select('.node-shape');
+                            shape.attr('filter', topIds.has(n.id) ? `url(#nodeGlow-${n.type})` : null);
+                        });
+                    graphG.selectAll('.edge-line')
+                        .classed('highlighted', e => {
+                            const s = typeof e.source === 'object' ? e.source.id : e.source;
+                            const t = typeof e.target === 'object' ? e.target.id : e.target;
+                            return topIds.has(s) && topIds.has(t);
+                        })
+                        .classed('dimmed', e => {
+                            const s = typeof e.source === 'object' ? e.source.id : e.source;
+                            const t = typeof e.target === 'object' ? e.target.id : e.target;
+                            return !(topIds.has(s) && topIds.has(t));
+                        });
+                }
+            },
+            polymarket: {
+                action() {
+                    const node = graphNodes.find(n => n.name.toLowerCase().includes('polymarket'));
+                    if (node) updateGraphHighlight(node);
+                }
+            },
+            kalshi: {
+                action() {
+                    const node = graphNodes.find(n => n.name.toLowerCase().includes('kalshi'));
+                    if (node) updateGraphHighlight(node);
+                }
+            },
+            operational: {
+                action() {
+                    document.getElementById('graphTypeFilter').value = 'Operational';
+                    filterGraph();
+                }
+            },
+            acquisition: {
+                action() {
+                    document.getElementById('graphTypeFilter').value = 'Acquisition';
+                    filterGraph();
+                }
+            },
+            data: {
+                action() {
+                    document.getElementById('graphTypeFilter').value = 'Data/Integration';
+                    filterGraph();
+                }
+            },
+            tradfi: {
+                action() {
+                    const tradfiIds = new Set();
+                    graphNodes.forEach(n => {
+                        if (n.type === 'FCM' || n.type === 'IB') tradfiIds.add(n.id);
+                    });
+                    graphG.selectAll('.node-group')
+                        .classed('highlighted', n => tradfiIds.has(n.id))
+                        .classed('dimmed', n => !tradfiIds.has(n.id))
+                        .each(function(n) {
+                            const shape = d3.select(this).select('.node-shape');
+                            shape.attr('filter', tradfiIds.has(n.id) ? `url(#nodeGlow-${n.type})` : null);
+                        });
+                    graphG.selectAll('.edge-line')
+                        .classed('highlighted', e => {
+                            const s = typeof e.source === 'object' ? e.source.id : e.source;
+                            const t = typeof e.target === 'object' ? e.target.id : e.target;
+                            return tradfiIds.has(s) || tradfiIds.has(t);
+                        })
+                        .classed('dimmed', e => {
+                            const s = typeof e.source === 'object' ? e.source.id : e.source;
+                            const t = typeof e.target === 'object' ? e.target.id : e.target;
+                            return !tradfiIds.has(s) && !tradfiIds.has(t);
+                        });
+                }
+            }
+        };
+
+        function handleGuidedQuestion(key) {
+            if (!networkGraphInitialized) return;
+            const chip = document.querySelector(`.graph-chip[data-question="${key}"]`);
+            // Toggle off if same chip clicked again
+            if (activeGuidedQuestion === key) {
+                clearGuidedQuestion();
+                return;
+            }
+            // Reset prior state
+            clearGraphHighlight();
+            document.getElementById('graphTypeFilter').value = '';
+            document.getElementById('graphSearchInput').value = '';
+            filterGraph();
+            // Set active chip
+            document.querySelectorAll('.graph-chip').forEach(c => c.classList.remove('active'));
+            if (chip) chip.classList.add('active');
+            activeGuidedQuestion = key;
+            // Execute the question action
+            GUIDED_QUESTIONS[key].action();
+            // Reframe after a short delay
+            setTimeout(() => graphFitToView(), 350);
+        }
+
+        function clearGuidedQuestion() {
+            activeGuidedQuestion = null;
+            document.querySelectorAll('.graph-chip').forEach(c => c.classList.remove('active'));
+        }
+
+        // Attach click handlers to chips
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.graph-chip[data-question]').forEach(chip => {
+                chip.addEventListener('click', () => handleGuidedQuestion(chip.dataset.question));
+            });
+        });
 
         const NODE_COLORS = {
             Platform:  { fill: '#6366f1', stroke: '#4338ca', inner: '#818cf8', outer: '#4338ca', glow: 'rgba(99,102,241,0.4)' },
@@ -2960,6 +3125,7 @@
             applyShowAllState();
             filterGraph();
             clearGraphHighlight();
+            clearGuidedQuestion();
             if (graphG) graphG.selectAll('.edge-particle').remove();
             closeDetailPanel();
             selectedNode = null;
