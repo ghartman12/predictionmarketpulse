@@ -1571,6 +1571,7 @@
                     <button class="graph-chip" data-question="mostConnected">Most Connected</button>
                     <button class="graph-chip" data-question="polymarket">Polymarket's Network</button>
                     <button class="graph-chip" data-question="kalshi">Kalshi's Network</button>
+                    <button class="graph-chip" data-question="cryptodotcom">Crypto.com's Network</button>
                     <button class="graph-chip" data-question="operational">Operational Infrastructure</button>
                     <button class="graph-chip" data-question="acquisition">Acquisition Activity</button>
                     <button class="graph-chip" data-question="data">Data Partnerships</button>
@@ -2088,6 +2089,12 @@
             kalshi: {
                 action() {
                     const node = graphNodes.find(n => n.name.toLowerCase().includes('kalshi'));
+                    if (node) updateGraphHighlight(node);
+                }
+            },
+            cryptodotcom: {
+                action() {
+                    const node = graphNodes.find(n => n.name.toLowerCase().includes('crypto.com'));
                     if (node) updateGraphHighlight(node);
                 }
             },
