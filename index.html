@@ -649,7 +649,8 @@
             letter-spacing: 0.01em;
         }
         .network-svg .node-label.label-hidden {
-            opacity: 0;
+            opacity: 0.35;
+            font-size: 8px;
             transition: opacity 0.3s ease;
         }
         .network-svg .node-group:hover .node-label.label-hidden,
@@ -675,6 +676,8 @@
         /* Dim state */
         .network-svg .dimmed .node-shape { opacity: 0.08; transition: opacity 0.3s ease; }
         .network-svg .dimmed .node-label { opacity: 0.06; transition: opacity 0.3s ease; }
+        .network-svg .dimmed .connection-badge { opacity: 0.06; transition: opacity 0.3s ease; }
+        .network-svg .dimmed .hub-halo { opacity: 0; }
         .network-svg .dimmed .edge-line,
         .network-svg .edge-line.dimmed { stroke-opacity: 0.03; transition: stroke-opacity 0.3s ease; }
 
@@ -903,7 +906,7 @@
 
         /* Zoom controls */
         .graph-zoom-controls {
-            position: absolute; top: 1rem; right: 1rem; z-index: 10;
+            position: absolute; top: 1rem; left: 1rem; z-index: 10;
             display: flex; flex-direction: column; gap: 0.25rem;
         }
         .graph-zoom-controls button {
@@ -945,7 +948,7 @@
             .network-controls select,
             .network-controls input { font-size: 0.75rem; padding: 0.35rem 0.6rem; }
             .network-legend { bottom: 0.5rem; left: 0.5rem; gap: 0.4rem; font-size: 0.6rem; padding: 0.35rem 0.5rem; }
-            .graph-zoom-controls { top: 0.5rem; right: 0.5rem; }
+            .graph-zoom-controls { top: 0.5rem; left: 0.5rem; }
             .graph-zoom-controls button { width: 28px; height: 28px; }
             .network-svg .edge-particle { display: none; }
             .network-svg .connection-badge { display: none; }
@@ -1111,7 +1114,7 @@
     <main class="py-8 sm:py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
-            <div id="view-terminology" class="view-content active">
+            <div id="view-terminology" class="view-content">
                 <div class="mb-16 text-center">
                     <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-4">
                         Understanding the <span class="hero-gradient">Prediction Market Ecosystem</span>
@@ -1575,7 +1578,7 @@
                     <button class="graph-chip" data-question="operational">Operational Infrastructure</button>
                     <button class="graph-chip" data-question="acquisition">Acquisition Activity</button>
                     <button class="graph-chip" data-question="data">Data Partnerships</button>
-                    <button class="graph-chip" data-question="tradfi">Traditional Finance</button>
+                    <button class="graph-chip" data-question="newPartnerships">New Activity</button>
                 </div>
 
                 <div class="network-container" id="networkContainer">
@@ -1804,6 +1807,17 @@
     </main>
 
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        // Set correct view immediately to prevent flash of wrong content
+        (function() {
+            var hash = location.hash.replace('#','');
+            var valid = ['terminology','tracker','network','simulation','about','contact'];
+            var view = valid.indexOf(hash) !== -1 ? hash : 'terminology';
+            var el = document.getElementById('view-' + view);
+            if (el) el.classList.add('active');
+            var nav = document.getElementById('nav-' + view);
+            if (nav) { nav.classList.add('text-primary'); nav.classList.add('nav-active'); }
+        })();
+
         const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1NCU6XnJDrVpFkQuoqiyFijf66HozqUNpjLdaL5Hzxtk/gviz/tq?tqx=out:csv&sheet=Model%20Layout%20(%3F)';
 
         let partnershipsData = [];
@@ -2106,42 +2120,110 @@
             },
             acquisition: {
                 action() {
-                    document.getElementById('graphTypeFilter').value = 'Acquisition';
-                    filterGraph();
+                    // Collect acquirer + target node IDs from explicit sheet columns
+                    const acqNodeIds = new Set();
+                    graphEdges.forEach(e => {
+                        e.partnerships.forEach(p => {
+                            if (p.isAcqEdge) {
+                                p.acquirerIds.forEach(id => acqNodeIds.add(id));
+                                p.acqTargetIds.forEach(id => acqNodeIds.add(id));
+                            }
+                        });
+                    });
+                    graphG.selectAll('.node-group')
+                        .classed('highlighted', n => acqNodeIds.has(n.id))
+                        .classed('dimmed', n => !acqNodeIds.has(n.id))
+                        .each(function(n) {
+                            const shape = d3.select(this).select('.node-shape');
+                            shape.attr('filter', acqNodeIds.has(n.id) ? `url(#nodeGlow-${n.type})` : null);
+                        });
+                    // Only highlight acquirer→target edges, add directional arrow
+                    graphG.selectAll('.edge-line').each(function(e) {
+                        const acqP = e.partnerships.find(p => p.isAcqEdge);
+                        d3.select(this)
+                            .classed('highlighted', !!acqP)
+                            .classed('dimmed', !acqP);
+                        if (acqP) {
+                            const srcId = typeof e.source === 'object' ? e.source.id : e.source;
+                            if (acqP.acquirerIds.has(srcId)) {
+                                d3.select(this).attr('marker-end', 'url(#acqArrow)');
+                            } else {
+                                d3.select(this).attr('marker-start', 'url(#acqArrow)');
+                            }
+                            d3.select(this)
+                                .attr('stroke', '#e11d48')
+                                .attr('stroke-width', 2.5)
+                                .attr('stroke-opacity', 0.9);
+                        }
+                    });
                 }
             },
             data: {
                 action() {
-                    document.getElementById('graphTypeFilter').value = 'Data/Integration';
-                    filterGraph();
-                }
-            },
-            tradfi: {
-                action() {
-                    const tradfiIds = new Set();
-                    graphNodes.forEach(n => {
-                        if (n.type === 'FCM' || n.type === 'IB') tradfiIds.add(n.id);
+                    const dataTypes = new Set(['Data/Integration', 'Data/Marketing', 'Data/Marketing/Sponsorship']);
+                    const visibleNodeIds = new Set();
+                    graphEdges.forEach(e => {
+                        if (e.partnerships.some(p => dataTypes.has(p.type))) {
+                            visibleNodeIds.add(typeof e.source === 'object' ? e.source.id : e.source);
+                            visibleNodeIds.add(typeof e.target === 'object' ? e.target.id : e.target);
+                        }
                     });
                     graphG.selectAll('.node-group')
-                        .classed('highlighted', n => tradfiIds.has(n.id))
-                        .classed('dimmed', n => !tradfiIds.has(n.id))
+                        .classed('highlighted', n => visibleNodeIds.has(n.id))
+                        .classed('dimmed', n => !visibleNodeIds.has(n.id))
                         .each(function(n) {
                             const shape = d3.select(this).select('.node-shape');
-                            shape.attr('filter', tradfiIds.has(n.id) ? `url(#nodeGlow-${n.type})` : null);
+                            shape.attr('filter', visibleNodeIds.has(n.id) ? `url(#nodeGlow-${n.type})` : null);
                         });
                     graphG.selectAll('.edge-line')
-                        .classed('highlighted', e => {
-                            const s = typeof e.source === 'object' ? e.source.id : e.source;
-                            const t = typeof e.target === 'object' ? e.target.id : e.target;
-                            return tradfiIds.has(s) || tradfiIds.has(t);
-                        })
-                        .classed('dimmed', e => {
-                            const s = typeof e.source === 'object' ? e.source.id : e.source;
-                            const t = typeof e.target === 'object' ? e.target.id : e.target;
-                            return !tradfiIds.has(s) && !tradfiIds.has(t);
-                        });
+                        .classed('highlighted', e => e.partnerships.some(p => dataTypes.has(p.type)))
+                        .classed('dimmed', e => !e.partnerships.some(p => dataTypes.has(p.type)));
                 }
-            }
+            },
+            newPartnerships: {
+                action() {
+                    const cutoff = new Date();
+                    cutoff.setDate(cutoff.getDate() - 30);
+                    function parseDate(str) {
+                        if (!str) return null;
+                        // Handle M/D/YY format
+                        const parts = str.split('/');
+                        if (parts.length === 3) {
+                            let year = parseInt(parts[2], 10);
+                            if (year < 100) year += 2000;
+                            return new Date(year, parseInt(parts[0], 10) - 1, parseInt(parts[1], 10));
+                        }
+                        // Handle YYYY-MM-DD format
+                        const d = new Date(str);
+                        return isNaN(d) ? null : d;
+                    }
+                    function isRecent(p) {
+                        const d = parseDate(p.dateAdded);
+                        return d && d >= cutoff;
+                    }
+                    const recentNodeIds = new Set();
+                    graphEdges.forEach(e => {
+                        if (e.partnerships.some(isRecent)) {
+                            recentNodeIds.add(typeof e.source === 'object' ? e.source.id : e.source);
+                            recentNodeIds.add(typeof e.target === 'object' ? e.target.id : e.target);
+                        }
+                    });
+                    // Also check node partnerships directly (for nodes without edges)
+                    graphNodes.forEach(n => {
+                        if (n.partnerships.some(isRecent)) recentNodeIds.add(n.id);
+                    });
+                    graphG.selectAll('.node-group')
+                        .classed('highlighted', n => recentNodeIds.has(n.id))
+                        .classed('dimmed', n => !recentNodeIds.has(n.id))
+                        .each(function(n) {
+                            const shape = d3.select(this).select('.node-shape');
+                            shape.attr('filter', recentNodeIds.has(n.id) ? `url(#nodeGlow-${n.type})` : null);
+                        });
+                    graphG.selectAll('.edge-line')
+                        .classed('highlighted', e => e.partnerships.some(isRecent))
+                        .classed('dimmed', e => !e.partnerships.some(isRecent));
+                }
+            },
         };
 
         function handleGuidedQuestion(key) {
@@ -2163,8 +2245,8 @@
             activeGuidedQuestion = key;
             // Execute the question action
             GUIDED_QUESTIONS[key].action();
-            // Reframe after a short delay
-            setTimeout(() => graphFitToView(), 350);
+            // Fit view to highlighted nodes after a short delay
+            setTimeout(() => fitHighlightedToView(), 50);
         }
 
         function clearGuidedQuestion() {
@@ -2248,6 +2330,7 @@
             ['Webull Financial', 'WeBull Financial'],
             ['Small Exchange', 'Small Exchange'],
             ['MIAX Derivatives Exchange', 'MIAX Derivatives Exchange'],
+            ['MIAXdx', 'MIAX Derivatives Exchange'],
         ];
 
         function normalizeEntityName(raw) {
@@ -2354,7 +2437,7 @@
                 'Sleeper', 'Sporttrade', 'ProphetX', 'Mojo Interactive',
                 'Plus500', 'Galactic Markets', 'Novig', 'Matchbook', 'RSBIX',
                 'Onyx Odds', 'High Roller Technologies', 'ForecastEx', 'MyPrize',
-                'Gemini', 'WeBull', 'Phantom', 'DAZN',
+                'Gemini', 'WeBull', 'Phantom', 'DAZN', 'Kraken',
             ]);
 
             const KNOWN_TSPS = new Set([
@@ -2413,6 +2496,10 @@
                 if (!partnershipName) return;
 
                 const type = p['Type of Partnership'] || 'Other';
+                const dateAdded = (p['Date Added'] || '').trim();
+                const rawAcquirer = (p['Acquirer'] || '').trim();
+                const rawAcqTarget = (p['Acquisition Target'] || '').trim();
+                const isAcquisition = !!(rawAcquirer || rawAcqTarget);
                 const rawPartners = splitPartnerNames(partnershipName);
 
                 // Resolve all names — assign Platform, TSP, specific role, or no role
@@ -2434,6 +2521,20 @@
                 const allEntities = new Set(partners);
                 [ibKey, fcmKey, dcmKey, dcoKey].forEach(k => { if (k) allEntities.add(k); });
 
+                // Resolve explicit acquirer/target node IDs for acquisitions
+                const acquirerIds = new Set();
+                const acqTargetIds = new Set();
+                if (isAcquisition) {
+                    rawAcquirer.split(',').map(s => s.trim()).filter(Boolean).forEach(name => {
+                        const key = resolveRaw(name);
+                        if (key) acquirerIds.add(key);
+                    });
+                    rawAcqTarget.split(',').map(s => s.trim()).filter(Boolean).forEach(name => {
+                        const key = resolveRaw(name);
+                        if (key) { ensureNode(name, null); acqTargetIds.add(key); }
+                    });
+                }
+
                 // Create edges between partners (the main partnership relationship)
                 for (let i = 0; i < partners.length; i++) {
                     for (let j = i + 1; j < partners.length; j++) {
@@ -2441,30 +2542,86 @@
                         if (!edgeMap[edgeKey]) {
                             edgeMap[edgeKey] = { source: partners[i], target: partners[j], partnerships: [], weight: 0 };
                         }
-                        edgeMap[edgeKey].partnerships.push({ name: partnershipName, type: type });
+                        const pEntry = { name: partnershipName, type: type, acquisition: isAcquisition, dateAdded };
+                        edgeMap[edgeKey].partnerships.push(pEntry);
                         edgeMap[edgeKey].weight++;
                     }
                 }
 
+                // Create explicit acquirer → target edges for acquisitions
+                if (isAcquisition) {
+                    acquirerIds.forEach(acqId => {
+                        acqTargetIds.forEach(tgtId => {
+                            if (acqId === tgtId) return;
+                            const edgeKey = [acqId, tgtId].sort().join('|||');
+                            if (!edgeMap[edgeKey]) {
+                                edgeMap[edgeKey] = { source: acqId, target: tgtId, partnerships: [], weight: 0 };
+                            }
+                            // Tag this edge with acquisition direction info
+                            const existing = edgeMap[edgeKey].partnerships.find(ep => ep.name === partnershipName);
+                            if (existing) {
+                                existing.acquirerIds = acquirerIds;
+                                existing.acqTargetIds = acqTargetIds;
+                                existing.isAcqEdge = true;
+                            } else {
+                                edgeMap[edgeKey].partnerships.push({
+                                    name: partnershipName, type: type, acquisition: true,
+                                    dateAdded, acquirerIds, acqTargetIds, isAcqEdge: true
+                                });
+                                edgeMap[edgeKey].weight++;
+                            }
+                        });
+                    });
+                }
+
                 // Create edges between partners and their regulatory entities
+                // FCM/IB are broker-level: only connect to the partner that owns them
+                // DCM/DCO are exchange/clearing-level: all partners route through them
+                const regEntries = [
+                    { key: ibKey,  level: 'broker' },
+                    { key: fcmKey, level: 'broker' },
+                    { key: dcmKey, level: 'exchange' },
+                    { key: dcoKey, level: 'exchange' },
+                ];
                 partners.forEach(partner => {
-                    [ibKey, fcmKey, dcmKey, dcoKey].forEach(regKey => {
+                    regEntries.forEach(({ key: regKey, level }) => {
                         if (!regKey || regKey === partner) return;
+                        // For broker-level entities (FCM/IB): skip if entity belongs to another partner
+                        if (level === 'broker') {
+                            const regLower = regKey.toLowerCase();
+                            const ownedByThisPartner = regLower.includes(partner.toLowerCase());
+                            const ownedByAnyPartner = partners.some(p => regLower.includes(p.toLowerCase()));
+                            if (ownedByAnyPartner && !ownedByThisPartner) return;
+                        }
                         const edgeKey = [partner, regKey].sort().join('|||');
                         if (!edgeMap[edgeKey]) {
                             edgeMap[edgeKey] = { source: partner, target: regKey, partnerships: [], weight: 0 };
                         }
                         if (!edgeMap[edgeKey].partnerships.some(ep => ep.name === partnershipName)) {
-                            edgeMap[edgeKey].partnerships.push({ name: partnershipName, type: type });
+                            edgeMap[edgeKey].partnerships.push({ name: partnershipName, type: type, acquisition: isAcquisition, dateAdded });
                             edgeMap[edgeKey].weight++;
                         }
                     });
                 });
 
+                // Create regulatory chain edges: IB → FCM → DCM → DCO
+                const regChain = [ibKey, fcmKey, dcmKey, dcoKey].filter(Boolean);
+                for (let i = 0; i < regChain.length - 1; i++) {
+                    if (regChain[i] === regChain[i + 1]) continue;
+                    const edgeKey = [regChain[i], regChain[i + 1]].sort().join('|||');
+                    if (!edgeMap[edgeKey]) {
+                        edgeMap[edgeKey] = { source: regChain[i], target: regChain[i + 1], partnerships: [], weight: 0 };
+                    }
+                    if (!edgeMap[edgeKey].partnerships.some(ep => ep.name === partnershipName)) {
+                        edgeMap[edgeKey].partnerships.push({ name: partnershipName, type: 'Operational', acquisition: false, dateAdded });
+                        edgeMap[edgeKey].weight++;
+                    }
+                }
+
                 // Record partnership on each involved node
                 allEntities.forEach(eName => {
                     if (nodeMap[eName]) {
-                        nodeMap[eName].partnerships.push({ name: partnershipName, type: type, details: p['Additional Details'] || '' });
+                        nodeMap[eName].partnerships.push({ name: partnershipName, type: type, acquisition: isAcquisition, dateAdded, details: p['Additional Details'] || '' });
                     }
                 });
             });
@@ -2543,7 +2700,7 @@
                     }).map(p => p.join(',')).join(' ');
                     shape = g.append('polygon').attr('points', pts);
                 } else {
-                    shape = g.append('rect').attr('x', -r * 0.75).attr('y', -r * 0.75).attr('width', r * 1.5).attr('height', r * 1.5).attr('rx', 3);
+                    shape = g.append('rect').attr('x', -r * 0.8).attr('y', -r * 0.8).attr('width', r * 1.6).attr('height', r * 1.6).attr('rx', 2);
                 }
 
                 shape.attr('fill', gradId).attr('stroke', strokeColor)
@@ -2620,6 +2777,17 @@
             merge.append('feMergeNode').attr('in', 'blur');
             merge.append('feMergeNode').attr('in', 'SourceGraphic');
 
+            // Acquisition arrow marker
+            defs.append('marker')
+                .attr('id', 'acqArrow')
+                .attr('viewBox', '0 0 10 10')
+                .attr('refX', 28).attr('refY', 5)
+                .attr('markerWidth', 6).attr('markerHeight', 6)
+                .attr('orient', 'auto-start-reverse')
+                .append('path')
+                .attr('d', 'M 0 0 L 10 5 L 0 10 z')
+                .attr('fill', '#e11d48');
+
             // Per-edge linear gradients (source→target node color)
             const nodeById = {};
             graphNodes.forEach(n => { nodeById[n.id] = n; });
@@ -2640,7 +2808,8 @@
 
             // === Zoom ===
             graphZoom = d3.zoom()
-                .scaleExtent([0.2, 4])
+                .scaleExtent([0.4, 3])
+                .wheelDelta(event => -event.deltaY * (event.deltaMode === 1 ? 0.05 : event.deltaMode ? 1 : 0.004))
                 .on('zoom', (event) => { graphG.attr('transform', event.transform); });
             graphSvg.call(graphZoom);
 
@@ -2736,15 +2905,16 @@
 
             // === Hover/Click ===
             nodeSel.on('mouseenter', (event, d) => {
-                if (selectedNode) return;
+                if (selectedNode || activeGuidedQuestion) return;
                 updateGraphHighlight(d);
                 showGraphTooltip(event, d);
             }).on('mouseleave', () => {
-                if (selectedNode) return;
+                if (selectedNode || activeGuidedQuestion) return;
                 clearGraphHighlight();
                 hideGraphTooltip();
             }).on('click', (event, d) => {
                 event.stopPropagation();
+                if (activeGuidedQuestion) { clearGuidedQuestion(); clearGraphHighlight(); }
                 if (selectedNode === d.id) {
                     selectedNode = null;
                     clearGraphHighlight();
@@ -2753,19 +2923,22 @@
                     selectedNode = d.id;
                     updateGraphHighlight(d);
                     showDetailPanel(d);
+                    // Pan to center the clicked node at the current zoom level
+                    panToNode(d);
                 }
                 hideGraphTooltip();
             });
 
             edgeSel.on('mouseenter', (event, d) => {
-                if (selectedNode) return;
+                if (selectedNode || activeGuidedQuestion) return;
                 showEdgeTooltip(event, d);
             }).on('mouseleave', () => {
-                if (selectedNode) return;
+                if (selectedNode || activeGuidedQuestion) return;
                 hideGraphTooltip();
             });
 
             graphSvg.on('click', () => {
+                if (activeGuidedQuestion) { clearGuidedQuestion(); }
                 selectedNode = null;
                 clearGraphHighlight();
                 closeDetailPanel();
@@ -2790,7 +2963,7 @@
                     if (cat === 'Data' || cat === 'Marketing') return 140;
                     return 110;
                 }))
-                .force('charge', d3.forceManyBody().strength(-500))
+                .force('charge', d3.forceManyBody().strength(-350))
                 .force('center', d3.forceCenter(width / 2, height / 2))
                 .force('collision', d3.forceCollide().radius(d => nodeRadius(d) + 20))
                 .force('x', d3.forceX(width / 2).strength(0.08))
@@ -2816,8 +2989,47 @@
             applyShowAllState();
 
             graphSimulation.alpha(1).restart();
-            graphSimulation.on('end', () => { fitGraphToView(width, height); });
-            setTimeout(() => fitGraphToView(width, height), 2500);
+            graphSimulation.on('end', () => { if (!activeGuidedQuestion && !selectedNode) fitGraphToView(width, height); });
+            setTimeout(() => { if (!activeGuidedQuestion && !selectedNode) fitGraphToView(width, height); }, 2500);
+        }
+
+        function fitHighlightedToView() {
+            if (!graphSvg || !graphG) return;
+            const container = document.getElementById('networkContainer');
+            if (!container) return;
+            const rect = container.getBoundingClientRect();
+            const highlighted = [];
+            graphG.selectAll('.node-group.highlighted').each(function(d) { highlighted.push(d); });
+            // For filter-based chips, fit to visible nodes instead
+            if (!highlighted.length) {
+                graphG.selectAll('.node-group').each(function(d) {
+                    if (d3.select(this).style('display') !== 'none') highlighted.push(d);
+                });
+            }
+            if (!highlighted.length) return;
+            const padX = 80;
+            const padTop = 60;
+            const padBottom = 160; // extra space for legend
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            highlighted.forEach(d => {
+                const r = nodeRadius(d) + 20;
+                if (d.x - r < minX) minX = d.x - r;
+                if (d.y - r < minY) minY = d.y - r;
+                if (d.x + r > maxX) maxX = d.x + r;
+                if (d.y + r > maxY) maxY = d.y + r;
+            });
+            const gw = maxX - minX;
+            const gh = maxY - minY;
+            if (gw <= 0 || gh <= 0) return;
+            const availW = rect.width - padX * 2;
+            const availH = rect.height - padTop - padBottom;
+            const scale = Math.max(0.5, Math.min(availW / gw, availH / gh, 2));
+            const tx = (rect.width - gw * scale) / 2 - minX * scale;
+            const ty = (padTop + (availH - gh * scale) / 2) - minY * scale;
+            graphSvg.transition().duration(600).call(
+                graphZoom.transform,
+                d3.zoomIdentity.translate(tx, ty).scale(scale)
+            );
         }
 
         function fitGraphToView(width, height) {
@@ -2841,7 +3053,7 @@
             const graphWidth = maxX - minX;
             const graphHeight = maxY - minY;
             if (graphWidth <= 0 || graphHeight <= 0) return;
-            const scale = Math.max(0.3, Math.min((width - padding * 2) / graphWidth, (height - padding * 2) / graphHeight, 1.2));
+            const scale = Math.max(0.5, Math.min((width - padding * 2) / graphWidth, (height - padding * 2) / graphHeight, 1.5));
             const tx = (width - graphWidth * scale) / 2 - minX * scale;
             const ty = (height - graphHeight * scale) / 2 - minY * scale;
             graphSvg.transition().duration(600).call(
@@ -2922,7 +3134,15 @@
             graphG.selectAll('.node-group').each(function() {
                 d3.select(this).select('.node-shape').attr('filter', null);
             });
-            graphG.selectAll('.edge-line').classed('highlighted', false).classed('dimmed', false);
+            graphG.selectAll('.edge-line')
+                .classed('highlighted', false).classed('dimmed', false)
+                .attr('marker-start', null).attr('marker-end', null)
+                .each(function(d) {
+                    d3.select(this)
+                        .attr('stroke', `url(#edgeGrad-${d._gradIdx})`)
+                        .attr('stroke-width', Math.max(1, Math.min(4, 0.8 + d.weight * 1.2)))
+                        .attr('stroke-opacity', Math.min(0.55, 0.2 + d.weight * 0.1));
+                });
             graphG.selectAll('.edge-particle').remove();
         }
 
@@ -3114,6 +3334,7 @@
         }
 
         function toggleShowAll() {
+            if (activeGuidedQuestion) { clearGuidedQuestion(); clearGraphHighlight(); }
             showAllNodes = !showAllNodes;
             applyShowAllState();
             // Re-run filter if active
@@ -3123,7 +3344,6 @@
 
         function resetGraphView() {
             if (!graphSvg || !graphZoom) return;
-            graphSvg.transition().duration(500).call(graphZoom.transform, d3.zoomIdentity);
             document.getElementById('graphTypeFilter').value = '';
             document.getElementById('graphSearchInput').value = '';
             showAllNodes = true;
@@ -3136,6 +3356,7 @@
             if (graphG) graphG.selectAll('.edge-particle').remove();
             closeDetailPanel();
             selectedNode = null;
+            graphFitToView();
         }
 
         // Legend filter toggle
@@ -3152,6 +3373,25 @@
             applyShowAllState();
             const filterVal = document.getElementById('graphTypeFilter').value;
             if (filterVal) filterGraph();
+        }
+
+        // Pan to a node at the current zoom level, offset for detail panel and legend
+        function panToNode(d) {
+            if (!graphSvg || !graphZoom) return;
+            const container = document.getElementById('networkContainer');
+            if (!container) return;
+            const rect = container.getBoundingClientRect();
+            const currentTransform = d3.zoomTransform(graphSvg.node());
+            const scale = currentTransform.k;
+            // Offset left for detail panel, up for legend
+            const panelOffsetX = window.innerWidth > 640 ? 150 : 0;
+            const legendOffsetY = 50; // shift center upward so legend doesn't cover nodes
+            const tx = rect.width / 2 - d.x * scale - panelOffsetX;
+            const ty = rect.height / 2 - d.y * scale - legendOffsetY;
+            graphSvg.transition().duration(400).call(
+                graphZoom.transform,
+                d3.zoomIdentity.translate(tx, ty).scale(scale)
+            );
         }
 
         // Zoom controls
