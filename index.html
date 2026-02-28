@@ -3007,6 +3007,8 @@
                 });
             }
             if (!highlighted.length) return;
+            const panelOpen = document.getElementById('graphDetailPanel')?.classList.contains('open');
+            const panelWidth = (panelOpen && window.innerWidth > 640) ? 340 : 0;
             const padX = 80;
             const padTop = 60;
             const padBottom = 160; // extra space for legend
@@ -3021,10 +3023,11 @@
             const gw = maxX - minX;
             const gh = maxY - minY;
             if (gw <= 0 || gh <= 0) return;
-            const availW = rect.width - padX * 2;
+            const visibleWidth = rect.width - panelWidth;
+            const availW = visibleWidth - padX * 2;
             const availH = rect.height - padTop - padBottom;
             const scale = Math.max(0.5, Math.min(availW / gw, availH / gh, 2));
-            const tx = (rect.width - gw * scale) / 2 - minX * scale;
+            const tx = (visibleWidth - gw * scale) / 2 - minX * scale;
             const ty = (padTop + (availH - gh * scale) / 2) - minY * scale;
             graphSvg.transition().duration(600).call(
                 graphZoom.transform,
@@ -3034,6 +3037,9 @@
 
         function fitGraphToView(width, height) {
             if (!graphNodes.length || !graphSvg || !graphG) return;
+            const panelOpen = document.getElementById('graphDetailPanel')?.classList.contains('open');
+            const panelWidth = (panelOpen && window.innerWidth > 640) ? 340 : 0;
+            const visibleWidth = width - panelWidth;
             const padding = 60;
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
             // Only include visible nodes in the bounding box
@@ -3053,8 +3059,8 @@
             const graphWidth = maxX - minX;
             const graphHeight = maxY - minY;
             if (graphWidth <= 0 || graphHeight <= 0) return;
-            const scale = Math.max(0.5, Math.min((width - padding * 2) / graphWidth, (height - padding * 2) / graphHeight, 1.5));
-            const tx = (width - graphWidth * scale) / 2 - minX * scale;
+            const scale = Math.max(0.5, Math.min((visibleWidth - padding * 2) / graphWidth, (height - padding * 2) / graphHeight, 1.5));
+            const tx = (visibleWidth - graphWidth * scale) / 2 - minX * scale;
             const ty = (height - graphHeight * scale) / 2 - minY * scale;
             graphSvg.transition().duration(600).call(
                 graphZoom.transform,
@@ -3375,23 +3381,26 @@
             if (filterVal) filterGraph();
         }
 
-        // Pan to a node at the current zoom level, offset for detail panel and legend
+        // Pan to center clicked node in visible area, keeping current zoom level
         function panToNode(d) {
             if (!graphSvg || !graphZoom) return;
             const container = document.getElementById('networkContainer');
             if (!container) return;
-            const rect = container.getBoundingClientRect();
-            const currentTransform = d3.zoomTransform(graphSvg.node());
-            const scale = currentTransform.k;
-            // Offset left for detail panel, up for legend
-            const panelOffsetX = window.innerWidth > 640 ? 150 : 0;
-            const legendOffsetY = 50; // shift center upward so legend doesn't cover nodes
-            const tx = rect.width / 2 - d.x * scale - panelOffsetX;
-            const ty = rect.height / 2 - d.y * scale - legendOffsetY;
-            graphSvg.transition().duration(400).call(
-                graphZoom.transform,
-                d3.zoomIdentity.translate(tx, ty).scale(scale)
-            );
+            // Use a short delay to ensure this runs after any other zoom transitions
+            setTimeout(() => {
+                const rect = container.getBoundingClientRect();
+                const currentTransform = d3.zoomTransform(graphSvg.node());
+                const scale = currentTransform.k;
+                const panelWidth = window.innerWidth > 640 ? 340 : 0;
+                const centerX = (rect.width - panelWidth) / 2;
+                const centerY = rect.height / 2 - 50; // offset up for legend
+                const tx = centerX - d.x * scale;
+                const ty = centerY - d.y * scale;
+                graphSvg.transition().duration(400).call(
+                    graphZoom.transform,
+                    d3.zoomIdentity.translate(tx, ty).scale(scale)
+                );
+            }, 60);
         }
 
         // Zoom controls
