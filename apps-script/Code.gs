@@ -84,7 +84,7 @@ function generateDraft_(mode) {
 
   sheet.getRange(row, draftCol).setValue(draft);
 
-  var dateAddedCol = colIndex_(headers, 'Date Added') + 1;
+  var dateAddedCol = colIndex_(headers, 'Date X Post Generated') + 1;
   var existingDate = String(sheet.getRange(row, dateAddedCol).getValue()).trim();
   if (!existingDate) {
     sheet.getRange(row, dateAddedCol).setValue(

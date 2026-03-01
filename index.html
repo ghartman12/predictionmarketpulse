@@ -169,6 +169,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -562,6 +563,399 @@
         .dark .reg-label {
             color: #94a3b8;
         }
+
+        /* ========================================
+           NETWORK GRAPH STYLES
+           ======================================== */
+
+        /* Container — gradient bg, shimmer bar, orbs */
+        .network-container {
+            position: relative;
+            background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-bg-secondary) 100%);
+            border: 1px solid var(--color-border-light);
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: var(--shadow-xl);
+        }
+        .dark .network-container {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-color: rgba(99, 102, 241, 0.15);
+            box-shadow: 0 0 60px rgba(99, 102, 241, 0.05), var(--shadow-xl);
+        }
+        .network-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            z-index: 5;
+            background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+        }
+        .network-orb-1 {
+            position: absolute; top: -80px; right: -80px;
+            width: 320px; height: 320px;
+            background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%);
+            border-radius: 50%; pointer-events: none; z-index: 0;
+        }
+        .dark .network-orb-1 { background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%); }
+        .network-orb-2 {
+            position: absolute; bottom: -60px; left: -60px;
+            width: 280px; height: 280px;
+            background: radial-gradient(circle, rgba(168,85,247,0.06) 0%, transparent 70%);
+            border-radius: 50%; pointer-events: none; z-index: 0;
+        }
+        .dark .network-orb-2 { background: radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 70%); }
+
+        /* SVG canvas */
+        .network-svg {
+            width: 100%;
+            height: 600px;
+            cursor: grab;
+            position: relative;
+            z-index: 1;
+        }
+        .network-svg:active { cursor: grabbing; }
+
+        /* Node shapes */
+        .network-svg .node-shape {
+            stroke-width: 2;
+            stroke-opacity: 0.7;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.15s ease;
+        }
+        .network-svg .node-group:hover .node-shape {
+            transform: scale(1.12);
+        }
+
+        /* Labels — halo for readability */
+        .network-svg .node-label {
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            fill: var(--color-text-primary);
+            pointer-events: none;
+            text-anchor: middle;
+            paint-order: stroke;
+            stroke: var(--color-surface);
+            stroke-width: 3px;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .dark .network-svg .node-label { stroke: #0f172a; }
+        .network-svg .node-label.label-hub {
+            opacity: 1;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+        .network-svg .node-label.label-hidden {
+            opacity: 0.35;
+            font-size: 8px;
+            transition: opacity 0.3s ease;
+        }
+        .network-svg .node-group:hover .node-label.label-hidden,
+        .network-svg .highlighted .node-label.label-hidden {
+            opacity: 1;
+            transition: opacity 0.15s ease;
+        }
+
+        /* Minor nodes */
+        .network-svg .node-minor .node-shape { opacity: 0.5; }
+        .network-svg .node-group:hover .node-minor .node-shape,
+        .network-svg .highlighted .node-minor .node-shape { opacity: 1; }
+
+        /* Edges */
+        .network-svg .edge-line {
+            stroke-linecap: round;
+            transition: stroke-opacity 0.25s ease, stroke-width 0.25s ease;
+            cursor: pointer;
+        }
+        .network-svg .edge-line.edge-minor { stroke-opacity: 0.15; }
+        .network-svg .edge-line.edge-minor.highlighted { stroke-opacity: 0.65; }
+
+        /* Dim state */
+        .network-svg .dimmed .node-shape { opacity: 0.08; transition: opacity 0.3s ease; }
+        .network-svg .dimmed .node-label { opacity: 0.06; transition: opacity 0.3s ease; }
+        .network-svg .dimmed .connection-badge { opacity: 0.06; transition: opacity 0.3s ease; }
+        .network-svg .dimmed .hub-halo { opacity: 0; }
+        .network-svg .dimmed .edge-line,
+        .network-svg .edge-line.dimmed { stroke-opacity: 0.03; transition: stroke-opacity 0.3s ease; }
+
+        /* Highlighted state */
+        .network-svg .highlighted .node-shape { opacity: 1; transition: opacity 0.15s ease; }
+        .network-svg .highlighted .node-label { opacity: 1; font-weight: 700; transition: opacity 0.15s ease; }
+        .network-svg .highlighted .edge-line,
+        .network-svg .edge-line.highlighted { stroke-opacity: 0.9; transition: stroke-opacity 0.15s ease; }
+
+        /* Hub pulse */
+        @keyframes hubPulse {
+            0%, 100% { opacity: 0.35; }
+            50% { opacity: 0.1; }
+        }
+        .network-svg .hub-halo { animation: hubPulse 3s ease-in-out infinite; }
+        .dark .network-svg .hub-halo { stroke-opacity: 0.5; }
+        .network-svg .edge-particle { pointer-events: none; }
+        .network-svg .connection-badge { pointer-events: none; }
+
+        /* Tooltip — glass morphism */
+        .graph-tooltip {
+            position: absolute;
+            pointer-events: none;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border-light);
+            border-radius: 1rem;
+            padding: 0.875rem 1.125rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+            backdrop-filter: blur(16px);
+            font-size: 0.8rem;
+            z-index: 25;
+            max-width: 280px;
+            opacity: 0;
+            transform: translateY(4px);
+            transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+        .graph-tooltip.visible { opacity: 1; transform: translateY(0); }
+        .dark .graph-tooltip {
+            background: rgba(30,41,59,0.95);
+            border-color: rgba(99,102,241,0.15);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 1px rgba(99,102,241,0.3);
+        }
+        .graph-tooltip .tt-name {
+            font-weight: 700; font-size: 0.875rem;
+            color: var(--color-text-primary);
+            margin-bottom: 0.375rem;
+            display: flex; align-items: center; gap: 0.375rem;
+        }
+        .graph-tooltip .tt-role {
+            font-size: 0.65rem; text-transform: uppercase;
+            letter-spacing: 0.06em; font-weight: 600;
+            margin-bottom: 0.5rem; padding: 0.15rem 0.5rem;
+            border-radius: 0.25rem; display: inline-block;
+        }
+        .graph-tooltip .tt-count {
+            font-size: 0.75rem; color: var(--color-text-secondary);
+            display: flex; align-items: center; gap: 0.25rem;
+        }
+
+        /* Detail panel */
+        .graph-detail-panel {
+            position: absolute; top: 0; right: 0;
+            width: 340px; height: 100%;
+            background: var(--color-surface);
+            border-left: 1px solid var(--color-border-light);
+            box-shadow: -8px 0 32px rgba(0,0,0,0.08);
+            z-index: 15; overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 0;
+        }
+        .dark .graph-detail-panel {
+            background: rgba(15,23,42,0.97);
+            border-left-color: rgba(99,102,241,0.12);
+            box-shadow: -8px 0 32px rgba(0,0,0,0.4);
+        }
+        .graph-detail-panel.open { transform: translateX(0); }
+        .graph-detail-panel .dp-close {
+            position: absolute; top: 1rem; right: 1rem;
+            background: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border-light);
+            cursor: pointer; color: var(--color-text-tertiary);
+            font-size: 1.125rem; width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 0.5rem; transition: all 0.2s; z-index: 2;
+        }
+        .graph-detail-panel .dp-close:hover {
+            background: var(--color-primary); color: white; border-color: var(--color-primary);
+        }
+        .graph-detail-panel .dp-name {
+            font-size: 1.125rem; font-weight: 700;
+            color: var(--color-text-primary); margin-bottom: 0.25rem;
+        }
+        .graph-detail-panel .dp-role {
+            font-size: 0.7rem; text-transform: uppercase;
+            letter-spacing: 0.05em; font-weight: 600;
+        }
+        .graph-detail-panel .dp-partnership {
+            padding: 0.75rem 0.875rem; border-radius: 0.625rem;
+            background: var(--color-bg-tertiary);
+            margin-bottom: 0.5rem; font-size: 0.8rem;
+            border-left: 3px solid var(--color-primary);
+            transition: background 0.2s ease;
+        }
+        .graph-detail-panel .dp-partnership:hover { background: var(--color-surface-hover); }
+        .graph-detail-panel .dp-partnership .dp-p-name {
+            font-weight: 600; color: var(--color-text-primary); margin-bottom: 0.25rem;
+        }
+        .graph-detail-panel .dp-partnership .dp-p-type {
+            font-size: 0.7rem; color: var(--color-text-tertiary);
+        }
+
+        /* Controls — glass morphism */
+        .network-controls {
+            display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+            margin-bottom: 0.75rem; padding: 0.75rem 1rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border-light);
+            border-radius: 1rem; backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-sm);
+        }
+        .dark .network-controls {
+            background: rgba(30,41,59,0.85);
+            border-color: rgba(99,102,241,0.1);
+        }
+        .network-controls select,
+        .network-controls input {
+            padding: 0.4rem 0.85rem;
+            border: 1.5px solid var(--color-border-light);
+            border-radius: 0.5rem;
+            background: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 0.8rem; font-weight: 500;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .network-controls select:focus,
+        .network-controls input:focus {
+            outline: none;
+            border-color: var(--color-primary-light);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+        }
+        .network-controls .btn-reset {
+            padding: 0.4rem 0.75rem;
+            border: 1.5px solid var(--color-border-light);
+            border-radius: 0.5rem;
+            background: var(--color-bg-secondary);
+            color: var(--color-text-secondary);
+            font-size: 0.8rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 0.3rem;
+            transition: all 0.2s ease;
+        }
+        .network-controls .btn-reset:hover {
+            border-color: var(--color-primary); color: var(--color-primary);
+            background: rgba(99,102,241,0.05);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.08);
+        }
+
+        /* Guided question chips */
+        .graph-questions {
+            display: flex; flex-wrap: wrap; gap: 0.4rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border-light);
+            border-radius: 0.75rem;
+            backdrop-filter: blur(12px);
+        }
+        .dark .graph-questions {
+            background: rgba(30,41,59,0.85);
+            border-color: rgba(99,102,241,0.15);
+        }
+        .graph-chip {
+            padding: 0.3rem 0.7rem;
+            border: 1.5px solid var(--color-border-light);
+            border-radius: 999px;
+            background: var(--color-bg-secondary);
+            color: var(--color-text-secondary);
+            font-size: 0.75rem; font-weight: 600;
+            cursor: pointer; white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        .graph-chip:hover {
+            border-color: var(--color-primary); color: var(--color-primary);
+            background: rgba(99,102,241,0.05);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.08);
+        }
+        .graph-chip.active {
+            background: var(--color-primary); color: #fff;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.18);
+        }
+
+        /* Legend — floating pill inside container */
+        .network-legend {
+            position: absolute; bottom: 1rem; left: 1rem; z-index: 10;
+            display: flex; gap: 0.75rem; flex-wrap: wrap;
+            padding: 0.5rem 0.75rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border-light);
+            border-radius: 0.75rem; backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-md);
+            font-size: 0.7rem; color: var(--color-text-secondary);
+            max-width: calc(100% - 2rem);
+            max-height: calc(100% - 2rem); overflow-y: auto;
+        }
+        .dark .network-legend {
+            background: rgba(30,41,59,0.9);
+            border-color: rgba(99,102,241,0.1);
+        }
+        .network-legend .legend-item {
+            display: flex; align-items: center; gap: 0.3rem; white-space: nowrap;
+            cursor: pointer; user-select: none; transition: opacity 0.2s ease;
+        }
+        .network-legend .legend-item.legend-inactive {
+            opacity: 0.35; text-decoration: line-through;
+        }
+        .network-legend .legend-item:hover { opacity: 0.75; }
+        .network-legend .legend-item.legend-inactive:hover { opacity: 0.5; }
+        .network-legend .legend-divider {
+            width: 100%; height: 0; border-top: 1px solid var(--color-border-light); margin: 0.15rem 0;
+        }
+        .network-legend .legend-swatch {
+            width: 12px; height: 12px; border-radius: 3px;
+            flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+
+        /* Zoom controls */
+        .graph-zoom-controls {
+            position: absolute; top: 1rem; left: 1rem; z-index: 10;
+            display: flex; flex-direction: column; gap: 0.25rem;
+        }
+        .graph-zoom-controls button {
+            width: 32px; height: 32px; border: 1px solid var(--color-border-light);
+            border-radius: 0.5rem; background: var(--color-surface);
+            backdrop-filter: blur(12px); box-shadow: var(--shadow-md);
+            color: var(--color-text-secondary); font-size: 1.1rem; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease; padding: 0;
+        }
+        .graph-zoom-controls button:hover {
+            border-color: var(--color-primary); color: var(--color-primary);
+            background: rgba(99,102,241,0.05); box-shadow: 0 0 0 3px rgba(99,102,241,0.08);
+        }
+        .dark .graph-zoom-controls button {
+            background: rgba(30,41,59,0.9); border-color: rgba(99,102,241,0.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .network-svg { height: 450px; }
+            .graph-detail-panel {
+                top: auto; bottom: 0; left: 0; right: 0;
+                width: 100%; height: 50%;
+                border-left: none;
+                border-top: 1px solid var(--color-border-light);
+                border-radius: 1.5rem 1.5rem 0 0;
+                transform: translateY(100%);
+            }
+            .graph-detail-panel.open { transform: translateY(0); }
+        }
+        @media (max-width: 640px) {
+            .network-svg { height: 350px; }
+            .network-svg .node-label { display: none; }
+            .network-svg .node-label.tap-visible { display: block; }
+            .network-svg .node-label.label-hub { display: block; font-size: 9px; }
+            .network-svg .node-shape { stroke-width: 2.5; }
+            .network-controls { gap: 0.375rem; padding: 0.5rem 0.75rem; border-radius: 0.75rem; }
+            .network-controls select,
+            .network-controls input { font-size: 0.75rem; padding: 0.35rem 0.6rem; }
+            .network-legend { bottom: 0.5rem; left: 0.5rem; gap: 0.4rem; font-size: 0.6rem; padding: 0.35rem 0.5rem; }
+            .graph-zoom-controls { top: 0.5rem; left: 0.5rem; }
+            .graph-zoom-controls button { width: 28px; height: 28px; }
+            .network-svg .edge-particle { display: none; }
+            .network-svg .connection-badge { display: none; }
+            .network-svg .hub-halo { display: none; }
+            .graph-questions { gap: 0.3rem; padding: 0.4rem 0.6rem; }
+            .graph-chip { font-size: 0.65rem; padding: 0.25rem 0.55rem; }
+        }
     </style>
 </head>
 <body class="font-sans bg-slate-50 dark:bg-slate-900 dark:bg-slate-900 text-slate-700 dark:text-slate-200 transition-colors duration-200">
@@ -649,6 +1043,10 @@
                         <span class="material-icons-outlined text-base mr-2">trending_up</span>
                         Tracker & Deals
                     </button>
+                    <button onclick="switchView('network')" id="nav-network" class="nav-btn flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
+                        <span class="material-icons-outlined text-base mr-2">hub</span>
+                        Network Map
+                    </button>
                     <button onclick="switchView('simulation')" id="nav-simulation" class="nav-btn flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
                         <span class="material-icons-outlined text-base mr-2">sports_esports</span>
                         Trading Simulation
@@ -692,6 +1090,10 @@
                         <span class="material-icons-outlined text-base mr-3">trending_up</span>
                         Tracker & Deals
                     </button>
+                    <button onclick="switchView('network'); toggleMobileMenu()" class="nav-btn-mobile flex items-center text-sm font-medium text-slate-700 dark:text-slate-200 px-4 py-3 rounded-lg transition-all hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 w-full text-left dark:text-slate-200">
+                        <span class="material-icons-outlined text-base mr-3">hub</span>
+                        Network Map
+                    </button>
                     <button onclick="switchView('simulation'); toggleMobileMenu()" class="nav-btn-mobile flex items-center text-sm font-medium text-slate-700 dark:text-slate-200 px-4 py-3 rounded-lg transition-all hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 w-full text-left dark:text-slate-200">
                         <span class="material-icons-outlined text-base mr-3">sports_esports</span>
                         Trading Simulation
@@ -712,7 +1114,7 @@
     <main class="py-8 sm:py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
-            <div id="view-terminology" class="view-content active">
+            <div id="view-terminology" class="view-content">
                 <div class="mb-16 text-center">
                     <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-4">
                         Understanding the <span class="hero-gradient">Prediction Market Ecosystem</span>
@@ -1135,6 +1537,83 @@
                 <div id="tracker-content" class="space-y-6"></div>
             </div>
 
+            <div id="view-network" class="view-content">
+                <div class="mb-6">
+                    <h1 class="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-3">Ecosystem <span class="hero-gradient">Network Map</span></h1>
+                    <p class="text-slate-700 dark:text-slate-100 text-lg mb-6">Interactive visualization of prediction market partnerships and regulatory relationships.</p>
+                </div>
+
+                <div class="network-controls">
+                    <select id="graphTypeFilter" onchange="filterGraph()">
+                        <option value="">All Types</option>
+                        <option value="Acquisition">Acquisition</option>
+                        <option value="Capital/Collaboration">Capital/Collaboration</option>
+                        <option value="Capital/Marketing">Capital/Marketing</option>
+                        <option value="Data/Integration">Data/Integration</option>
+                        <option value="Data/Marketing">Data/Marketing</option>
+                        <option value="Data/Marketing/Sponsorship">Data/Marketing/Sponsorship</option>
+                        <option value="Government Affairs">Government Affairs</option>
+                        <option value="Marketing/Athlete Sponsorship">Marketing/Athlete Sponsorship</option>
+                        <option value="Operational">Operational</option>
+                        <option value="Operational/B2B">Operational/B2B</option>
+                        <option value="Operational/Data">Operational/Data</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <input type="text" id="graphSearchInput" oninput="searchGraph()" placeholder="Search entities...">
+                    <button class="btn-reset" id="graphToggleAll" onclick="toggleShowAll()">
+                        <span class="material-icons-outlined text-base">visibility_off</span>
+                        <span id="toggleAllLabel">Focused</span>
+                    </button>
+                    <button class="btn-reset" onclick="resetGraphView()">
+                        <span class="material-icons-outlined text-base">refresh</span>
+                        Reset View
+                    </button>
+                </div>
+
+                <div class="graph-questions" id="graphQuestions">
+                    <button class="graph-chip" data-question="mostConnected">Most Connected</button>
+                    <button class="graph-chip" data-question="polymarket">Polymarket's Network</button>
+                    <button class="graph-chip" data-question="kalshi">Kalshi's Network</button>
+                    <button class="graph-chip" data-question="cryptodotcom">Crypto.com's Network</button>
+                    <button class="graph-chip" data-question="operational">Operational Infrastructure</button>
+                    <button class="graph-chip" data-question="acquisition">Acquisition Activity</button>
+                    <button class="graph-chip" data-question="data">Data Partnerships</button>
+                    <button class="graph-chip" data-question="newPartnerships">New Activity</button>
+                </div>
+
+                <div class="network-container" id="networkContainer">
+                    <div class="network-orb-1"></div>
+                    <div class="network-orb-2"></div>
+                    <svg class="network-svg" id="networkSvg"></svg>
+                    <div class="graph-zoom-controls">
+                        <button onclick="graphZoomIn()" title="Zoom In"><span class="material-icons-outlined" style="font-size:18px;">add</span></button>
+                        <button onclick="graphZoomOut()" title="Zoom Out"><span class="material-icons-outlined" style="font-size:18px;">remove</span></button>
+                        <button onclick="graphFitToView()" title="Fit to View"><span class="material-icons-outlined" style="font-size:18px;">fit_screen</span></button>
+                    </div>
+                    <div class="network-legend" id="networkLegend">
+                        <div class="legend-item" data-node-type="Platform" onclick="toggleLegendFilter(this)"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#6366f1" stroke="#4338ca" stroke-width="1.5"/></svg><span>Prediction Market</span></div>
+                        <div class="legend-item" data-node-type="DCM" onclick="toggleLegendFilter(this)"><svg width="12" height="12"><polygon points="6,1 11,4 10,10 2,10 1,4" fill="#10b981" stroke="#059669" stroke-width="1.5"/></svg><span>DCM</span></div>
+                        <div class="legend-item" data-node-type="DCO" onclick="toggleLegendFilter(this)"><svg width="12" height="12"><polygon points="6,1 11,6 6,11 1,6" fill="#3b82f6" stroke="#2563eb" stroke-width="1.5"/></svg><span>DCO</span></div>
+                        <div class="legend-item" data-node-type="FCM" onclick="toggleLegendFilter(this)"><svg width="12" height="12"><rect x="1" y="3" width="10" height="7" rx="2.5" fill="#f59e0b" stroke="#d97706" stroke-width="1.5"/></svg><span>FCM</span></div>
+                        <div class="legend-item" data-node-type="IB" onclick="toggleLegendFilter(this)"><svg width="12" height="12"><polygon points="6,2 11,10 1,10" fill="#ec4899" stroke="#db2777" stroke-width="1.5"/></svg><span>IB</span></div>
+                        <div class="legend-item" data-node-type="TSP" onclick="toggleLegendFilter(this)"><svg width="12" height="12"><polygon points="6,1 11,5 9,11 3,11 1,5" fill="#f43f5e" stroke="#e11d48" stroke-width="1.5"/></svg><span>TSP</span></div>
+                        <div class="legend-item" data-node-type="Other" onclick="toggleLegendFilter(this)"><svg width="12" height="12"><rect x="1" y="1" width="10" height="10" rx="2" fill="#8b5cf6" stroke="#7c3aed" stroke-width="1.5"/></svg><span>Partner</span></div>
+                        <div class="legend-divider"></div>
+                        <div class="legend-item" style="cursor:default;"><svg width="20" height="12"><line x1="0" y1="6" x2="20" y2="6" stroke="#10b981" stroke-width="2"/></svg><span>Operational</span></div>
+                        <div class="legend-item" style="cursor:default;"><svg width="20" height="12"><line x1="0" y1="6" x2="20" y2="6" stroke="#2563eb" stroke-width="2"/></svg><span>Data</span></div>
+                        <div class="legend-item" style="cursor:default;"><svg width="20" height="12"><line x1="0" y1="6" x2="20" y2="6" stroke="#7c3aed" stroke-width="2"/></svg><span>Capital</span></div>
+                        <div class="legend-item" style="cursor:default;"><svg width="20" height="12"><line x1="0" y1="6" x2="20" y2="6" stroke="#f97316" stroke-width="2"/></svg><span>Marketing</span></div>
+                        <div class="legend-item" style="cursor:default;"><svg width="20" height="12"><line x1="0" y1="6" x2="20" y2="6" stroke="#e11d48" stroke-width="2"/></svg><span>Acquisition</span></div>
+                        <div class="legend-item" style="cursor:default;"><svg width="20" height="12"><line x1="0" y1="6" x2="20" y2="6" stroke="#facc15" stroke-width="2"/></svg><span>Government</span></div>
+                    </div>
+                    <div class="graph-tooltip" id="graphTooltip"></div>
+                    <div class="graph-detail-panel" id="graphDetailPanel">
+                        <button class="dp-close" onclick="closeDetailPanel()"><span class="material-icons-outlined" style="font-size:16px;">close</span></button>
+                        <div id="graphDetailContent"></div>
+                    </div>
+                </div>
+            </div>
+
             <div id="view-simulation" class="view-content">
                 <div class="mb-6 hidden md:block">
                     <h1 class="text-4xl font-bold text-slate-900 dark:text-white mb-3">
@@ -1219,8 +1698,6 @@
                             </a>
                         </div>
                     </div>
-                </div>
-                    </p>
                 </div>
             </div>
 
@@ -1330,7 +1807,18 @@
     </main>
 
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1NCU6XnJDrVpFkQuoqiyFijf66HozqUNpjLdaL5Hzxtk/gviz/tq?tqx=out:csv&sheet=Model%20Layout%20(%3F)';
+        // Set correct view immediately to prevent flash of wrong content
+        (function() {
+            var hash = location.hash.replace('#','');
+            var valid = ['terminology','tracker','network','simulation','about','contact'];
+            var view = valid.indexOf(hash) !== -1 ? hash : 'terminology';
+            var el = document.getElementById('view-' + view);
+            if (el) el.classList.add('active');
+            var nav = document.getElementById('nav-' + view);
+            if (nav) { nav.classList.add('text-primary'); nav.classList.add('nav-active'); }
+        })();
+
+        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1UiZ-MlqAgQ5MexL9BgwAzXWfTZHCYUj6-1F1sm7ZJBw/gviz/tq?tqx=out:csv&sheet=Model%20Layout%20(%3F)';
 
         let partnershipsData = [];
 
@@ -1345,6 +1833,10 @@
                 complete: function(results) {
                     partnershipsData = results.data.filter(row => row.Partnership && row.Partnership.trim() && String(row.Published || '').trim().toLowerCase() === 'yes');
                     renderTracker();
+                    // If network view is already active (direct navigation via hash), init the graph now
+                    if (!networkGraphInitialized && document.getElementById('view-network').classList.contains('active')) {
+                        setTimeout(initNetworkGraph, 50);
+                    }
                 },
                 error: function(err) {
                     console.error('Failed to fetch sheet data:', err);
@@ -1368,12 +1860,17 @@
             if (navBtn) {
                 navBtn.classList.add('text-primary', 'nav-active');
             }
-            
+
             const navBtnMobile = document.querySelector(`.nav-btn-mobile[onclick*="${viewName}"]`);
             if (navBtnMobile) {
                 navBtnMobile.classList.add('text-primary', 'nav-active');
             }
             history.replaceState(null, '', '#' + viewName);
+
+            // Lazy init network graph
+            if (viewName === 'network' && !networkGraphInitialized && partnershipsData.length) {
+                setTimeout(initNetworkGraph, 50);
+            }
         }
 
         function toggleMobileMenu() {
@@ -1405,6 +1902,7 @@
             if (simIframe && simIframe.contentWindow) {
                 simIframe.contentWindow.postMessage({type:'sim-theme', dark: !isDark}, '*');
             }
+            updateGraphColors();
         }
 
         // Initialize dark mode on page load
@@ -1556,10 +2054,1387 @@
             renderTracker();
         }
 
+        // ========================================
+        // NETWORK GRAPH
+        // ========================================
+        let networkGraphInitialized = false;
+        let graphSimulation = null;
+        let graphZoom = null;
+        let graphNodes = [];
+        let graphEdges = [];
+        let graphSvg = null;
+        let graphG = null;
+        let selectedNode = null;
+        let showAllNodes = true; // true = show all nodes including peripheral
+        const hiddenNodeTypes = new Set();
+        let activeGuidedQuestion = null;
+
+        const GUIDED_QUESTIONS = {
+            mostConnected: {
+                action() {
+                    const sorted = [...graphNodes].sort((a, b) => b.connections - a.connections);
+                    const topIds = new Set(sorted.slice(0, 5).map(n => n.id));
+                    graphG.selectAll('.node-group')
+                        .classed('highlighted', n => topIds.has(n.id))
+                        .classed('dimmed', n => !topIds.has(n.id))
+                        .each(function(n) {
+                            const shape = d3.select(this).select('.node-shape');
+                            shape.attr('filter', topIds.has(n.id) ? `url(#nodeGlow-${n.type})` : null);
+                        });
+                    graphG.selectAll('.edge-line')
+                        .classed('highlighted', e => {
+                            const s = typeof e.source === 'object' ? e.source.id : e.source;
+                            const t = typeof e.target === 'object' ? e.target.id : e.target;
+                            return topIds.has(s) && topIds.has(t);
+                        })
+                        .classed('dimmed', e => {
+                            const s = typeof e.source === 'object' ? e.source.id : e.source;
+                            const t = typeof e.target === 'object' ? e.target.id : e.target;
+                            return !(topIds.has(s) && topIds.has(t));
+                        });
+                }
+            },
+            polymarket: {
+                action() {
+                    const node = graphNodes.find(n => n.name.toLowerCase().includes('polymarket'));
+                    if (node) updateGraphHighlight(node);
+                }
+            },
+            kalshi: {
+                action() {
+                    const node = graphNodes.find(n => n.name.toLowerCase().includes('kalshi'));
+                    if (node) updateGraphHighlight(node);
+                }
+            },
+            cryptodotcom: {
+                action() {
+                    const node = graphNodes.find(n => n.name.toLowerCase().includes('crypto.com'));
+                    if (node) updateGraphHighlight(node);
+                }
+            },
+            operational: {
+                action() {
+                    document.getElementById('graphTypeFilter').value = 'Operational';
+                    filterGraph();
+                }
+            },
+            acquisition: {
+                action() {
+                    // Collect acquirer + target node IDs from explicit sheet columns
+                    const acqNodeIds = new Set();
+                    graphEdges.forEach(e => {
+                        e.partnerships.forEach(p => {
+                            if (p.isAcqEdge) {
+                                p.acquirerIds.forEach(id => acqNodeIds.add(id));
+                                p.acqTargetIds.forEach(id => acqNodeIds.add(id));
+                            }
+                        });
+                    });
+                    graphG.selectAll('.node-group')
+                        .classed('highlighted', n => acqNodeIds.has(n.id))
+                        .classed('dimmed', n => !acqNodeIds.has(n.id))
+                        .each(function(n) {
+                            const shape = d3.select(this).select('.node-shape');
+                            shape.attr('filter', acqNodeIds.has(n.id) ? `url(#nodeGlow-${n.type})` : null);
+                        });
+                    // Only highlight acquirer→target edges, add directional arrow
+                    graphG.selectAll('.edge-line').each(function(e) {
+                        const acqP = e.partnerships.find(p => p.isAcqEdge);
+                        d3.select(this)
+                            .classed('highlighted', !!acqP)
+                            .classed('dimmed', !acqP);
+                        if (acqP) {
+                            const srcId = typeof e.source === 'object' ? e.source.id : e.source;
+                            if (acqP.acquirerIds.has(srcId)) {
+                                d3.select(this).attr('marker-end', 'url(#acqArrow)');
+                            } else {
+                                d3.select(this).attr('marker-start', 'url(#acqArrow)');
+                            }
+                            d3.select(this)
+                                .attr('stroke', '#e11d48')
+                                .attr('stroke-width', 2.5)
+                                .attr('stroke-opacity', 0.9);
+                        }
+                    });
+                }
+            },
+            data: {
+                action() {
+                    const dataTypes = new Set(['Data/Integration', 'Data/Marketing', 'Data/Marketing/Sponsorship']);
+                    const visibleNodeIds = new Set();
+                    graphEdges.forEach(e => {
+                        if (e.partnerships.some(p => dataTypes.has(p.type))) {
+                            visibleNodeIds.add(typeof e.source === 'object' ? e.source.id : e.source);
+                            visibleNodeIds.add(typeof e.target === 'object' ? e.target.id : e.target);
+                        }
+                    });
+                    graphG.selectAll('.node-group')
+                        .classed('highlighted', n => visibleNodeIds.has(n.id))
+                        .classed('dimmed', n => !visibleNodeIds.has(n.id))
+                        .each(function(n) {
+                            const shape = d3.select(this).select('.node-shape');
+                            shape.attr('filter', visibleNodeIds.has(n.id) ? `url(#nodeGlow-${n.type})` : null);
+                        });
+                    graphG.selectAll('.edge-line')
+                        .classed('highlighted', e => e.partnerships.some(p => dataTypes.has(p.type)))
+                        .classed('dimmed', e => !e.partnerships.some(p => dataTypes.has(p.type)));
+                }
+            },
+            newPartnerships: {
+                action() {
+                    const cutoff = new Date();
+                    cutoff.setDate(cutoff.getDate() - 30);
+                    function parseDate(str) {
+                        if (!str) return null;
+                        // Handle M/D/YY format
+                        const parts = str.split('/');
+                        if (parts.length === 3) {
+                            let year = parseInt(parts[2], 10);
+                            if (year < 100) year += 2000;
+                            return new Date(year, parseInt(parts[0], 10) - 1, parseInt(parts[1], 10));
+                        }
+                        // Handle YYYY-MM-DD format
+                        const d = new Date(str);
+                        return isNaN(d) ? null : d;
+                    }
+                    function isRecent(p) {
+                        const d = parseDate(p.dateAdded);
+                        return d && d >= cutoff;
+                    }
+                    const recentNodeIds = new Set();
+                    graphEdges.forEach(e => {
+                        if (e.partnerships.some(isRecent)) {
+                            recentNodeIds.add(typeof e.source === 'object' ? e.source.id : e.source);
+                            recentNodeIds.add(typeof e.target === 'object' ? e.target.id : e.target);
+                        }
+                    });
+                    // Also check node partnerships directly (for nodes without edges)
+                    graphNodes.forEach(n => {
+                        if (n.partnerships.some(isRecent)) recentNodeIds.add(n.id);
+                    });
+                    graphG.selectAll('.node-group')
+                        .classed('highlighted', n => recentNodeIds.has(n.id))
+                        .classed('dimmed', n => !recentNodeIds.has(n.id))
+                        .each(function(n) {
+                            const shape = d3.select(this).select('.node-shape');
+                            shape.attr('filter', recentNodeIds.has(n.id) ? `url(#nodeGlow-${n.type})` : null);
+                        });
+                    graphG.selectAll('.edge-line')
+                        .classed('highlighted', e => e.partnerships.some(isRecent))
+                        .classed('dimmed', e => !e.partnerships.some(isRecent));
+                }
+            },
+        };
+
+        function handleGuidedQuestion(key) {
+            if (!networkGraphInitialized) return;
+            const chip = document.querySelector(`.graph-chip[data-question="${key}"]`);
+            // Toggle off if same chip clicked again
+            if (activeGuidedQuestion === key) {
+                clearGuidedQuestion();
+                return;
+            }
+            // Reset prior state
+            clearGraphHighlight();
+            document.getElementById('graphTypeFilter').value = '';
+            document.getElementById('graphSearchInput').value = '';
+            filterGraph();
+            // Set active chip
+            document.querySelectorAll('.graph-chip').forEach(c => c.classList.remove('active'));
+            if (chip) chip.classList.add('active');
+            activeGuidedQuestion = key;
+            // Execute the question action
+            GUIDED_QUESTIONS[key].action();
+            // Fit view to highlighted nodes after a short delay
+            setTimeout(() => fitHighlightedToView(), 50);
+        }
+
+        function clearGuidedQuestion() {
+            activeGuidedQuestion = null;
+            document.querySelectorAll('.graph-chip').forEach(c => c.classList.remove('active'));
+        }
+
+        // Attach click handlers to chips
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.graph-chip[data-question]').forEach(chip => {
+                chip.addEventListener('click', () => handleGuidedQuestion(chip.dataset.question));
+            });
+        });
+
+        const NODE_COLORS = {
+            Platform:  { fill: '#6366f1', stroke: '#4338ca', inner: '#818cf8', outer: '#4338ca', glow: 'rgba(99,102,241,0.4)' },
+            DCM:       { fill: '#10b981', stroke: '#059669', inner: '#34d399', outer: '#059669', glow: 'rgba(16,185,129,0.4)' },
+            DCO:       { fill: '#3b82f6', stroke: '#2563eb', inner: '#60a5fa', outer: '#2563eb', glow: 'rgba(59,130,246,0.4)' },
+            FCM:       { fill: '#f59e0b', stroke: '#d97706', inner: '#fbbf24', outer: '#d97706', glow: 'rgba(245,158,11,0.4)' },
+            IB:        { fill: '#ec4899', stroke: '#db2777', inner: '#f472b6', outer: '#db2777', glow: 'rgba(236,72,153,0.4)' },
+            TSP:       { fill: '#f43f5e', stroke: '#e11d48', inner: '#fb7185', outer: '#e11d48', glow: 'rgba(244,63,94,0.4)' },
+            Other:     { fill: '#8b5cf6', stroke: '#7c3aed', inner: '#a78bfa', outer: '#7c3aed', glow: 'rgba(139,92,246,0.35)' }
+        };
+
+        const EDGE_COLORS = {
+            Operational: '#10b981',
+            Data: '#2563eb',
+            Capital: '#7c3aed',
+            Investment: '#7c3aed',
+            Marketing: '#f97316',
+            Acquisition: '#e11d48',
+            Government: '#facc15',
+            Other: '#64748b'
+        };
+
+        function getEdgeColor(type) {
+            if (!type) return EDGE_COLORS.Other;
+            for (const key of Object.keys(EDGE_COLORS)) {
+                if (type.includes(key)) return EDGE_COLORS[key];
+            }
+            return EDGE_COLORS.Other;
+        }
+
+        function getEdgeCategory(type) {
+            if (!type) return 'Other';
+            if (type.includes('Operational')) return 'Operational';
+            if (type.includes('Data') || type.includes('Integration')) return 'Data';
+            if (type.includes('Capital') || type.includes('Investment')) return 'Capital';
+            if (type.includes('Marketing') || type.includes('Sponsorship')) return 'Marketing';
+            if (type.includes('Acquisition')) return 'Acquisition';
+            if (type.includes('Government')) return 'Government';
+            return 'Other';
+        }
+
+        // Prefix-based alias rules: if a name starts with the key (case-insensitive), map to value
+        const ALIAS_PREFIXES = [
+            // Subsidiaries — keep separate from parent platform, clean display names
+            ['Coinbase Financial Markets', 'Coinbase Financial Markets'],
+            ['FANDUEL PREDICTION MARKETS', 'FanDuel Prediction Markets'],
+            ['Fanduel Predicts', 'FanDuel'],
+            ['DraftKings Predictions', 'DraftKings Predictions'],
+            ['PrizePicks (Performance', 'PrizePicks Predictions'],
+            ['Robinhood Derivatives', 'Robinhood Derivatives'],
+            // True aliases — same entity, different spellings
+            ['Crypto.com (CDNA)', 'Crypto.com'],
+            ['d/b/a Crypto.com', 'Crypto.com'],
+            ['Paragon Global Markets LLC d/b/a Fanatics', 'Fanatics'],
+            ['Fanatics Markets', 'Fanatics'],
+            ['QCEX', 'Polymarket'],
+            ['QCX LLC', 'Polymarket US (QCX)'],
+            ['QC Clearing LLC', 'Polymarket Clearing'],
+            ['Kalshi Klear', 'Kalshi Klear'],
+            ['Kalshi (TBC)', 'Kalshi'],
+            ['Kraken Derivatives', 'Kraken Derivatives'],
+            ['Railbird Exchange', 'Railbird Exchange'],
+            ['Gemini Titan', 'Gemini Titan'],
+            ['TBC (NinjaTrader', 'NinjaTrader'],
+            ['Chicago Mercantile Exchang', 'CME'],
+            ['Options Clearing Corporati', 'OCC'],
+            ['Sleeper Markets', 'Sleeper'],
+            ['Webull Financial', 'WeBull Financial'],
+            ['Small Exchange', 'Small Exchange'],
+            ['MIAX Derivatives Exchange', 'MIAX Derivatives Exchange'],
+            ['MIAXdx', 'MIAX Derivatives Exchange'],
+        ];
+
+        function normalizeEntityName(raw) {
+            let name = raw.trim();
+            if (!name || /^N\/A/i.test(name)) return null;
+            if (/^TBD\b/i.test(name) || /^\(?(Assumed|TBD)\b/i.test(name)) return null;
+            if (/^additional\s+notes$/i.test(name)) return null;
+
+            // Check prefix aliases
+            const nameLower = name.toLowerCase();
+            for (const [prefix, canonical] of ALIAS_PREFIXES) {
+                if (nameLower.startsWith(prefix.toLowerCase())) return canonical;
+            }
+
+            // Strip keyword-based trailing parentheticals
+            name = name.replace(/\s*\((?:owned|pending|custodial|assumed|d\/b\/a|see|more)[^)]*\)\s*$/i, '').trim();
+            // Strip short acronym trailing parentheticals like "(RHD)", "(MIAXdx)", "(CME)"
+            name = name.replace(/\s*\([A-Za-z0-9]{1,10}\)\s*$/, '').trim();
+            // Strip ", LLC", ", Inc", etc. and trailing asterisks
+            name = name.replace(/,?\s*(LLC|Inc|Ltd|L\.P\.)\.?\s*\**\s*$/i, '').trim();
+            // Strip trailing asterisks
+            name = name.replace(/\*+$/, '').trim();
+
+            // Strip "d/b/a" — take the part after it
+            if (/\bd\/b\/a\b/i.test(name)) {
+                const dbaMatch = name.match(/d\/b\/a\s+(.+)/i);
+                if (dbaMatch) return dbaMatch[1].trim();
+            }
+            return name || null;
+        }
+
+        // Map of raw names → canonical names for deduplication
+        const ENTITY_ALIASES = {};
+        function registerAlias(raw, canonical) {
+            ENTITY_ALIASES[raw.trim()] = canonical;
+        }
+
+        function resolveEntity(raw) {
+            const trimmed = raw.trim();
+            if (ENTITY_ALIASES[trimmed]) return ENTITY_ALIASES[trimmed];
+            return trimmed;
+        }
+
+        function buildGraphData() {
+            const nodeMap = {};
+            const edgeMap = {};
+
+            // Pre-scan to build alias table for duplicate entities
+            // Collect all raw entity names first, then group by normalized form
+            const rawNames = new Set();
+            partnershipsData.forEach(p => {
+                const partnershipName = (p.Partnership || '').trim();
+                if (!partnershipName) return;
+                partnershipName.split('/').map(s => s.trim()).filter(Boolean).forEach(n => rawNames.add(n));
+                ['IB', 'FCM', 'DCM', 'DCO'].forEach(col => {
+                    const v = (p[col] || '').trim();
+                    if (v && v !== 'N/A') rawNames.add(v);
+                });
+            });
+
+            // Build canonical name map: strip parentheticals, group similar names
+            const canonicalGroups = {};
+            rawNames.forEach(raw => {
+                const norm = normalizeEntityName(raw);
+                if (!norm) return;
+                // Create a simple key: lowercase, strip "LLC", "Inc", commas, periods
+                const simpleKey = norm.toLowerCase().replace(/[,.]| llc| inc| ltd| group/gi, '').replace(/\s+/g, ' ').trim();
+                if (!canonicalGroups[simpleKey]) canonicalGroups[simpleKey] = [];
+                canonicalGroups[simpleKey].push({ raw, norm });
+            });
+
+            // For each group, pick the shortest normalized name as canonical
+            Object.values(canonicalGroups).forEach(group => {
+                if (group.length <= 1) return;
+                const canonical = group.reduce((a, b) => a.norm.length <= b.norm.length ? a : b).norm;
+                group.forEach(entry => {
+                    if (entry.raw !== canonical) {
+                        registerAlias(entry.raw, canonical);
+                    }
+                });
+            });
+
+            function ensureNode(rawName, role) {
+                const normalized = normalizeEntityName(rawName);
+                if (!normalized) return null;
+                const key = resolveEntity(normalized);
+                if (!nodeMap[key]) {
+                    nodeMap[key] = { id: key, name: key, roles: new Set(), partnerships: [], connections: 0 };
+                }
+                if (role) nodeMap[key].roles.add(role);
+                return key;
+            }
+
+            function resolveRaw(raw) {
+                const norm = normalizeEntityName(raw);
+                if (!norm) return null;
+                return resolveEntity(norm);
+            }
+
+            // Known prediction market platforms (get Platform type; everything else defaults to Other)
+            const KNOWN_PLATFORMS = new Set([
+                'Kalshi', 'Polymarket', 'Crypto.com', 'DraftKings', 'FanDuel',
+                'Robinhood', 'Coinbase', 'Interactive Brokers', 'PrizePicks',
+                'Sleeper', 'Sporttrade', 'ProphetX', 'Mojo Interactive',
+                'Plus500', 'Galactic Markets', 'Novig', 'Matchbook', 'RSBIX',
+                'Onyx Odds', 'High Roller Technologies', 'ForecastEx', 'MyPrize',
+                'Gemini', 'WeBull', 'Phantom', 'DAZN', 'Kraken',
+            ]);
+
+            const KNOWN_TSPS = new Set([
+                'Underdog Fantasy', 'Dome',
+            ]);
+
+            // Entities with known regulatory roles when they appear as partners
+            const KNOWN_ROLES = {
+                'The Clearing Company': 'DCO',
+            };
+
+            // Compound entity names containing "&" that should NOT be split
+            const COMPOUND_NAMES = new Set([
+                'trump media & tech group',
+                'madison square garden & new york rangers',
+                'ufc & zuffa boxing',
+            ]);
+
+            function splitPartnerNames(partnershipName) {
+                // Filter out junk rows
+                if (/^additional notes$/i.test(partnershipName)) return [];
+                // Filter out comma-separated note-style entries
+                if (partnershipName.includes(',') && !partnershipName.includes('/')) return [];
+
+                // First split on "/"
+                const parts = partnershipName.split('/').map(s => s.trim()).filter(Boolean);
+
+                // Then handle "&" within each part (but not inside parentheses)
+                const result = [];
+                parts.forEach(part => {
+                    // Check if " & " exists outside of parentheses
+                    const ampIdx = part.indexOf(' & ');
+                    if (ampIdx === -1) {
+                        result.push(part);
+                        return;
+                    }
+                    // Don't split if the & is inside parentheses
+                    const beforeAmp = part.substring(0, ampIdx);
+                    if ((beforeAmp.match(/\(/g) || []).length > (beforeAmp.match(/\)/g) || []).length) {
+                        result.push(part);
+                        return;
+                    }
+                    // Check if this is a known compound name
+                    if (COMPOUND_NAMES.has(part.toLowerCase())) {
+                        result.push(part);
+                    } else {
+                        // Split on " & "
+                        part.split(' & ').map(s => s.trim()).filter(Boolean).forEach(s => result.push(s));
+                    }
+                });
+                return result;
+            }
+
+            partnershipsData.forEach(p => {
+                const partnershipName = (p.Partnership || '').trim();
+                if (!partnershipName) return;
+
+                const type = p['Type of Partnership'] || 'Other';
+                const dateAdded = (p['Date Added'] || '').trim();
+                const rawAcquirer = (p['Acquirer'] || '').trim();
+                const rawAcqTarget = (p['Acquisition Target'] || '').trim();
+                const isAcquisition = !!(rawAcquirer || rawAcqTarget);
+                const rawPartners = splitPartnerNames(partnershipName);
+
+                // Resolve all names — assign Platform, TSP, specific role, or no role
+                const partners = rawPartners.map(n => {
+                    const resolved = normalizeEntityName(n);
+                    let role = null;
+                    if (resolved && KNOWN_ROLES[resolved]) role = KNOWN_ROLES[resolved];
+                    else if (resolved && KNOWN_PLATFORMS.has(resolved)) role = 'Platform';
+                    else if (resolved && KNOWN_TSPS.has(resolved)) role = 'TSP';
+                    return ensureNode(n, role);
+                }).filter(Boolean);
+
+                const ibKey = (p.IB || '').trim() && (p.IB || '').trim() !== 'N/A' ? ensureNode(p.IB, 'IB') : null;
+                const fcmKey = (p.FCM || '').trim() && (p.FCM || '').trim() !== 'N/A' ? ensureNode(p.FCM, 'FCM') : null;
+                const dcmKey = (p.DCM || '').trim() && (p.DCM || '').trim() !== 'N/A' ? ensureNode(p.DCM, 'DCM') : null;
+                const dcoKey = (p.DCO || '').trim() && (p.DCO || '').trim() !== 'N/A' ? ensureNode(p.DCO, 'DCO') : null;
+
+                // Collect all resolved entities in this partnership
+                const allEntities = new Set(partners);
+                [ibKey, fcmKey, dcmKey, dcoKey].forEach(k => { if (k) allEntities.add(k); });
+
+                // Resolve explicit acquirer/target node IDs for acquisitions
+                const acquirerIds = new Set();
+                const acqTargetIds = new Set();
+                if (isAcquisition) {
+                    rawAcquirer.split(',').map(s => s.trim()).filter(Boolean).forEach(name => {
+                        const key = resolveRaw(name);
+                        if (key) acquirerIds.add(key);
+                    });
+                    rawAcqTarget.split(',').map(s => s.trim()).filter(Boolean).forEach(name => {
+                        const key = resolveRaw(name);
+                        if (key) { ensureNode(name, null); acqTargetIds.add(key); }
+                    });
+                }
+
+                // Create edges between partners (the main partnership relationship)
+                for (let i = 0; i < partners.length; i++) {
+                    for (let j = i + 1; j < partners.length; j++) {
+                        const edgeKey = [partners[i], partners[j]].sort().join('|||');
+                        if (!edgeMap[edgeKey]) {
+                            edgeMap[edgeKey] = { source: partners[i], target: partners[j], partnerships: [], weight: 0 };
+                        }
+                        const pEntry = { name: partnershipName, type: type, acquisition: isAcquisition, dateAdded };
+                        edgeMap[edgeKey].partnerships.push(pEntry);
+                        edgeMap[edgeKey].weight++;
+                    }
+                }
+
+                // Create explicit acquirer → target edges for acquisitions
+                if (isAcquisition) {
+                    acquirerIds.forEach(acqId => {
+                        acqTargetIds.forEach(tgtId => {
+                            if (acqId === tgtId) return;
+                            const edgeKey = [acqId, tgtId].sort().join('|||');
+                            if (!edgeMap[edgeKey]) {
+                                edgeMap[edgeKey] = { source: acqId, target: tgtId, partnerships: [], weight: 0 };
+                            }
+                            // Tag this edge with acquisition direction info
+                            const existing = edgeMap[edgeKey].partnerships.find(ep => ep.name === partnershipName);
+                            if (existing) {
+                                existing.acquirerIds = acquirerIds;
+                                existing.acqTargetIds = acqTargetIds;
+                                existing.isAcqEdge = true;
+                            } else {
+                                edgeMap[edgeKey].partnerships.push({
+                                    name: partnershipName, type: type, acquisition: true,
+                                    dateAdded, acquirerIds, acqTargetIds, isAcqEdge: true
+                                });
+                                edgeMap[edgeKey].weight++;
+                            }
+                        });
+                    });
+                }
+
+                // Create edges between partners and their regulatory entities
+                // FCM/IB are broker-level: only connect to the partner that owns them
+                // DCM/DCO are exchange/clearing-level: all partners route through them
+                const regEntries = [
+                    { key: ibKey,  level: 'broker' },
+                    { key: fcmKey, level: 'broker' },
+                    { key: dcmKey, level: 'exchange' },
+                    { key: dcoKey, level: 'exchange' },
+                ];
+                partners.forEach(partner => {
+                    regEntries.forEach(({ key: regKey, level }) => {
+                        if (!regKey || regKey === partner) return;
+                        // For broker-level entities (FCM/IB): skip if entity belongs to another partner
+                        if (level === 'broker') {
+                            const regLower = regKey.toLowerCase();
+                            const ownedByThisPartner = regLower.includes(partner.toLowerCase());
+                            const ownedByAnyPartner = partners.some(p => regLower.includes(p.toLowerCase()));
+                            if (ownedByAnyPartner && !ownedByThisPartner) return;
+                        }
+                        const edgeKey = [partner, regKey].sort().join('|||');
+                        if (!edgeMap[edgeKey]) {
+                            edgeMap[edgeKey] = { source: partner, target: regKey, partnerships: [], weight: 0 };
+                        }
+                        if (!edgeMap[edgeKey].partnerships.some(ep => ep.name === partnershipName)) {
+                            edgeMap[edgeKey].partnerships.push({ name: partnershipName, type: type, acquisition: isAcquisition, dateAdded });
+                            edgeMap[edgeKey].weight++;
+                        }
+                    });
+                });
+
+                // Create regulatory chain edges: IB → FCM → DCM → DCO
+                const regChain = [ibKey, fcmKey, dcmKey, dcoKey].filter(Boolean);
+                for (let i = 0; i < regChain.length - 1; i++) {
+                    if (regChain[i] === regChain[i + 1]) continue;
+                    const edgeKey = [regChain[i], regChain[i + 1]].sort().join('|||');
+                    if (!edgeMap[edgeKey]) {
+                        edgeMap[edgeKey] = { source: regChain[i], target: regChain[i + 1], partnerships: [], weight: 0 };
+                    }
+                    if (!edgeMap[edgeKey].partnerships.some(ep => ep.name === partnershipName)) {
+                        edgeMap[edgeKey].partnerships.push({ name: partnershipName, type: 'Operational', acquisition: false, dateAdded });
+                        edgeMap[edgeKey].weight++;
+                    }
+                }
+
+                // Record partnership on each involved node
+                allEntities.forEach(eName => {
+                    if (nodeMap[eName]) {
+                        nodeMap[eName].partnerships.push({ name: partnershipName, type: type, acquisition: isAcquisition, dateAdded, details: p['Additional Details'] || '' });
+                    }
+                });
+            });
+
+            // Determine primary type for each node
+            const typePriority = ['DCM', 'DCO', 'FCM', 'IB', 'TSP', 'Platform'];
+            Object.values(nodeMap).forEach(node => {
+                node.type = 'Other';
+                for (const tp of typePriority) {
+                    if (node.roles.has(tp)) { node.type = tp; break; }
+                }
+                const ROLE_LABELS = { Platform: 'Prediction Market' };
+                node.rolesStr = Array.from(node.roles).map(r => ROLE_LABELS[r] || r).join(', ') || 'Partner';
+            });
+
+            // Count connections
+            Object.values(edgeMap).forEach(edge => {
+                if (nodeMap[edge.source]) nodeMap[edge.source].connections++;
+                if (nodeMap[edge.target]) nodeMap[edge.target].connections++;
+            });
+
+            graphNodes = Object.values(nodeMap);
+            graphEdges = Object.values(edgeMap);
+        }
+
+        function nodeRadius(d) {
+            if (d.type === 'Other') {
+                return Math.max(5, Math.min(16, 3 + d.connections * 1.8));
+            }
+            if (d.connections >= 8) {
+                return Math.max(12, Math.min(34, 8 + d.connections * 2.8));
+            }
+            return Math.max(8, Math.min(26, 6 + d.connections * 2.2));
+        }
+
+        function drawNodeShape(sel) {
+            sel.each(function(d) {
+                const g = d3.select(this);
+                g.selectAll('*').remove();
+                const r = nodeRadius(d);
+                const gradId = `url(#nodeGrad-${d.type})`;
+                const strokeColor = (NODE_COLORS[d.type] || NODE_COLORS.Other).stroke;
+                const fillColor = (NODE_COLORS[d.type] || NODE_COLORS.Other).fill;
+                const sw = d.connections >= 8 ? 2.5 : 2;
+
+                // Hub halo — pulsing ring for high-connection Platform nodes
+                if (d.connections >= 8 && d.type === 'Platform') {
+                    g.append('circle')
+                        .attr('r', r + 6)
+                        .attr('fill', 'none')
+                        .attr('stroke', fillColor)
+                        .attr('stroke-width', 1.5)
+                        .attr('stroke-opacity', 0.3)
+                        .attr('class', 'hub-halo');
+                }
+
+                let shape;
+                if (d.type === 'Platform') {
+                    shape = g.append('circle').attr('r', r);
+                } else if (d.type === 'DCM') {
+                    const pts = d3.range(6).map(i => {
+                        const angle = (Math.PI / 3) * i - Math.PI / 2;
+                        return [r * Math.cos(angle), r * Math.sin(angle)];
+                    }).map(p => p.join(',')).join(' ');
+                    shape = g.append('polygon').attr('points', pts);
+                } else if (d.type === 'DCO') {
+                    shape = g.append('polygon').attr('points', `0,${-r} ${r},0 0,${r} ${-r},0`);
+                } else if (d.type === 'FCM') {
+                    shape = g.append('rect').attr('x', -r).attr('y', -r * 0.65).attr('width', r * 2).attr('height', r * 1.3).attr('rx', r * 0.35);
+                } else if (d.type === 'IB') {
+                    shape = g.append('polygon').attr('points', `0,${-r} ${r},${r * 0.7} ${-r},${r * 0.7}`);
+                } else if (d.type === 'TSP') {
+                    const pts = d3.range(5).map(i => {
+                        const angle = (Math.PI * 2 / 5) * i - Math.PI / 2;
+                        return [r * Math.cos(angle), r * Math.sin(angle)];
+                    }).map(p => p.join(',')).join(' ');
+                    shape = g.append('polygon').attr('points', pts);
+                } else {
+                    shape = g.append('rect').attr('x', -r * 0.8).attr('y', -r * 0.8).attr('width', r * 1.6).attr('height', r * 1.6).attr('rx', 2);
+                }
+
+                shape.attr('fill', gradId).attr('stroke', strokeColor)
+                    .attr('stroke-width', sw).attr('stroke-opacity', 0.7)
+                    .attr('class', 'node-shape');
+
+                // Specular highlight for larger Platform nodes
+                if (d.type === 'Platform' && r > 12) {
+                    g.append('ellipse')
+                        .attr('cx', -r * 0.25).attr('cy', -r * 0.3)
+                        .attr('rx', r * 0.3).attr('ry', r * 0.2)
+                        .attr('fill', 'white').attr('opacity', 0.15)
+                        .attr('pointer-events', 'none');
+                }
+            });
+        }
+
+        function initNetworkGraph() {
+            if (networkGraphInitialized) return;
+            if (!partnershipsData.length) return;
+            networkGraphInitialized = true;
+
+            buildGraphData();
+
+            const container = document.getElementById('networkContainer');
+            const svgEl = document.getElementById('networkSvg');
+            const width = container.clientWidth;
+            const height = svgEl.clientHeight;
+            const isMobile = window.innerWidth <= 640;
+
+            graphSvg = d3.select(svgEl);
+            graphSvg.selectAll('*').remove();
+
+            // === SVG Defs: gradients, glow filters, dot grid, particle glow ===
+            const defs = graphSvg.append('defs');
+
+            // Radial gradient + glow filter per node type
+            Object.entries(NODE_COLORS).forEach(([type, colors]) => {
+                const grad = defs.append('radialGradient')
+                    .attr('id', `nodeGrad-${type}`)
+                    .attr('cx', '35%').attr('cy', '35%').attr('r', '65%');
+                grad.append('stop').attr('offset', '0%').attr('stop-color', colors.inner);
+                grad.append('stop').attr('offset', '100%').attr('stop-color', colors.outer);
+
+                const filter = defs.append('filter')
+                    .attr('id', `nodeGlow-${type}`)
+                    .attr('x', '-50%').attr('y', '-50%')
+                    .attr('width', '200%').attr('height', '200%');
+                filter.append('feDropShadow')
+                    .attr('dx', 0).attr('dy', 0)
+                    .attr('stdDeviation', 4)
+                    .attr('flood-color', colors.glow)
+                    .attr('flood-opacity', 0.8);
+            });
+
+            // Dot grid pattern
+            defs.append('pattern')
+                .attr('id', 'dotGrid')
+                .attr('width', 24).attr('height', 24)
+                .attr('patternUnits', 'userSpaceOnUse')
+                .append('circle')
+                .attr('cx', 12).attr('cy', 12).attr('r', 0.8)
+                .attr('fill', 'var(--color-border-light)')
+                .attr('opacity', 0.4);
+
+            // Particle glow filter
+            const particleFilter = defs.append('filter')
+                .attr('id', 'particleGlow')
+                .attr('x', '-100%').attr('y', '-100%')
+                .attr('width', '300%').attr('height', '300%');
+            particleFilter.append('feGaussianBlur')
+                .attr('in', 'SourceGraphic').attr('stdDeviation', 2).attr('result', 'blur');
+            const merge = particleFilter.append('feMerge');
+            merge.append('feMergeNode').attr('in', 'blur');
+            merge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+            // Acquisition arrow marker
+            defs.append('marker')
+                .attr('id', 'acqArrow')
+                .attr('viewBox', '0 0 10 10')
+                .attr('refX', 28).attr('refY', 5)
+                .attr('markerWidth', 6).attr('markerHeight', 6)
+                .attr('orient', 'auto-start-reverse')
+                .append('path')
+                .attr('d', 'M 0 0 L 10 5 L 0 10 z')
+                .attr('fill', '#e11d48');
+
+            // Per-edge linear gradients (source→target node color)
+            const nodeById = {};
+            graphNodes.forEach(n => { nodeById[n.id] = n; });
+            graphEdges.forEach((edge, i) => {
+                const srcId = typeof edge.source === 'object' ? edge.source.id : edge.source;
+                const tgtId = typeof edge.target === 'object' ? edge.target.id : edge.target;
+                const srcType = (nodeById[srcId] || {}).type || 'Other';
+                const tgtType = (nodeById[tgtId] || {}).type || 'Other';
+                const grad = defs.append('linearGradient')
+                    .attr('id', `edgeGrad-${i}`)
+                    .attr('gradientUnits', 'userSpaceOnUse');
+                grad.append('stop').attr('offset', '0%')
+                    .attr('stop-color', NODE_COLORS[srcType]?.fill || '#64748b');
+                grad.append('stop').attr('offset', '100%')
+                    .attr('stop-color', NODE_COLORS[tgtType]?.fill || '#64748b');
+                edge._gradIdx = i;
+            });
+
+            // === Zoom ===
+            graphZoom = d3.zoom()
+                .scaleExtent([0.4, 3])
+                .wheelDelta(event => -event.deltaY * (event.deltaMode === 1 ? 0.05 : event.deltaMode ? 1 : 0.004))
+                .on('zoom', (event) => { graphG.attr('transform', event.transform); });
+            graphSvg.call(graphZoom);
+
+            graphG = graphSvg.append('g');
+
+            // Background dot grid
+            graphG.append('rect')
+                .attr('width', 4000).attr('height', 4000)
+                .attr('x', -2000).attr('y', -2000)
+                .attr('fill', 'url(#dotGrid)')
+                .attr('class', 'graph-bg-grid');
+
+            // === Edges ===
+            const edgeGroup = graphG.append('g').attr('class', 'edges');
+            const edgeSel = edgeGroup.selectAll('line')
+                .data(graphEdges)
+                .join('line')
+                .attr('class', d => {
+                    const srcNode = nodeById[typeof d.source === 'object' ? d.source.id : d.source];
+                    const tgtNode = nodeById[typeof d.target === 'object' ? d.target.id : d.target];
+                    const isMinor = (srcNode && srcNode.type === 'Other' && srcNode.connections <= 1) ||
+                                    (tgtNode && tgtNode.type === 'Other' && tgtNode.connections <= 1);
+                    return 'edge-line' + (isMinor ? ' edge-minor' : '');
+                })
+                .attr('stroke', d => `url(#edgeGrad-${d._gradIdx})`)
+                .attr('stroke-width', d => Math.max(1, Math.min(4, 0.8 + d.weight * 1.2)))
+                .attr('stroke-opacity', d => Math.min(0.55, 0.2 + d.weight * 0.1));
+
+            // === Nodes ===
+            const nodeGroup = graphG.append('g').attr('class', 'nodes');
+            const nodeSel = nodeGroup.selectAll('g')
+                .data(graphNodes)
+                .join('g')
+                .attr('class', 'node-group');
+
+            const shapeGroup = nodeSel.append('g').attr('class', 'node-shape-wrap');
+            drawNodeShape(shapeGroup);
+
+            // Labels — 3 tiers: hub (always visible, large), mid (3+ connections), hidden (<3)
+            nodeSel.append('text')
+                .attr('class', d => {
+                    if (d.connections >= 8) return 'node-label label-hub';
+                    if (d.connections >= 3) return 'node-label';
+                    return 'node-label label-hidden';
+                })
+                .attr('dy', d => nodeRadius(d) + 13)
+                .attr('font-size', d => {
+                    if (d.connections >= 8) return '12px';
+                    if (d.type === 'Other') return '9px';
+                    return '10px';
+                })
+                .attr('font-weight', d => d.connections >= 8 ? 700 : 600)
+                .text(d => d.name.length > 24 ? d.name.substring(0, 22) + '...' : d.name)
+                .each(function(d) { d3.select(this).append('title').text(d.name); });
+
+            // Minor node styling
+            nodeSel.filter(d => d.type === 'Other' && d.connections <= 1)
+                .classed('node-minor', true);
+
+            // Connection count badges for nodes with 5+ connections
+            nodeSel.filter(d => d.connections >= 5).append('g')
+                .attr('class', 'connection-badge')
+                .attr('transform', d => `translate(${nodeRadius(d) * 0.7}, ${-nodeRadius(d) * 0.7})`)
+                .each(function(d) {
+                    const bg = d3.select(this);
+                    bg.append('circle')
+                        .attr('r', 8)
+                        .attr('fill', 'var(--color-primary)')
+                        .attr('stroke', 'var(--color-surface)')
+                        .attr('stroke-width', 2);
+                    bg.append('text')
+                        .attr('text-anchor', 'middle')
+                        .attr('dy', '0.35em')
+                        .attr('font-size', '8px')
+                        .attr('font-weight', 700)
+                        .attr('fill', 'white')
+                        .text(d.connections);
+                });
+
+            // === Drag ===
+            if (!isMobile) {
+                nodeSel.call(d3.drag()
+                    .on('start', (event, d) => {
+                        if (!event.active) graphSimulation.alphaTarget(0.3).restart();
+                        d.fx = d.x; d.fy = d.y;
+                    })
+                    .on('drag', (event, d) => { d.fx = event.x; d.fy = event.y; })
+                    .on('end', (event, d) => {
+                        if (!event.active) graphSimulation.alphaTarget(0);
+                        d.fx = null; d.fy = null;
+                    }));
+            }
+
+            // === Hover/Click ===
+            nodeSel.on('mouseenter', (event, d) => {
+                if (selectedNode || activeGuidedQuestion) return;
+                updateGraphHighlight(d);
+                showGraphTooltip(event, d);
+            }).on('mouseleave', () => {
+                if (selectedNode || activeGuidedQuestion) return;
+                clearGraphHighlight();
+                hideGraphTooltip();
+            }).on('click', (event, d) => {
+                event.stopPropagation();
+                if (activeGuidedQuestion) { clearGuidedQuestion(); clearGraphHighlight(); }
+                if (selectedNode === d.id) {
+                    selectedNode = null;
+                    clearGraphHighlight();
+                    closeDetailPanel();
+                } else {
+                    selectedNode = d.id;
+                    updateGraphHighlight(d);
+                    showDetailPanel(d);
+                    // Pan to center the clicked node at the current zoom level
+                    panToNode(d);
+                }
+                hideGraphTooltip();
+            });
+
+            edgeSel.on('mouseenter', (event, d) => {
+                if (selectedNode || activeGuidedQuestion) return;
+                showEdgeTooltip(event, d);
+            }).on('mouseleave', () => {
+                if (selectedNode || activeGuidedQuestion) return;
+                hideGraphTooltip();
+            });
+
+            graphSvg.on('click', () => {
+                if (activeGuidedQuestion) { clearGuidedQuestion(); }
+                selectedNode = null;
+                clearGraphHighlight();
+                closeDetailPanel();
+            });
+
+            if (isMobile) {
+                nodeSel.on('touchstart', (event, d) => {
+                    event.preventDefault();
+                    nodeSel.selectAll('.node-label').classed('tap-visible', false);
+                    d3.select(event.currentTarget).select('.node-label').classed('tap-visible', true);
+                    updateGraphHighlight(d);
+                    showDetailPanel(d);
+                    selectedNode = d.id;
+                });
+            }
+
+            // === Force simulation ===
+            graphSimulation = d3.forceSimulation(graphNodes)
+                .force('link', d3.forceLink(graphEdges).id(d => d.id).distance(d => {
+                    const cat = getEdgeCategory(d.partnerships[0]?.type);
+                    if (cat === 'Operational') return 80;
+                    if (cat === 'Data' || cat === 'Marketing') return 140;
+                    return 110;
+                }))
+                .force('charge', d3.forceManyBody().strength(-350))
+                .force('center', d3.forceCenter(width / 2, height / 2))
+                .force('collision', d3.forceCollide().radius(d => nodeRadius(d) + 20))
+                .force('x', d3.forceX(width / 2).strength(0.08))
+                .force('y', d3.forceY(height / 2).strength(0.08))
+                .on('tick', () => {
+                    edgeSel
+                        .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+                        .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+
+                    // Update per-edge gradient coordinates
+                    graphEdges.forEach(edge => {
+                        const grad = graphSvg.select(`#edgeGrad-${edge._gradIdx}`);
+                        if (grad.size()) {
+                            grad.attr('x1', edge.source.x).attr('y1', edge.source.y)
+                                .attr('x2', edge.target.x).attr('y2', edge.target.y);
+                        }
+                    });
+
+                    nodeSel.attr('transform', d => `translate(${d.x},${d.y})`);
+                });
+
+            // Apply focused view
+            applyShowAllState();
+
+            graphSimulation.alpha(1).restart();
+            graphSimulation.on('end', () => { if (!activeGuidedQuestion && !selectedNode) fitGraphToView(width, height); });
+            setTimeout(() => { if (!activeGuidedQuestion && !selectedNode) fitGraphToView(width, height); }, 2500);
+        }
+
+        function fitHighlightedToView() {
+            if (!graphSvg || !graphG) return;
+            const container = document.getElementById('networkContainer');
+            if (!container) return;
+            const rect = container.getBoundingClientRect();
+            const highlighted = [];
+            graphG.selectAll('.node-group.highlighted').each(function(d) { highlighted.push(d); });
+            // For filter-based chips, fit to visible nodes instead
+            if (!highlighted.length) {
+                graphG.selectAll('.node-group').each(function(d) {
+                    if (d3.select(this).style('display') !== 'none') highlighted.push(d);
+                });
+            }
+            if (!highlighted.length) return;
+            const panelOpen = document.getElementById('graphDetailPanel')?.classList.contains('open');
+            const panelWidth = (panelOpen && window.innerWidth > 640) ? 340 : 0;
+            const padX = 80;
+            const padTop = 60;
+            const padBottom = 160; // extra space for legend
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            highlighted.forEach(d => {
+                const r = nodeRadius(d) + 20;
+                if (d.x - r < minX) minX = d.x - r;
+                if (d.y - r < minY) minY = d.y - r;
+                if (d.x + r > maxX) maxX = d.x + r;
+                if (d.y + r > maxY) maxY = d.y + r;
+            });
+            const gw = maxX - minX;
+            const gh = maxY - minY;
+            if (gw <= 0 || gh <= 0) return;
+            const visibleWidth = rect.width - panelWidth;
+            const availW = visibleWidth - padX * 2;
+            const availH = rect.height - padTop - padBottom;
+            const scale = Math.max(0.5, Math.min(availW / gw, availH / gh, 2));
+            const tx = (visibleWidth - gw * scale) / 2 - minX * scale;
+            const ty = (padTop + (availH - gh * scale) / 2) - minY * scale;
+            graphSvg.transition().duration(600).call(
+                graphZoom.transform,
+                d3.zoomIdentity.translate(tx, ty).scale(scale)
+            );
+        }
+
+        function fitGraphToView(width, height) {
+            if (!graphNodes.length || !graphSvg || !graphG) return;
+            const panelOpen = document.getElementById('graphDetailPanel')?.classList.contains('open');
+            const panelWidth = (panelOpen && window.innerWidth > 640) ? 340 : 0;
+            const visibleWidth = width - panelWidth;
+            const padding = 60;
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            // Only include visible nodes in the bounding box
+            const visibleNodes = graphNodes.filter(d => {
+                if (!showAllNodes && d.type === 'Other' && d.connections <= 1) return false;
+                if (hiddenNodeTypes.has(d.type)) return false;
+                return true;
+            });
+            if (!visibleNodes.length) return;
+            visibleNodes.forEach(d => {
+                const r = nodeRadius(d) + 20;
+                if (d.x - r < minX) minX = d.x - r;
+                if (d.y - r < minY) minY = d.y - r;
+                if (d.x + r > maxX) maxX = d.x + r;
+                if (d.y + r > maxY) maxY = d.y + r;
+            });
+            const graphWidth = maxX - minX;
+            const graphHeight = maxY - minY;
+            if (graphWidth <= 0 || graphHeight <= 0) return;
+            const scale = Math.max(0.5, Math.min((visibleWidth - padding * 2) / graphWidth, (height - padding * 2) / graphHeight, 1.5));
+            const tx = (visibleWidth - graphWidth * scale) / 2 - minX * scale;
+            const ty = (height - graphHeight * scale) / 2 - minY * scale;
+            graphSvg.transition().duration(600).call(
+                graphZoom.transform,
+                d3.zoomIdentity.translate(tx, ty).scale(scale)
+            );
+        }
+
+        function animateEdgeParticle(d) {
+            if (!graphG) return;
+            const particle = graphG.append('circle')
+                .attr('r', 2.5).attr('fill', 'white').attr('opacity', 0.85)
+                .attr('class', 'edge-particle')
+                .attr('filter', 'url(#particleGlow)');
+            let count = 0;
+            function pulse() {
+                if (count >= 5 || !graphG.selectAll('.edge-particle').size()) { particle.remove(); return; }
+                count++;
+                particle
+                    .attr('cx', d.source.x).attr('cy', d.source.y)
+                    .transition().duration(1200).ease(d3.easeLinear)
+                    .attr('cx', d.target.x).attr('cy', d.target.y)
+                    .on('end', pulse);
+            }
+            pulse();
+        }
+
+        function updateGraphHighlight(d) {
+            const connectedIds = new Set();
+            connectedIds.add(d.id);
+            graphEdges.forEach(e => {
+                const srcId = typeof e.source === 'object' ? e.source.id : e.source;
+                const tgtId = typeof e.target === 'object' ? e.target.id : e.target;
+                if (srcId === d.id) connectedIds.add(tgtId);
+                if (tgtId === d.id) connectedIds.add(srcId);
+            });
+
+            // Apply glow filter per node type on highlighted nodes
+            graphG.selectAll('.node-group')
+                .classed('highlighted', n => connectedIds.has(n.id))
+                .classed('dimmed', n => !connectedIds.has(n.id))
+                .each(function(n) {
+                    const shapeEl = d3.select(this).select('.node-shape');
+                    if (connectedIds.has(n.id)) {
+                        shapeEl.attr('filter', `url(#nodeGlow-${n.type})`);
+                    } else {
+                        shapeEl.attr('filter', null);
+                    }
+                });
+
+            graphG.selectAll('.edge-line')
+                .classed('highlighted', e => {
+                    const srcId = typeof e.source === 'object' ? e.source.id : e.source;
+                    const tgtId = typeof e.target === 'object' ? e.target.id : e.target;
+                    return srcId === d.id || tgtId === d.id;
+                })
+                .classed('dimmed', e => {
+                    const srcId = typeof e.source === 'object' ? e.source.id : e.source;
+                    const tgtId = typeof e.target === 'object' ? e.target.id : e.target;
+                    return srcId !== d.id && tgtId !== d.id;
+                });
+
+            // Animate particles on highlighted edges (max 6, skip on mobile)
+            graphG.selectAll('.edge-particle').remove();
+            if (window.innerWidth > 640) {
+                let particleCount = 0;
+                graphG.selectAll('.edge-line.highlighted').each(function(ed) {
+                    if (particleCount < 6) {
+                        animateEdgeParticle(ed);
+                        particleCount++;
+                    }
+                });
+            }
+        }
+
+        function clearGraphHighlight() {
+            graphG.selectAll('.node-group').classed('highlighted', false).classed('dimmed', false);
+            graphG.selectAll('.node-group').each(function() {
+                d3.select(this).select('.node-shape').attr('filter', null);
+            });
+            graphG.selectAll('.edge-line')
+                .classed('highlighted', false).classed('dimmed', false)
+                .attr('marker-start', null).attr('marker-end', null)
+                .each(function(d) {
+                    d3.select(this)
+                        .attr('stroke', `url(#edgeGrad-${d._gradIdx})`)
+                        .attr('stroke-width', Math.max(1, Math.min(4, 0.8 + d.weight * 1.2)))
+                        .attr('stroke-opacity', Math.min(0.55, 0.2 + d.weight * 0.1));
+                });
+            graphG.selectAll('.edge-particle').remove();
+        }
+
+        function showGraphTooltip(event, d) {
+            const tooltip = document.getElementById('graphTooltip');
+            const container = document.getElementById('networkContainer');
+            const rect = container.getBoundingClientRect();
+            const x = event.clientX - rect.left + 14;
+            const y = event.clientY - rect.top - 12;
+            const colors = NODE_COLORS[d.type] || NODE_COLORS.Other;
+
+            tooltip.innerHTML = `
+                <div class="tt-name">
+                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${colors.fill};box-shadow:0 0 6px ${colors.fill}40;flex-shrink:0;"></span>
+                    ${d.name}
+                </div>
+                <div class="tt-role" style="background:${colors.fill}18;color:${colors.fill};">${d.rolesStr}</div>
+                <div class="tt-count">
+                    <span class="material-icons-outlined" style="font-size:14px;">link</span>
+                    ${d.partnerships.length} partnership${d.partnerships.length !== 1 ? 's' : ''} &middot; ${d.connections} connection${d.connections !== 1 ? 's' : ''}
+                </div>
+            `;
+            tooltip.style.left = x + 'px';
+            tooltip.style.top = y + 'px';
+            tooltip.classList.add('visible');
+        }
+
+        function showEdgeTooltip(event, d) {
+            const tooltip = document.getElementById('graphTooltip');
+            const container = document.getElementById('networkContainer');
+            const rect = container.getBoundingClientRect();
+            const x = event.clientX - rect.left + 12;
+            const y = event.clientY - rect.top - 10;
+
+            const srcName = typeof d.source === 'object' ? d.source.name : d.source;
+            const tgtName = typeof d.target === 'object' ? d.target.name : d.target;
+
+            tooltip.innerHTML = `
+                <div class="tt-name">${srcName} &harr; ${tgtName}</div>
+                ${d.partnerships.map(p => `<div class="tt-count" style="margin-top:2px">${p.name} <span style="opacity:0.6">(${p.type})</span></div>`).join('')}
+            `;
+            tooltip.style.left = x + 'px';
+            tooltip.style.top = y + 'px';
+            tooltip.classList.add('visible');
+        }
+
+        function hideGraphTooltip() {
+            document.getElementById('graphTooltip').classList.remove('visible');
+        }
+
+        function showDetailPanel(d) {
+            const panel = document.getElementById('graphDetailPanel');
+            const content = document.getElementById('graphDetailContent');
+            const colors = NODE_COLORS[d.type] || NODE_COLORS.Other;
+
+            const seen = new Set();
+            const unique = d.partnerships.filter(p => {
+                if (seen.has(p.name)) return false;
+                seen.add(p.name);
+                return true;
+            });
+
+            content.innerHTML = `
+                <div style="background:linear-gradient(135deg, ${colors.fill}15, ${colors.fill}05);padding:1.5rem 1.5rem 1.25rem;border-bottom:1px solid var(--color-border-light);">
+                    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.375rem;">
+                        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${colors.fill};box-shadow:0 0 8px ${colors.fill}50;"></span>
+                        <div class="dp-name" style="padding-right:2rem;">${d.name}</div>
+                    </div>
+                    <div class="dp-role" style="color:${colors.fill};">${d.rolesStr}</div>
+                    <div style="font-size:0.8rem;color:var(--color-text-secondary);margin-top:0.25rem;">
+                        <span class="material-icons-outlined" style="font-size:14px;vertical-align:-2px;">link</span>
+                        ${d.connections} connection${d.connections !== 1 ? 's' : ''}
+                    </div>
+                </div>
+                <div style="padding:1.25rem 1.5rem;">
+                    <div style="font-weight:600;font-size:0.75rem;color:var(--color-text-tertiary);margin-bottom:0.625rem;text-transform:uppercase;letter-spacing:0.06em;">
+                        Partnerships (${unique.length})
+                    </div>
+                    ${unique.map(p => {
+                        const edgeColor = getEdgeColor(p.type);
+                        return `
+                            <div class="dp-partnership" style="border-left-color:${edgeColor};">
+                                <div class="dp-p-name">${p.name}</div>
+                                <div class="dp-p-type">${p.type}</div>
+                                ${p.details ? `<div style="margin-top:4px;font-size:0.7rem;color:var(--color-text-tertiary);line-height:1.5;">${p.details}</div>` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+
+            panel.classList.add('open');
+        }
+
+        function closeDetailPanel() {
+            document.getElementById('graphDetailPanel').classList.remove('open');
+        }
+
+        function filterGraph() {
+            if (!networkGraphInitialized) return;
+            const filterVal = document.getElementById('graphTypeFilter').value;
+
+            function isNodeHidden(node) {
+                if (!node) return false;
+                if (!showAllNodes && node.type === 'Other' && node.connections <= 1) return true;
+                if (hiddenNodeTypes.has(node.type)) return true;
+                return false;
+            }
+
+            graphG.selectAll('.edge-line').each(function(d) {
+                const matchesFilter = !filterVal || d.partnerships.some(p => p.type === filterVal);
+                const srcNode = graphNodes.find(n => n.id === (typeof d.source === 'object' ? d.source.id : d.source));
+                const tgtNode = graphNodes.find(n => n.id === (typeof d.target === 'object' ? d.target.id : d.target));
+                const hidden = !matchesFilter || isNodeHidden(srcNode) || isNodeHidden(tgtNode);
+                d3.select(this).style('display', hidden ? 'none' : null);
+            });
+
+            // Show/hide nodes: respect type filter, showAll state, and legend filters
+            if (filterVal) {
+                const visibleNodeIds = new Set();
+                graphEdges.forEach(e => {
+                    if (e.partnerships.some(p => p.type === filterVal)) {
+                        const srcId = typeof e.source === 'object' ? e.source.id : e.source;
+                        const tgtId = typeof e.target === 'object' ? e.target.id : e.target;
+                        visibleNodeIds.add(srcId);
+                        visibleNodeIds.add(tgtId);
+                    }
+                });
+                graphG.selectAll('.node-group').each(function(d) {
+                    const matchesFilter = visibleNodeIds.has(d.id);
+                    const hidden = !matchesFilter || isNodeHidden(d);
+                    d3.select(this).style('display', hidden ? 'none' : null);
+                });
+            } else {
+                // No filter — just apply showAll and legend state
+                graphG.selectAll('.node-group').each(function(d) {
+                    d3.select(this).style('display', isNodeHidden(d) ? 'none' : null);
+                });
+            }
+        }
+
+        function searchGraph() {
+            if (!networkGraphInitialized) return;
+            const query = (document.getElementById('graphSearchInput').value || '').toLowerCase().trim();
+
+            if (!query) {
+                clearGraphHighlight();
+                graphG.selectAll('.node-group').classed('search-match', false);
+                return;
+            }
+
+            const matches = graphNodes.filter(n => n.name.toLowerCase().includes(query));
+            if (matches.length === 1) {
+                updateGraphHighlight(matches[0]);
+            } else if (matches.length > 1) {
+                clearGraphHighlight();
+                const matchIds = new Set(matches.map(m => m.id));
+                graphG.selectAll('.node-group')
+                    .classed('highlighted', n => matchIds.has(n.id))
+                    .classed('dimmed', n => !matchIds.has(n.id));
+                graphG.selectAll('.edge-line').classed('dimmed', true);
+            } else {
+                clearGraphHighlight();
+                graphG.selectAll('.node-group').classed('dimmed', true);
+                graphG.selectAll('.edge-line').classed('dimmed', true);
+            }
+        }
+
+        function applyShowAllState() {
+            if (!networkGraphInitialized || !graphG) return;
+            // Hide/show nodes respecting both showAll toggle and legend filters
+            graphG.selectAll('.node-group').each(function(d) {
+                const isPeripheral = d.type === 'Other' && d.connections <= 1;
+                const hidden = (!showAllNodes && isPeripheral) || hiddenNodeTypes.has(d.type);
+                d3.select(this).style('display', hidden ? 'none' : null);
+            });
+            graphG.selectAll('.edge-line').each(function(d) {
+                const srcNode = graphNodes.find(n => n.id === (typeof d.source === 'object' ? d.source.id : d.source));
+                const tgtNode = graphNodes.find(n => n.id === (typeof d.target === 'object' ? d.target.id : d.target));
+                const srcHidden = (!showAllNodes && srcNode && srcNode.type === 'Other' && srcNode.connections <= 1) || (srcNode && hiddenNodeTypes.has(srcNode.type));
+                const tgtHidden = (!showAllNodes && tgtNode && tgtNode.type === 'Other' && tgtNode.connections <= 1) || (tgtNode && hiddenNodeTypes.has(tgtNode.type));
+                d3.select(this).style('display', (srcHidden || tgtHidden) ? 'none' : null);
+            });
+            // Update button label
+            const label = document.getElementById('toggleAllLabel');
+            if (label) label.textContent = showAllNodes ? 'Focused' : 'Show All';
+            const icon = document.querySelector('#graphToggleAll .material-icons-outlined');
+            if (icon) icon.textContent = showAllNodes ? 'visibility_off' : 'visibility';
+        }
+
+        function toggleShowAll() {
+            if (activeGuidedQuestion) { clearGuidedQuestion(); clearGraphHighlight(); }
+            showAllNodes = !showAllNodes;
+            applyShowAllState();
+            // Re-run filter if active
+            const filterVal = document.getElementById('graphTypeFilter').value;
+            if (filterVal) filterGraph();
+        }
+
+        function resetGraphView() {
+            if (!graphSvg || !graphZoom) return;
+            document.getElementById('graphTypeFilter').value = '';
+            document.getElementById('graphSearchInput').value = '';
+            showAllNodes = true;
+            hiddenNodeTypes.clear();
+            document.querySelectorAll('#networkLegend .legend-item[data-node-type]').forEach(el => el.classList.remove('legend-inactive'));
+            applyShowAllState();
+            filterGraph();
+            clearGraphHighlight();
+            clearGuidedQuestion();
+            if (graphG) graphG.selectAll('.edge-particle').remove();
+            closeDetailPanel();
+            selectedNode = null;
+            graphFitToView();
+        }
+
+        // Legend filter toggle
+        function toggleLegendFilter(el) {
+            const type = el.dataset.nodeType;
+            if (!type || !graphG) return;
+            if (hiddenNodeTypes.has(type)) {
+                hiddenNodeTypes.delete(type);
+                el.classList.remove('legend-inactive');
+            } else {
+                hiddenNodeTypes.add(type);
+                el.classList.add('legend-inactive');
+            }
+            applyShowAllState();
+            const filterVal = document.getElementById('graphTypeFilter').value;
+            if (filterVal) filterGraph();
+        }
+
+        // Pan to center clicked node in visible area, keeping current zoom level
+        function panToNode(d) {
+            if (!graphSvg || !graphZoom) return;
+            const container = document.getElementById('networkContainer');
+            if (!container) return;
+            // Use a short delay to ensure this runs after any other zoom transitions
+            setTimeout(() => {
+                const rect = container.getBoundingClientRect();
+                const currentTransform = d3.zoomTransform(graphSvg.node());
+                const scale = currentTransform.k;
+                const panelWidth = window.innerWidth > 640 ? 340 : 0;
+                const centerX = (rect.width - panelWidth) / 2;
+                const centerY = rect.height / 2 - 50; // offset up for legend
+                const tx = centerX - d.x * scale;
+                const ty = centerY - d.y * scale;
+                graphSvg.transition().duration(400).call(
+                    graphZoom.transform,
+                    d3.zoomIdentity.translate(tx, ty).scale(scale)
+                );
+            }, 60);
+        }
+
+        // Zoom controls
+        function graphZoomIn() {
+            if (!graphSvg || !graphZoom) return;
+            graphSvg.transition().duration(300).call(graphZoom.scaleBy, 1.3);
+        }
+        function graphZoomOut() {
+            if (!graphSvg || !graphZoom) return;
+            graphSvg.transition().duration(300).call(graphZoom.scaleBy, 0.7);
+        }
+        function graphFitToView() {
+            if (!graphSvg || !graphG) return;
+            const container = document.getElementById('networkContainer');
+            if (!container) return;
+            const rect = container.getBoundingClientRect();
+            fitGraphToView(rect.width, rect.height);
+        }
+
+        function updateGraphColors() {
+            if (!networkGraphInitialized || !graphG) return;
+            // Re-draw node shapes (uses gradients which are color-independent)
+            graphG.selectAll('.node-shape-wrap').each(function(d) {
+                drawNodeShape(d3.select(this));
+            });
+            // Update dot grid pattern fill (uses CSS variable)
+            graphSvg.select('#dotGrid circle')
+                .attr('fill', 'var(--color-border-light)');
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
             var hash = location.hash.replace('#','');
-            var valid = ['terminology','tracker','simulation','about','contact'];
+            var valid = ['terminology','tracker','network','simulation','about','contact'];
             switchView(valid.indexOf(hash) !== -1 ? hash : 'terminology');
         });
     </script>
