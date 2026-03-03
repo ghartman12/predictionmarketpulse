@@ -3233,7 +3233,14 @@
                             <div class="dp-partnership" style="border-left-color:${edgeColor};">
                                 <div class="dp-p-name">${p.name}</div>
                                 <div class="dp-p-type">${p.type}</div>
-                                ${p.details ? `<div style="margin-top:4px;font-size:0.7rem;color:var(--color-text-tertiary);line-height:1.5;">${p.details}</div>` : ''}
+                                ${p.details ? `<div style="margin-top:4px;font-size:0.7rem;color:var(--color-text-tertiary);line-height:1.5;">${(() => {
+                                    const items = p.details.trim().split(/(?:\n|(?<=\S)\s*-\s+(?=[A-Z]))/).map(line => line.trim().replace(/^-\s*/, '')).filter(Boolean);
+                                    if (items.length > 1) {
+                                        return items.map(item => '<div style="display:flex;align-items:start;gap:6px;margin-top:3px;"><span style="color:#6366f1;margin-top:1px;">•</span><span>' + item + '</span></div>').join('');
+                                    } else {
+                                        return items[0] || '';
+                                    }
+                                })()}</div>` : ''}
                             </div>
                         `;
                     }).join('')}
