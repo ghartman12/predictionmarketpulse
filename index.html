@@ -1546,18 +1546,6 @@
                 <div class="network-controls">
                     <select id="graphTypeFilter" onchange="filterGraph()">
                         <option value="">All Types</option>
-                        <option value="Acquisition">Acquisition</option>
-                        <option value="Capital/Collaboration">Capital/Collaboration</option>
-                        <option value="Capital/Marketing">Capital/Marketing</option>
-                        <option value="Data/Integration">Data/Integration</option>
-                        <option value="Data/Marketing">Data/Marketing</option>
-                        <option value="Data/Marketing/Sponsorship">Data/Marketing/Sponsorship</option>
-                        <option value="Government Affairs">Government Affairs</option>
-                        <option value="Marketing/Athlete Sponsorship">Marketing/Athlete Sponsorship</option>
-                        <option value="Operational">Operational</option>
-                        <option value="Operational/B2B">Operational/B2B</option>
-                        <option value="Operational/Data">Operational/Data</option>
-                        <option value="Other">Other</option>
                     </select>
                     <input type="text" id="graphSearchInput" oninput="searchGraph()" placeholder="Search entities...">
                     <button class="btn-reset" id="graphToggleAll" onclick="toggleShowAll()">
@@ -2725,6 +2713,17 @@
             networkGraphInitialized = true;
 
             buildGraphData();
+
+            // Populate type filter dropdown from actual data
+            const typeSet = new Set();
+            graphEdges.forEach(e => e.partnerships.forEach(p => { if (p.type) typeSet.add(p.type); }));
+            const typeSelect = document.getElementById('graphTypeFilter');
+            Array.from(typeSet).sort().forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t;
+                opt.textContent = t;
+                typeSelect.appendChild(opt);
+            });
 
             const container = document.getElementById('networkContainer');
             const svgEl = document.getElementById('networkSvg');
