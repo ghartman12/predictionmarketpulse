@@ -3295,6 +3295,9 @@
                     d3.select(this).style('display', isNodeHidden(d) ? 'none' : null);
                 });
             }
+
+            // Fit view to visible nodes after filtering
+            setTimeout(fitHighlightedToView, 50);
         }
 
         function searchGraph() {
