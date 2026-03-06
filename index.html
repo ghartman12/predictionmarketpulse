@@ -2196,6 +2196,7 @@
                 const appDate = r['Application Date'] || '';
                 const lastUpdated = r['Last Updated'] || '';
                 const updateSummary = r['Last Update Summary'] || '';
+                const sourceUrl = (r['Source URL'] || '').trim();
                 const notes = r['Notes'] || '';
 
                 const typeBadgeClass = 'badge-' + regType;
@@ -2263,6 +2264,15 @@
                             </div>
                             ` : ''}
                         </div>
+
+                        ${sourceUrl ? `
+                        <div class="px-8 pb-6">
+                            <a href="${sourceUrl}" target="_blank" class="announcement-link">
+                                <span>Source</span>
+                                <span class="material-icons-outlined">arrow_forward</span>
+                            </a>
+                        </div>
+                        ` : ''}
                     </div>
                 `;
             });
