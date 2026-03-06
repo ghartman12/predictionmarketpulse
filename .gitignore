@@ -1,0 +1,4 @@
+.env
+
+# Working copies for pasting into Apps Script editor
+apps-script/*.txt
