@@ -209,27 +209,27 @@ function ensureRegStatusTab_(ss) {
   // Sources: CFTC Industry Filings — Trading Organizations + Clearing Organizations pages
   var seedData = [
     // ── Pending DCM Applications (13) ──
-    ['OneChronos Markets DCM LLC', 'DCM', 'Applied', '2025-07-31', '', '2026-03-06', 'DCM application filed', '', ''],
-    ['RSBIX, LLC (Matchbook)', 'DCM', 'Applied', '2025-09-16', '', '2026-03-06', 'DCM application filed', '', ''],
-    ['ProphetX LLC', 'DCM', 'Applied', '2025-11-07', '', '2026-03-06', 'DCM application filed', '', 'Also filed DCO (2025-11-18)'],
-    ['tZERO DCM, LLC', 'DCM', 'Applied', '2025-11-21', '', '2026-03-06', 'DCM application filed', '', 'Also filed DCO (2025-09-18)'],
-    ['XV Exchange, LLC (STX)', 'DCM', 'Applied', '2025-12-09', '', '2026-03-06', 'DCM application filed', '', ''],
-    ['Optex Markets LLC', 'DCM', 'Applied', '2026-01-13', '', '2026-03-06', 'DCM application filed', '', ''],
-    ['Ludlow Exchange, LLC (Novig)', 'DCM', 'Applied', '2026-01-21', '', '2026-03-06', 'DCM application filed', '', ''],
-    ['Water Street Labs, LLC', 'DCM', 'Applied', '2026-01-22', '', '2026-03-06', 'DCM application filed', '', ''],
-    ['Juice Exchange, LLC', 'DCM', 'Applied', '2026-01-27', '', '2026-03-06', 'DCM application filed', '', ''],
-    ['Sporttrade DCM LLC', 'DCM', 'Applied', '2026-01-27', '', '2026-03-06', 'DCM application filed', '', 'Also filed DCO (2026-01-27)'],
-    ['PMEX Markets', 'DCM', 'Applied', '2026-02-09', '', '2026-03-06', 'DCM application filed', '', 'Also filed DCO via PMEX Clearing (2026-02-09)'],
-    ['PredictCraft Mkt Inc. (DimeTrades)', 'DCM', 'Applied', '2026-02-11', '', '2026-03-06', 'DCM application filed', '', ''],
-    ['Smarkets Board of Trade Exchange LLC', 'DCM', 'Applied', '2026-03-03', '', '2026-03-06', 'DCM application filed', '', 'Sports prediction market entrant'],
+    ['OneChronos Markets DCM LLC', 'DCM', 'Applied', '2025-07-31', '', '2026-03-06', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/57746', ''],
+    ['RSBIX, LLC (Matchbook)', 'DCM', 'Applied', '2025-09-16', '', '2026-03-06', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/58152', ''],
+    ['ProphetX LLC', 'DCM', 'Applied', '2025-11-07', '', '2026-03-06', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/58754', 'Also filed DCO (2025-11-18)'],
+    ['tZERO DCM, LLC', 'DCM', 'Applied', '2025-11-21', '', '2026-03-06', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/58712', 'Also filed DCO (2025-09-18)'],
+    ['XV Exchange, LLC (STX)', 'DCM', 'Applied', '2025-12-09', '', '2026-03-06', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/58807', ''],
+    ['Optex Markets LLC', 'DCM', 'Applied', '2026-01-13', '', '2026-03-06', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59349', ''],
+    ['Ludlow Exchange, LLC (Novig)', 'DCM', 'Applied', '2026-01-21', '', '2026-03-06', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59390', ''],
+    ['Water Street Labs, LLC', 'DCM', 'Applied', '2026-01-22', '', '2026-03-06', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59469', ''],
+    ['Juice Exchange, LLC', 'DCM', 'Applied', '2026-01-27', '', '2026-03-06', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59480', ''],
+    ['Sporttrade DCM LLC', 'DCM', 'Applied', '2026-01-27', '', '2026-03-06', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59605', 'Also filed DCO (2026-01-27)'],
+    ['PMEX Markets', 'DCM', 'Applied', '2026-02-09', '', '2026-03-06', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59665', 'Also filed DCO via PMEX Clearing (2026-02-09)'],
+    ['PredictCraft Mkt Inc. (DimeTrades)', 'DCM', 'Applied', '2026-02-11', '', '2026-03-06', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59756', ''],
+    ['Smarkets Board of Trade Exchange LLC', 'DCM', 'Applied', '2026-03-03', '', '2026-03-06', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59862', 'Sports prediction market entrant'],
     // ── Pending DCO Applications (7) ──
-    ['tZERO DCO, LLC', 'DCO', 'Applied', '2025-09-18', '', '2026-03-06', 'DCO application filed', '', 'Also filed DCM (2025-11-21)'],
-    ['ProphetX LLC', 'DCO', 'Applied', '2025-11-18', '', '2026-03-06', 'DCO application filed', '', 'Also filed DCM (2025-11-07)'],
-    ['ICE Direct Clear, Inc.', 'DCO', 'Applied', '2025-12-02', '', '2026-03-06', 'DCO application filed', '', 'ICE subsidiary — dedicated PM clearing'],
-    ['Gemini Olympus, LLC', 'DCO', 'Applied', '2025-12-17', '', '2026-03-06', 'DCO application filed', '', 'Clearing arm for Gemini Titan (DCM approved 2025-12-10)'],
-    ['Sporttrade DCO LLC', 'DCO', 'Applied', '2026-01-27', '', '2026-03-06', 'DCO application filed', '', 'Also filed DCM (2026-01-27)'],
-    ['Quanta Clear, Inc.', 'DCO', 'Applied', '2026-01-30', '', '2026-03-06', 'DCO application filed', '', 'Quanta Exchange DCM approved 2025-05-30'],
-    ['PMEX Clearing, Inc.', 'DCO', 'Applied', '2026-02-09', '', '2026-03-06', 'DCO application filed', '', 'Also filed DCM via PMEX Markets (2026-02-09)']
+    ['tZERO DCO, LLC', 'DCO', 'Applied', '2025-09-18', '', '2026-03-06', 'DCO application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59186', 'Also filed DCM (2025-11-21)'],
+    ['ProphetX LLC', 'DCO', 'Applied', '2025-11-18', '', '2026-03-06', 'DCO application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59187', 'Also filed DCM (2025-11-07)'],
+    ['ICE Direct Clear, Inc.', 'DCO', 'Applied', '2025-12-02', '', '2026-03-06', 'DCO application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59188', 'ICE subsidiary — dedicated PM clearing'],
+    ['Gemini Olympus, LLC', 'DCO', 'Applied', '2025-12-17', '', '2026-03-06', 'DCO application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59189', 'Clearing arm for Gemini Titan (DCM approved 2025-12-10)'],
+    ['Sporttrade DCO LLC', 'DCO', 'Applied', '2026-01-27', '', '2026-03-06', 'DCO application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59607', 'Also filed DCM (2026-01-27)'],
+    ['Quanta Clear, Inc.', 'DCO', 'Applied', '2026-01-30', '', '2026-03-06', 'DCO application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59642', 'Quanta Exchange DCM approved 2025-05-30'],
+    ['PMEX Clearing, Inc.', 'DCO', 'Applied', '2026-02-09', '', '2026-03-06', 'DCO application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59720', 'Also filed DCM via PMEX Markets (2026-02-09)']
   ];
 
   sheet.getRange(2, 1, seedData.length, headers.length).setValues(seedData);
@@ -253,4 +253,64 @@ function ensureRegStatusTab_(ss) {
 
   console.log('Created "' + SHEET_REG_STATUS + '" tab with ' + seedData.length + ' seed rows.');
   return sheet;
+}
+
+/**
+ * Backfill Source URLs for existing Regulatory Status rows.
+ * Matches by Entity name and Registration Type, writes the CFTC filing URL
+ * into the Source URL column (column 8). Safe to run multiple times.
+ *
+ * Run from Apps Script editor: Run > backfillSourceUrls
+ */
+function backfillSourceUrls() {
+  var urlMap = {
+    'OneChronos Markets DCM LLC|DCM': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/57746',
+    'RSBIX, LLC (Matchbook)|DCM': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/58152',
+    'ProphetX LLC|DCM': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/58754',
+    'tZERO DCM, LLC|DCM': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/58712',
+    'XV Exchange, LLC (STX)|DCM': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/58807',
+    'Optex Markets LLC|DCM': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59349',
+    'Ludlow Exchange, LLC (Novig)|DCM': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59390',
+    'Water Street Labs, LLC|DCM': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59469',
+    'Juice Exchange, LLC|DCM': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59480',
+    'Sporttrade DCM LLC|DCM': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59605',
+    'PMEX Markets|DCM': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59665',
+    'PredictCraft Mkt Inc. (DimeTrades)|DCM': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59756',
+    'Smarkets Board of Trade Exchange LLC|DCM': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59862',
+    'tZERO DCO, LLC|DCO': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59186',
+    'ProphetX LLC|DCO': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59187',
+    'ICE Direct Clear, Inc.|DCO': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59188',
+    'Gemini Olympus, LLC|DCO': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59189',
+    'Sporttrade DCO LLC|DCO': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59607',
+    'Quanta Clear, Inc.|DCO': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59642',
+    'PMEX Clearing, Inc.|DCO': 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59720'
+  };
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(SHEET_REG_STATUS);
+
+  if (!sheet || sheet.getLastRow() < 2) {
+    console.log('No Regulatory Status data to backfill.');
+    return;
+  }
+
+  var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues();
+  var updated = 0;
+
+  for (var i = 0; i < data.length; i++) {
+    var entity = String(data[i][0]).trim();       // Column A: Entity
+    var regType = String(data[i][1]).trim();       // Column B: Registration Type
+    var existingUrl = String(data[i][7]).trim();   // Column H: Source URL
+
+    if (existingUrl) continue; // Skip rows that already have a URL
+
+    var key = entity + '|' + regType;
+    if (urlMap[key]) {
+      sheet.getRange(i + 2, 8).setValue(urlMap[key]);
+      updated++;
+    }
+  }
+
+  console.log('Backfilled ' + updated + ' Source URLs.');
+  SpreadsheetApp.getActiveSpreadsheet().toast('Updated ' + updated + ' Source URLs.', 'Backfill Complete', 5);
 }
