@@ -332,7 +332,61 @@
             color: white;
             box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
         }
-        
+
+        /* Regulatory Registration Type Badges */
+        .badge-DCM {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+        .badge-DCO {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+        .badge-FCM {
+            background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(168, 85, 247, 0.3);
+        }
+        .badge-IB {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+        }
+
+        /* Regulatory Status Badges */
+        .status-applied {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #78350f;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+        .status-under-review {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+        .status-conditionally-approved {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+        .status-denied {
+            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+        .status-withdrawn {
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(100, 116, 139, 0.3);
+        }
+        .status-suspended {
+            background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
+        }
+
         /* Mobile badge adjustments */
         @media (max-width: 640px) {
             .badge-Data,
@@ -340,7 +394,11 @@
             .badge-Capital,
             .badge-Government,
             .badge-Investment,
-            .badge-Other {
+            .badge-Other,
+            .badge-DCM,
+            .badge-DCO,
+            .badge-FCM,
+            .badge-IB {
                 font-size: 0.65rem;
                 line-height: 1.2;
                 max-width: 100%;
@@ -1041,7 +1099,11 @@
                     </button>
                     <button onclick="switchView('tracker')" id="nav-tracker" class="nav-btn flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
                         <span class="material-icons-outlined text-base mr-2">trending_up</span>
-                        Tracker & Deals
+                        Partnerships
+                    </button>
+                    <button onclick="switchView('regulatory')" id="nav-regulatory" class="nav-btn flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
+                        <span class="material-icons-outlined text-base mr-2">gavel</span>
+                        Regulatory
                     </button>
                     <button onclick="switchView('network')" id="nav-network" class="nav-btn flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
                         <span class="material-icons-outlined text-base mr-2">hub</span>
@@ -1049,7 +1111,7 @@
                     </button>
                     <button onclick="switchView('simulation')" id="nav-simulation" class="nav-btn flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
                         <span class="material-icons-outlined text-base mr-2">sports_esports</span>
-                        Trading Simulation
+                        Simulator
                     </button>
                     <button onclick="switchView('about')" id="nav-about" class="nav-btn flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
                         <span class="material-icons-outlined text-base mr-2">info</span>
@@ -1088,7 +1150,11 @@
                     </button>
                     <button onclick="switchView('tracker'); toggleMobileMenu()" class="nav-btn-mobile flex items-center text-sm font-medium text-slate-700 dark:text-slate-200 px-4 py-3 rounded-lg transition-all hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 w-full text-left dark:text-slate-200">
                         <span class="material-icons-outlined text-base mr-3">trending_up</span>
-                        Tracker & Deals
+                        Partnerships
+                    </button>
+                    <button onclick="switchView('regulatory'); toggleMobileMenu()" class="nav-btn-mobile flex items-center text-sm font-medium text-slate-700 dark:text-slate-200 px-4 py-3 rounded-lg transition-all hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 w-full text-left dark:text-slate-200">
+                        <span class="material-icons-outlined text-base mr-3">gavel</span>
+                        Regulatory
                     </button>
                     <button onclick="switchView('network'); toggleMobileMenu()" class="nav-btn-mobile flex items-center text-sm font-medium text-slate-700 dark:text-slate-200 px-4 py-3 rounded-lg transition-all hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 w-full text-left dark:text-slate-200">
                         <span class="material-icons-outlined text-base mr-3">hub</span>
@@ -1096,7 +1162,7 @@
                     </button>
                     <button onclick="switchView('simulation'); toggleMobileMenu()" class="nav-btn-mobile flex items-center text-sm font-medium text-slate-700 dark:text-slate-200 px-4 py-3 rounded-lg transition-all hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 w-full text-left dark:text-slate-200">
                         <span class="material-icons-outlined text-base mr-3">sports_esports</span>
-                        Trading Simulation
+                        Simulator
                     </button>
                     <button onclick="switchView('about'); toggleMobileMenu()" class="nav-btn-mobile flex items-center text-sm font-medium text-slate-700 dark:text-slate-200 px-4 py-3 rounded-lg transition-all hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 w-full text-left dark:text-slate-200">
                         <span class="material-icons-outlined text-base mr-3">info</span>
@@ -1537,6 +1603,27 @@
                 <div id="tracker-content" class="space-y-6"></div>
             </div>
 
+            <div id="view-regulatory" class="view-content">
+                <div class="mb-10">
+                    <h1 class="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-3">Regulatory <span class="hero-gradient">Pipeline</span></h1>
+                    <p class="text-slate-700 dark:text-slate-100 mb-8 text-lg">CFTC and NFA registration applications currently in review.</p>
+
+                    <div class="flex gap-4 items-center flex-wrap">
+                        <select id="regTypeFilter" onchange="filterRegStatus()" class="filter-select px-5 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm font-medium shadow-sm hover:border-indigo-300 transition-all focus:ring-2 focus:ring-indigo-500">
+                            <option value="">All Types</option>
+                            <option value="DCM">DCM</option>
+                            <option value="DCO">DCO</option>
+                            <option value="FCM">FCM</option>
+                            <option value="IB">IB</option>
+                        </select>
+
+                        <input type="text" id="regSearchInput" oninput="filterRegStatus()" placeholder="Search entities..." class="search-input flex-1 min-w-[200px] px-5 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm shadow-sm hover:border-indigo-300 transition-all">
+                    </div>
+                </div>
+
+                <div id="regulatory-content" class="space-y-6"></div>
+            </div>
+
             <div id="view-network" class="view-content">
                 <div class="mb-6">
                     <h1 class="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-3">Ecosystem <span class="hero-gradient">Network Map</span></h1>
@@ -1795,7 +1882,7 @@
         // Set correct view immediately to prevent flash of wrong content
         (function() {
             var hash = location.hash.replace('#','');
-            var valid = ['terminology','tracker','network','simulation','about','contact'];
+            var valid = ['terminology','tracker','regulatory','network','simulation','about','contact'];
             var view = valid.indexOf(hash) !== -1 ? hash : 'terminology';
             var el = document.getElementById('view-' + view);
             if (el) el.classList.add('active');
@@ -1804,8 +1891,11 @@
         })();
 
         const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1UiZ-MlqAgQ5MexL9BgwAzXWfTZHCYUj6-1F1sm7ZJBw/gviz/tq?tqx=out:csv&sheet=Model%20Layout%20(%3F)';
+        const REG_STATUS_CSV_URL = 'https://docs.google.com/spreadsheets/d/1hOyJ7yLCTGPhHV7T7HKj3N6KrVcv2BKDdJ4Tue9QI4o/gviz/tq?tqx=out:csv&sheet=Regulatory%20Status';
 
         let partnershipsData = [];
+        let regStatusData = [];
+        let regDataLoaded = false;
 
         function loadData() {
             const container = document.getElementById('tracker-content');
@@ -1830,7 +1920,19 @@
             });
         }
 
+        var simEnterTime = null;
+
         function switchView(viewName) {
+            // Track simulator session duration
+            if (simEnterTime && viewName !== 'simulation') {
+                var seconds = Math.round((Date.now() - simEnterTime) / 1000);
+                gtag('event', 'simulator_duration', { duration_seconds: seconds });
+                simEnterTime = null;
+            }
+            if (viewName === 'simulation') {
+                simEnterTime = Date.now();
+            }
+
             document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('text-primary', 'nav-active');
@@ -1856,6 +1958,14 @@
             if (viewName === 'network' && !networkGraphInitialized && partnershipsData.length) {
                 setTimeout(initNetworkGraph, 50);
             }
+
+            // Lazy-load regulatory data
+            if (viewName === 'regulatory' && !regDataLoaded) {
+                loadRegData();
+            }
+
+            // GA4 section tracking
+            gtag('event', 'section_view', { section_name: viewName });
         }
 
         function toggleMobileMenu() {
@@ -2037,6 +2147,156 @@
 
         function filterPartnerships() {
             renderTracker();
+        }
+
+        // ========================================
+        // REGULATORY STATUS TRACKER
+        // ========================================
+
+        function loadRegData() {
+            const container = document.getElementById('regulatory-content');
+            container.innerHTML = '<p class="text-center text-slate-500 py-8">Loading regulatory data...</p>';
+
+            Papa.parse(REG_STATUS_CSV_URL, {
+                download: true,
+                header: true,
+                skipEmptyLines: 'greedy',
+                complete: function(results) {
+                    regStatusData = results.data.filter(row => row['Entity'] && row['Entity'].trim());
+                    regDataLoaded = true;
+                    renderRegStatus();
+                },
+                error: function(err) {
+                    console.error('Failed to fetch regulatory data:', err);
+                    container.innerHTML = '<p class="text-center text-red-500 dark:text-red-400 py-8">Unable to load regulatory data. Please try refreshing.</p>';
+                }
+            });
+        }
+
+        function renderRegStatus() {
+            const container = document.getElementById('regulatory-content');
+
+            if (!regStatusData.length) {
+                container.innerHTML = '<p class="text-center text-slate-500">No regulatory data available</p>';
+                return;
+            }
+
+            const typeFilter = document.getElementById('regTypeFilter')?.value || '';
+            const searchQuery = document.getElementById('regSearchInput')?.value.toLowerCase() || '';
+
+            const filtered = regStatusData.filter(r => {
+                const regType = (r['Registration Type'] || '').trim();
+                const matchesType = !typeFilter || regType === typeFilter;
+                const matchesSearch = !searchQuery ||
+                    (r['Entity'] || '').toLowerCase().includes(searchQuery) ||
+                    (r['Last Update Summary'] || '').toLowerCase().includes(searchQuery) ||
+                    (r['Notes'] || '').toLowerCase().includes(searchQuery);
+                return matchesType && matchesSearch;
+            });
+
+            const typeOrder = { 'DCM': 1, 'DCO': 2, 'FCM': 3, 'IB': 4 };
+            filtered.sort((a, b) => {
+                const orderA = typeOrder[a['Registration Type']] || 99;
+                const orderB = typeOrder[b['Registration Type']] || 99;
+                if (orderA !== orderB) return orderA - orderB;
+                return (a['Entity'] || '').localeCompare(b['Entity'] || '');
+            });
+
+            let html = '';
+
+            filtered.forEach(r => {
+                const entityName = r['Entity'] || 'Unknown Entity';
+                const regType = (r['Registration Type'] || '').trim();
+                const status = (r['Status'] || '').trim();
+                const appDate = r['Application Date'] || '';
+                const lastUpdated = r['Last Updated'] || '';
+                const updateSummary = r['Last Update Summary'] || '';
+                const sourceUrl = (r['Source URL'] || '').trim();
+                const notes = r['Notes'] || '';
+
+                const typeBadgeClass = 'badge-' + regType;
+
+                const statusKey = status.toLowerCase().replace(/\s+/g, '-');
+                const statusClassMap = {
+                    'applied': 'status-applied',
+                    'under-review': 'status-under-review',
+                    'conditionally-approved': 'status-conditionally-approved',
+                    'denied': 'status-denied',
+                    'withdrawn': 'status-withdrawn',
+                    'suspended': 'status-suspended'
+                };
+                const statusClass = statusClassMap[statusKey] || 'status-under-review';
+
+                html += `
+                    <div class="partnership-card rounded-2xl overflow-hidden shadow-lg">
+                        <div class="p-8 pb-6">
+                            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
+                                <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 flex-1">${entityName}</h3>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="text-xs font-bold px-3 sm:px-4 py-2 rounded-full ${typeBadgeClass} uppercase tracking-wider whitespace-nowrap">${regType}</span>
+                                    <span class="text-xs font-bold px-3 sm:px-4 py-2 rounded-full ${statusClass} uppercase tracking-wider whitespace-nowrap">${status}</span>
+                                </div>
+                            </div>
+
+                            <div class="regulatory-box mb-6 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    ${appDate ? `
+                                    <div>
+                                        <div class="reg-label mb-2">Application Date</div>
+                                        <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">${appDate}</div>
+                                    </div>
+                                    ` : ''}
+                                    ${lastUpdated ? `
+                                    <div>
+                                        <div class="reg-label mb-2">Last Updated</div>
+                                        <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">${lastUpdated}</div>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+
+                            ${updateSummary ? `
+                            <div class="mb-6">
+                                <div class="flex items-start gap-3">
+                                    <span class="info-icon material-icons-outlined text-sm mt-0.5 flex-shrink-0">update</span>
+                                    <div class="flex-1">
+                                        <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Last Update</span>
+                                        <p class="text-sm text-slate-700 dark:text-slate-200 mt-2 leading-relaxed">${updateSummary}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+
+                            ${notes ? `
+                            <div class="mb-2">
+                                <div class="flex items-start gap-3">
+                                    <span class="info-icon material-icons-outlined text-sm mt-0.5 flex-shrink-0">info</span>
+                                    <div class="flex-1">
+                                        <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Notes</span>
+                                        <p class="text-sm text-slate-700 dark:text-slate-200 mt-2 leading-relaxed">${notes}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        ${sourceUrl ? `
+                        <div class="px-8 pb-6">
+                            <a href="${sourceUrl}" target="_blank" class="announcement-link">
+                                <span>Source</span>
+                                <span class="material-icons-outlined">arrow_forward</span>
+                            </a>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html || '<p class="text-center text-slate-600 dark:text-slate-200 py-8">No regulatory filings found</p>';
+        }
+
+        function filterRegStatus() {
+            renderRegStatus();
         }
 
         // ========================================
@@ -2926,6 +3186,7 @@
                     showDetailPanel(d);
                     // Pan to center the clicked node at the current zoom level
                     panToNode(d);
+                    gtag('event', 'network_node_click', { node_name: d.id, node_type: d.type });
                 }
                 hideGraphTooltip();
             });
@@ -3355,9 +3616,11 @@
             if (hiddenNodeTypes.has(type)) {
                 hiddenNodeTypes.delete(type);
                 el.classList.remove('legend-inactive');
+                gtag('event', 'network_filter', { filter_type: type, action: 'show' });
             } else {
                 hiddenNodeTypes.add(type);
                 el.classList.add('legend-inactive');
+                gtag('event', 'network_filter', { filter_type: type, action: 'hide' });
             }
             applyShowAllState();
         }
@@ -3388,10 +3651,12 @@
         function graphZoomIn() {
             if (!graphSvg || !graphZoom) return;
             graphSvg.transition().duration(300).call(graphZoom.scaleBy, 1.3);
+            gtag('event', 'network_zoom', { action: 'zoom_in' });
         }
         function graphZoomOut() {
             if (!graphSvg || !graphZoom) return;
             graphSvg.transition().duration(300).call(graphZoom.scaleBy, 0.7);
+            gtag('event', 'network_zoom', { action: 'zoom_out' });
         }
         function graphFitToView() {
             if (!graphSvg || !graphG) return;
@@ -3415,7 +3680,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
             var hash = location.hash.replace('#','');
-            var valid = ['terminology','tracker','network','simulation','about','contact'];
+            var valid = ['terminology','tracker','regulatory','network','simulation','about','contact'];
             switchView(valid.indexOf(hash) !== -1 ? hash : 'terminology');
         });
     </script>

@@ -1063,7 +1063,7 @@ function reset(){
 
 function dismissTip(){ el('sell-tip').classList.add('hidden'); }
 
-function startGame(){ el('tm').classList.add('hidden'); render(); updateUI(); }
+function startGame(){ el('tm').classList.add('hidden'); render(); updateUI(); if(window.parent&&window.parent.gtag)window.parent.gtag('event','simulator_start',{}); }
 
 var howStep = 0;
 function showHow(){ el('tm').classList.add('hidden'); el('hm').classList.remove('hidden'); howStep = 0; renderHow(); }
