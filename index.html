@@ -1998,6 +1998,7 @@
                 simIframe.contentWindow.postMessage({type:'sim-theme', dark: !isDark}, '*');
             }
             updateGraphColors();
+            gtag('event', 'dark_mode_toggle', { mode: isDark ? 'light' : 'dark' });
         }
 
         // Initialize dark mode on page load
@@ -2145,8 +2146,20 @@
             container.innerHTML = html || '<p class="text-center text-slate-600 dark:text-slate-200 py-8">No partnerships found</p>';
         }
 
+        var _partnerSearchTimer = null;
         function filterPartnerships() {
             renderTracker();
+            var type = document.getElementById('typeFilter').value;
+            if (type) {
+                gtag('event', 'partnership_filter', { filter_type: type });
+            }
+            clearTimeout(_partnerSearchTimer);
+            var query = document.getElementById('searchInput').value.trim();
+            if (query) {
+                _partnerSearchTimer = setTimeout(function() {
+                    gtag('event', 'partnership_search', { search_term: query });
+                }, 800);
+            }
         }
 
         // ========================================
@@ -2295,8 +2308,20 @@
             container.innerHTML = html || '<p class="text-center text-slate-600 dark:text-slate-200 py-8">No regulatory filings found</p>';
         }
 
+        var _regSearchTimer = null;
         function filterRegStatus() {
             renderRegStatus();
+            var type = document.getElementById('regTypeFilter').value;
+            if (type) {
+                gtag('event', 'regulatory_filter', { filter_type: type });
+            }
+            clearTimeout(_regSearchTimer);
+            var query = document.getElementById('regSearchInput').value.trim();
+            if (query) {
+                _regSearchTimer = setTimeout(function() {
+                    gtag('event', 'regulatory_search', { search_term: query });
+                }, 800);
+            }
         }
 
         // ========================================
@@ -3682,6 +3707,42 @@
             var hash = location.hash.replace('#','');
             var valid = ['terminology','tracker','regulatory','network','simulation','about','contact'];
             switchView(valid.indexOf(hash) !== -1 ? hash : 'terminology');
+
+            // GA4: Contact form submission
+            var contactForm = document.querySelector('form[name="contact"]');
+            if (contactForm) {
+                contactForm.addEventListener('submit', function() {
+                    gtag('event', 'contact_form_submit', {});
+                });
+            }
+
+            // GA4: Outbound link clicks on cards
+            document.addEventListener('click', function(e) {
+                var link = e.target.closest('.announcement-link');
+                if (link) {
+                    gtag('event', 'outbound_link_click', {
+                        link_url: link.href,
+                        link_text: link.textContent.trim()
+                    });
+                }
+            });
+
+            // GA4: Terminology scroll depth
+            var scrollMilestones = {};
+            var termView = document.getElementById('view-terminology');
+            window.addEventListener('scroll', function() {
+                if (!termView || !termView.classList.contains('active')) return;
+                var rect = termView.getBoundingClientRect();
+                var viewHeight = termView.scrollHeight;
+                var scrolled = -rect.top + window.innerHeight;
+                var pct = Math.min(Math.round((scrolled / viewHeight) * 100), 100);
+                [25, 50, 75, 100].forEach(function(m) {
+                    if (pct >= m && !scrollMilestones[m]) {
+                        scrollMilestones[m] = true;
+                        gtag('event', 'terminology_scroll', { depth_percent: m });
+                    }
+                });
+            });
         });
     </script>
 
