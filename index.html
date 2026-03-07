@@ -1951,6 +1951,9 @@
             if (viewName === 'regulatory' && !regDataLoaded) {
                 loadRegData();
             }
+
+            // GA4 section tracking
+            gtag('event', 'section_view', { section_name: viewName });
         }
 
         function toggleMobileMenu() {
@@ -3171,6 +3174,7 @@
                     showDetailPanel(d);
                     // Pan to center the clicked node at the current zoom level
                     panToNode(d);
+                    gtag('event', 'network_node_click', { node_name: d.id, node_type: d.type });
                 }
                 hideGraphTooltip();
             });
@@ -3600,9 +3604,11 @@
             if (hiddenNodeTypes.has(type)) {
                 hiddenNodeTypes.delete(type);
                 el.classList.remove('legend-inactive');
+                gtag('event', 'network_filter', { filter_type: type, action: 'show' });
             } else {
                 hiddenNodeTypes.add(type);
                 el.classList.add('legend-inactive');
+                gtag('event', 'network_filter', { filter_type: type, action: 'hide' });
             }
             applyShowAllState();
         }
@@ -3633,10 +3639,12 @@
         function graphZoomIn() {
             if (!graphSvg || !graphZoom) return;
             graphSvg.transition().duration(300).call(graphZoom.scaleBy, 1.3);
+            gtag('event', 'network_zoom', { action: 'zoom_in' });
         }
         function graphZoomOut() {
             if (!graphSvg || !graphZoom) return;
             graphSvg.transition().duration(300).call(graphZoom.scaleBy, 0.7);
+            gtag('event', 'network_zoom', { action: 'zoom_out' });
         }
         function graphFitToView() {
             if (!graphSvg || !graphG) return;
