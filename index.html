@@ -1970,6 +1970,7 @@
 
             // GA4 section tracking
             gtag('event', 'section_view', { section_name: viewName });
+            gtag('event', 'page_view', { page_path: '/' + viewName, page_title: viewName });
         }
 
         function toggleMobileMenu() {
