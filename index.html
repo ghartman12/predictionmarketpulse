@@ -1914,7 +1914,7 @@
                     renderTracker();
                     // If network view is already active (direct navigation via hash), init the graph now
                     if (!networkGraphInitialized && document.getElementById('view-network').classList.contains('active')) {
-                        setTimeout(initNetworkGraph, 50);
+                        setTimeout(initNetworkGraph, 300);
                     }
                 },
                 error: function(err) {
@@ -1960,7 +1960,7 @@
 
             // Lazy init network graph
             if (viewName === 'network' && !networkGraphInitialized && partnershipsData.length) {
-                setTimeout(initNetworkGraph, 50);
+                setTimeout(initNetworkGraph, 300);
             }
 
             // Lazy-load regulatory data
@@ -3021,6 +3021,12 @@
             const width = container.clientWidth;
             const height = svgEl.clientHeight;
             const isMobile = window.innerWidth <= 640;
+
+            // Scatter nodes randomly so the force simulation can spread them
+            graphNodes.forEach(n => {
+                n.x = width / 2 + (Math.random() - 0.5) * width * 0.8;
+                n.y = height / 2 + (Math.random() - 0.5) * height * 0.8;
+            });
 
             graphSvg = d3.select(svgEl);
             graphSvg.selectAll('*').remove();
