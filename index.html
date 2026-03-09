@@ -2818,7 +2818,7 @@
                 if (isAcquisition) {
                     rawAcquirer.split(',').map(s => s.trim()).filter(Boolean).forEach(name => {
                         const key = resolveRaw(name);
-                        if (key) acquirerIds.add(key);
+                        if (key) { ensureNode(name, null); acquirerIds.add(key); }
                     });
                     rawAcqTarget.split(',').map(s => s.trim()).filter(Boolean).forEach(name => {
                         const key = resolveRaw(name);
