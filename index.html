@@ -2219,7 +2219,7 @@
         function regGroupKey(entity) {
             return (entity || '').trim()
                 .replace(/\s+(DCM|DCO|FCM|IB),?\s*(LLC|Inc\.?|LP)?$/i, '')
-                .replace(/\s+(Markets|Clearing|Exchange),?\s*(LLC|Inc\.?|LP)?$/i, '')
+                .replace(/\s+(Exchange\s+and\s+Clearing|Board\s+of\s+Trade\s+Exchange|Board\s+of\s+Trade\s+Clearing|Markets|Clearing|Exchange),?\s*(LLC|Inc\.?|LP)?$/i, '')
                 .replace(/,?\s*(LLC|Inc\.?|LP)$/i, '')
                 .trim();
         }
