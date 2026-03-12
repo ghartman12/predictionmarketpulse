@@ -2322,8 +2322,10 @@
                     const sourceUrl = (f['Source URL'] || '').trim();
                     const isApproved = status === 'CFTC Designated' || status === 'CFTC Registered' || status === 'NFA Registered';
                     const dateLabel = isApproved ? (effDate ? `${status.split(' ')[1]} ${effDate}` : '') : (appDate ? `Filed ${appDate}` : '');
+                    const statusKey = status.toLowerCase().replace(/\s+/g, '-');
                     return `<div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                                 <span class="text-xs font-bold px-2 py-1 rounded badge-${regType} uppercase tracking-wider w-12 text-center inline-block">${regType}</span>
+                                <span class="text-xs font-bold px-2 py-1 rounded-full ${statusClassMap[statusKey] || 'status-pending'} uppercase tracking-wider w-36 text-center inline-block">${status}</span>
                                 <span class="text-sm text-slate-600 dark:text-slate-300">${entityName}</span>
                                 ${dateLabel ? `<span class="text-sm text-slate-500 dark:text-slate-400">${dateLabel}</span>` : ''}
                                 ${sourceUrl ? `<a href="${sourceUrl}" target="_blank" class="text-sm text-blue-600 dark:text-blue-400 hover:underline ml-auto">Source ↗</a>` : ''}
@@ -2348,9 +2350,6 @@
                         <div class="p-8 pb-6">
                             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
                                 <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 flex-1">${displayName}</h3>
-                                <div class="flex flex-wrap gap-2">
-                                    ${typeBadges}${statusBadges}
-                                </div>
                             </div>
 
                             <div class="regulatory-box mb-6 rounded-xl p-5 border border-slate-200 dark:border-slate-700 space-y-3">
