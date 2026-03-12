@@ -1337,7 +1337,7 @@
                                         <h3 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">IB</h3>
                                         <p class="text-indigo-600 dark:text-indigo-300 font-semibold">Introducing Broker</p>
                                     </div>
-                                    <span class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 text-sm font-semibold rounded-lg whitespace-nowrap">NFA Registered</span>
+                                    <span class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 text-sm font-semibold rounded-lg whitespace-nowrap">NFA Approved</span>
                                 </div>
                                 
                                 <p class="text-slate-700 dark:text-slate-100 leading-relaxed mt-6 mb-6 flex-grow">A CFTC-registered intermediary that solicits or accepts customer orders but does not hold customer funds; instead, it "introduces" those accounts to an FCM that carries the positions.</p>
@@ -1630,11 +1630,12 @@
                         <select id="regStatusFilter" onchange="filterRegStatus()" class="filter-select px-5 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm font-medium shadow-sm hover:border-indigo-300 transition-all focus:ring-2 focus:ring-indigo-500">
                             <option value="">All Statuses</option>
                             <option value="Approved">Approved (all)</option>
-                            <option value="Applied">Applied (all)</option>
+                            <option value="Pending">Pending (all)</option>
                             <option value="CFTC Designated">CFTC Designated</option>
-                            <option value="CFTC Applied">CFTC Applied</option>
-                            <option value="NFA Registered">NFA Registered</option>
-                            <option value="NFA Applied">NFA Applied</option>
+                            <option value="CFTC Registered">CFTC Registered</option>
+                            <option value="CFTC Pending">CFTC Pending</option>
+                            <option value="NFA Approved">NFA Approved</option>
+                            <option value="NFA Pending">NFA Pending</option>
                         </select>
 
                         <select id="regTypeFilter" onchange="filterRegStatus()" class="filter-select px-5 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm font-medium shadow-sm hover:border-indigo-300 transition-all focus:ring-2 focus:ring-indigo-500">
@@ -2247,14 +2248,14 @@
             });
 
             // Filter groups
-            const approvedStatuses = ['CFTC Designated', 'NFA Registered'];
-            const appliedStatuses = ['CFTC Applied', 'NFA Applied'];
+            const approvedStatuses = ['CFTC Designated', 'CFTC Registered', 'NFA Approved'];
+            const pendingStatuses = ['CFTC Pending', 'NFA Pending'];
             const filteredGroups = Object.values(groups).filter(g => {
                 let matchesStatus;
                 if (statusFilter === 'Approved') {
                     matchesStatus = g.filings.some(f => approvedStatuses.includes((f['Status'] || '').trim()));
-                } else if (statusFilter === 'Applied') {
-                    matchesStatus = g.filings.some(f => appliedStatuses.includes((f['Status'] || '').trim()));
+                } else if (statusFilter === 'Pending') {
+                    matchesStatus = g.filings.some(f => pendingStatuses.includes((f['Status'] || '').trim()));
                 } else {
                     matchesStatus = !statusFilter || g.filings.some(f => (f['Status'] || '').trim() === statusFilter);
                 }
@@ -2267,8 +2268,8 @@
                 return matchesStatus && matchesType && matchesSearch;
             });
 
-            // Sort: Approved first, then Applied; within each, by earliest date
-            const statusOrder = { 'CFTC Designated': 0, 'NFA Registered': 0, 'CFTC Applied': 1, 'NFA Applied': 1 };
+            // Sort: Approved first, then Pending; within each, by earliest date
+            const statusOrder = { 'CFTC Designated': 0, 'CFTC Registered': 0, 'NFA Approved': 0, 'CFTC Pending': 1, 'NFA Pending': 1 };
             filteredGroups.sort((a, b) => {
                 const statusA = Math.min(...a.filings.map(f => statusOrder[(f['Status'] || '').trim()] ?? 2));
                 const statusB = Math.min(...b.filings.map(f => statusOrder[(f['Status'] || '').trim()] ?? 2));
@@ -2282,9 +2283,10 @@
 
             const statusClassMap = {
                 'cftc-designated': 'status-designated',
-                'cftc-applied': 'status-pending',
-                'nfa-registered': 'status-registered',
-                'nfa-applied': 'status-pending',
+                'cftc-registered': 'status-designated',
+                'cftc-pending': 'status-pending',
+                'nfa-approved': 'status-registered',
+                'nfa-pending': 'status-pending',
                 'denied': 'status-denied',
                 'withdrawn': 'status-withdrawn',
                 'suspended': 'status-suspended'
@@ -2318,7 +2320,7 @@
                     const appDate = f['Application Date'] || '';
                     const effDate = f['Effective Date'] || '';
                     const sourceUrl = (f['Source URL'] || '').trim();
-                    const isApproved = status === 'CFTC Designated' || status === 'NFA Registered';
+                    const isApproved = status === 'CFTC Designated' || status === 'CFTC Registered' || status === 'NFA Approved';
                     const dateLabel = isApproved ? (effDate ? `${status.split(' ')[1]} ${effDate}` : '') : (appDate ? `Filed ${appDate}` : '');
                     return `<div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                                 <span class="text-xs font-bold px-2 py-1 rounded badge-${regType} uppercase tracking-wider w-fit">${regType}</span>
