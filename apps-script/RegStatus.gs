@@ -118,22 +118,22 @@ function getRegSeedData_() {
     ['XV Clearing, LLC (STX)', 'DCO', 'CFTC Pending', '2026-02-27', '', '2026-03-10', 'DCO application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations', 'Also filed DCM via XV Exchange (2025-12-09)'],
 
     // ══════════════════════════════════════
-    // NFA APPROVED — FCMs (Futures Commission Merchants)
+    // NFA REGISTERED — FCMs (Futures Commission Merchants)
     // ══════════════════════════════════════
-    ['Coinbase Financial Markets, Inc.', 'FCM', 'NFA Approved', '', '2023-08-14', '2026-03-10', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=hDSLhKvcHgE%3D', 'Offers Kalshi event contracts'],
-    ['Robinhood Derivatives, LLC', 'FCM', 'NFA Approved', '', '2024-01-01', '2026-03-10', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=FKlW2H4UPq0%3D', 'NFA ID 0424278; Kalshi and ForecastEx clearing member; acquiring MIAXdx DCM/DCO with Susquehanna'],
-    ['Webull Financial LLC', 'FCM', 'NFA Approved', '', '', '2026-03-10', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=s1SZsbNB0%2Bo%3D', 'Offers Kalshi event contracts'],
-    ['Interactive Brokers LLC', 'FCM', 'NFA Approved', '', '', '2026-03-10', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=QHPcC3ptg/I%3D', 'ForecastEx parent company; CME Group clearing member'],
-    ['Performance Predictions II, LLC (PrizePicks)', 'FCM', 'NFA Approved', '', '2025-09-23', '2026-03-10', 'First sports entertainment operator to receive FCM registration', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=cq4lPPPq0Ew%3D', 'Offers Kalshi event contracts'],
-    ['Sleeper Markets LLC', 'FCM', 'NFA Approved', '', '2026-01-15', '2026-03-10', 'NFA approved FCM and swap firm registration', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=tlPlEWtBnsQ%3D', 'Offers Kalshi event contracts; previously sued CFTC over delayed approval'],
-    ['FanDuel Prediction Markets LLC', 'FCM', 'NFA Approved', '', '2025-12-22', '2026-03-10', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=pw8YVHX3mNs%3D', 'Offers CME Group event contracts'],
-    ['UDM LLC (Underdog)', 'FCM', 'NFA Approved', '', '2026-01-09', '2026-03-10', 'NFA approved FCM and swap firm registration', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=5BM2rMKqO5w%3D', 'Acquired Aristotle Exchange DCM/DCO (3/9/2026)'],
+    ['Coinbase Financial Markets, Inc.', 'FCM', 'NFA Registered', '', '2023-08-14', '2026-03-10', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=hDSLhKvcHgE%3D', 'Offers Kalshi event contracts'],
+    ['Robinhood Derivatives, LLC', 'FCM', 'NFA Registered', '', '2024-01-01', '2026-03-10', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=FKlW2H4UPq0%3D', 'NFA ID 0424278; Kalshi and ForecastEx clearing member; acquiring MIAXdx DCM/DCO with Susquehanna'],
+    ['Webull Financial LLC', 'FCM', 'NFA Registered', '', '', '2026-03-10', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=s1SZsbNB0%2Bo%3D', 'Offers Kalshi event contracts'],
+    ['Interactive Brokers LLC', 'FCM', 'NFA Registered', '', '', '2026-03-10', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=QHPcC3ptg/I%3D', 'ForecastEx parent company; CME Group clearing member'],
+    ['Performance Predictions II, LLC (PrizePicks)', 'FCM', 'NFA Registered', '', '2025-09-23', '2026-03-10', 'First sports entertainment operator to receive FCM registration', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=cq4lPPPq0Ew%3D', 'Offers Kalshi event contracts'],
+    ['Sleeper Markets LLC', 'FCM', 'NFA Registered', '', '2026-01-15', '2026-03-10', 'NFA approved FCM and swap firm registration', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=tlPlEWtBnsQ%3D', 'Offers Kalshi event contracts; previously sued CFTC over delayed approval'],
+    ['FanDuel Prediction Markets LLC', 'FCM', 'NFA Registered', '', '2025-12-22', '2026-03-10', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=pw8YVHX3mNs%3D', 'Offers CME Group event contracts'],
+    ['UDM LLC (Underdog)', 'FCM', 'NFA Registered', '', '2026-01-09', '2026-03-10', 'NFA approved FCM and swap firm registration', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=5BM2rMKqO5w%3D', 'Acquired Aristotle Exchange DCM/DCO (3/9/2026)'],
 
     // ══════════════════════════════════════
-    // NFA APPROVED — IBs (Introducing Brokers)
+    // NFA REGISTERED — IBs (Introducing Brokers)
     // ══════════════════════════════════════
-    ['Gus III LLC (DraftKings Predictions)', 'IB', 'NFA Approved', '', '2025-12-04', '2026-03-10', 'IB registration granted; launched DraftKings Predictions in 38 states', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=5AIFEr/FlzA%3D', 'Introduces customers to CME Group event contracts; acquired Railbird Exchange DCM'],
-    ['Paragon Global Markets LLC (Fanatics Markets)', 'IB', 'NFA Approved', '', '2025-07-01', '2026-03-10', 'Fanatics acquired Paragon for NFA IB status; rebranded as Fanatics Markets IB', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=jHY1Hb7WkB4%3D', 'Introduces customers to Crypto.com/CDNA event contracts'],
+    ['Gus III LLC (DraftKings Predictions)', 'IB', 'NFA Registered', '', '2025-12-04', '2026-03-10', 'IB registration granted; launched DraftKings Predictions in 38 states', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=5AIFEr/FlzA%3D', 'Introduces customers to CME Group event contracts; acquired Railbird Exchange DCM'],
+    ['Paragon Global Markets LLC (Fanatics Markets)', 'IB', 'NFA Registered', '', '2025-07-01', '2026-03-10', 'Fanatics acquired Paragon for NFA IB status; rebranded as Fanatics Markets IB', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=jHY1Hb7WkB4%3D', 'Introduces customers to Crypto.com/CDNA event contracts'],
 
     // ══════════════════════════════════════
     // NFA PENDING — FCM/IB Applications
@@ -181,7 +181,7 @@ function reseedRegSheet() {
   sheet.setColumnWidth(9, 400);  // Notes
 
   // Data validation for Status column
-  var statusValues = ['CFTC Designated', 'CFTC Registered', 'CFTC Pending', 'NFA Approved', 'NFA Pending', 'Denied', 'Withdrawn', 'Suspended'];
+  var statusValues = ['CFTC Designated', 'CFTC Registered', 'CFTC Pending', 'NFA Registered', 'NFA Pending', 'Denied', 'Withdrawn', 'Suspended'];
   var statusRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(statusValues, true)
     .setAllowInvalid(true)
@@ -199,7 +199,7 @@ function reseedRegSheet() {
   console.log('Reseeded "' + SHEET_REG_STATUS + '" with ' + seedData.length + ' rows (' +
     seedData.filter(function(r) { return r[2] === 'CFTC Designated'; }).length + ' CFTC designated, ' +
     seedData.filter(function(r) { return r[2] === 'CFTC Registered'; }).length + ' CFTC registered, ' +
-    seedData.filter(function(r) { return r[2] === 'NFA Approved'; }).length + ' NFA registered, ' +
+    seedData.filter(function(r) { return r[2] === 'NFA Registered'; }).length + ' NFA registered, ' +
     seedData.filter(function(r) { return r[2] === 'CFTC Pending'; }).length + ' CFTC pending, ' +
     seedData.filter(function(r) { return r[2] === 'NFA Pending'; }).length + ' NFA pending).');
 
