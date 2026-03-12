@@ -356,6 +356,20 @@
         }
 
         /* Regulatory Status Badges */
+        .status-pending {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #78350f;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+        .status-designated {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            color: white;
+        }
+        .status-registered {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
         .status-applied {
             background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
             color: #78350f;
@@ -1101,12 +1115,10 @@
                         <span class="material-icons-outlined text-base mr-2">trending_up</span>
                         Partnerships
                     </button>
-                    <!-- Regulatory nav hidden while page is disabled
                     <button onclick="switchView('regulatory')" id="nav-regulatory" class="nav-btn flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
                         <span class="material-icons-outlined text-base mr-2">gavel</span>
                         Regulatory
                     </button>
-                    -->
                     <button onclick="switchView('network')" id="nav-network" class="nav-btn flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
                         <span class="material-icons-outlined text-base mr-2">hub</span>
                         Network Map
@@ -1154,12 +1166,10 @@
                         <span class="material-icons-outlined text-base mr-3">trending_up</span>
                         Partnerships
                     </button>
-                    <!-- Regulatory nav hidden while page is disabled
                     <button onclick="switchView('regulatory'); toggleMobileMenu()" class="nav-btn-mobile flex items-center text-sm font-medium text-slate-700 dark:text-slate-200 px-4 py-3 rounded-lg transition-all hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 w-full text-left dark:text-slate-200">
                         <span class="material-icons-outlined text-base mr-3">gavel</span>
                         Regulatory
                     </button>
-                    -->
                     <button onclick="switchView('network'); toggleMobileMenu()" class="nav-btn-mobile flex items-center text-sm font-medium text-slate-700 dark:text-slate-200 px-4 py-3 rounded-lg transition-all hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 w-full text-left dark:text-slate-200">
                         <span class="material-icons-outlined text-base mr-3">hub</span>
                         Network Map
@@ -1609,10 +1619,21 @@
 
             <div id="view-regulatory" class="view-content">
                 <div class="mb-10">
-                    <h1 class="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-3">Regulatory <span class="hero-gradient">Pipeline</span></h1>
-                    <p class="text-slate-700 dark:text-slate-100 mb-8 text-lg">CFTC and NFA registration applications currently in review.</p>
+                    <h1 class="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-3">Regulatory <span class="hero-gradient">Tracker</span></h1>
+                    <p class="text-slate-700 dark:text-slate-100 mb-8 text-lg">CFTC and NFA prediction market designations, registrations, and applications.</p>
 
                     <div class="flex gap-4 items-center flex-wrap">
+                        <select id="regStatusFilter" onchange="filterRegStatus()" class="filter-select px-5 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm font-medium shadow-sm hover:border-indigo-300 transition-all focus:ring-2 focus:ring-indigo-500">
+                            <option value="">All Statuses</option>
+                            <option value="Approved">Approved (all)</option>
+                            <option value="Pending">Pending (all)</option>
+                            <option value="CFTC Designated">CFTC Designated</option>
+                            <option value="CFTC Registered">CFTC Registered</option>
+                            <option value="CFTC Pending">CFTC Pending</option>
+                            <option value="NFA Registered">NFA Registered</option>
+                            <option value="NFA Pending">NFA Pending</option>
+                        </select>
+
                         <select id="regTypeFilter" onchange="filterRegStatus()" class="filter-select px-5 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm font-medium shadow-sm hover:border-indigo-300 transition-all focus:ring-2 focus:ring-indigo-500">
                             <option value="">All Types</option>
                             <option value="DCM">DCM</option>
@@ -1886,7 +1907,7 @@
         // Set correct view immediately to prevent flash of wrong content
         (function() {
             var hash = location.hash.replace('#','');
-            var valid = ['terminology','tracker','network','simulation','about','contact'];
+            var valid = ['terminology','tracker','regulatory','network','simulation','about','contact'];
             var view = valid.indexOf(hash) !== -1 ? hash : 'terminology';
             var el = document.getElementById('view-' + view);
             if (el) el.classList.add('active');
@@ -2191,6 +2212,15 @@
             });
         }
 
+        // Normalize entity names to group related DCM/DCO/FCM/IB filings
+        function regGroupKey(entity) {
+            return (entity || '').trim()
+                .replace(/\s+(DCM|DCO|FCM|IB),?\s*(LLC|Inc\.?|LP)?$/i, '')
+                .replace(/\s+(Exchange\s+and\s+Clearing|Board\s+of\s+Trade\s+Exchange|Board\s+of\s+Trade\s+Clearing|Markets|Clearing|Exchange),?\s*(LLC|Inc\.?|LP)?$/i, '')
+                .replace(/,?\s*(LLC|Inc\.?|LP)$/i, '')
+                .trim();
+        }
+
         function renderRegStatus() {
             const container = document.getElementById('regulatory-content');
 
@@ -2199,113 +2229,154 @@
                 return;
             }
 
+            const statusFilter = document.getElementById('regStatusFilter')?.value || '';
             const typeFilter = document.getElementById('regTypeFilter')?.value || '';
             const searchQuery = document.getElementById('regSearchInput')?.value.toLowerCase() || '';
 
-            const filtered = regStatusData.filter(r => {
-                const regType = (r['Registration Type'] || '').trim();
-                const matchesType = !typeFilter || regType === typeFilter;
-                const matchesSearch = !searchQuery ||
-                    (r['Entity'] || '').toLowerCase().includes(searchQuery) ||
-                    (r['Last Update Summary'] || '').toLowerCase().includes(searchQuery) ||
-                    (r['Notes'] || '').toLowerCase().includes(searchQuery);
-                return matchesType && matchesSearch;
+            // Group rows by normalized entity name
+            const groups = {};
+            regStatusData.forEach(r => {
+                const entity = (r['Entity'] || '').trim();
+                if (!entity) return;
+                const key = regGroupKey(entity);
+                if (!groups[key]) groups[key] = { key, filings: [] };
+                groups[key].filings.push(r);
             });
 
-            const typeOrder = { 'DCM': 1, 'DCO': 2, 'FCM': 3, 'IB': 4 };
-            filtered.sort((a, b) => {
-                const orderA = typeOrder[a['Registration Type']] || 99;
-                const orderB = typeOrder[b['Registration Type']] || 99;
-                if (orderA !== orderB) return orderA - orderB;
-                return (a['Entity'] || '').localeCompare(b['Entity'] || '');
+            // Filter groups
+            const approvedStatuses = ['CFTC Designated', 'CFTC Registered', 'NFA Registered'];
+            const pendingStatuses = ['CFTC Pending', 'NFA Pending'];
+            const filteredGroups = Object.values(groups).filter(g => {
+                let matchesStatus;
+                if (statusFilter === 'Approved') {
+                    matchesStatus = g.filings.some(f => approvedStatuses.includes((f['Status'] || '').trim()));
+                } else if (statusFilter === 'Pending') {
+                    matchesStatus = g.filings.some(f => pendingStatuses.includes((f['Status'] || '').trim()));
+                } else {
+                    matchesStatus = !statusFilter || g.filings.some(f => (f['Status'] || '').trim() === statusFilter);
+                }
+                const matchesType = !typeFilter || g.filings.some(f => (f['Registration Type'] || '').trim() === typeFilter);
+                const matchesSearch = !searchQuery || g.filings.some(f =>
+                    (f['Entity'] || '').toLowerCase().includes(searchQuery) ||
+                    (f['Last Update Summary'] || '').toLowerCase().includes(searchQuery) ||
+                    (f['Notes'] || '').toLowerCase().includes(searchQuery)
+                );
+                return matchesStatus && matchesType && matchesSearch;
+            });
+
+            // Sort: Approved first, then Pending; within each, by earliest date
+            const statusOrder = { 'CFTC Designated': 0, 'CFTC Registered': 0, 'NFA Registered': 0, 'CFTC Pending': 1, 'NFA Pending': 1 };
+            filteredGroups.sort((a, b) => {
+                const statusA = Math.min(...a.filings.map(f => statusOrder[(f['Status'] || '').trim()] ?? 2));
+                const statusB = Math.min(...b.filings.map(f => statusOrder[(f['Status'] || '').trim()] ?? 2));
+                if (statusA !== statusB) return statusA - statusB;
+                const dateA = a.filings.map(f => f['Effective Date'] || f['Application Date'] || '').sort()[0] || '';
+                const dateB = b.filings.map(f => f['Effective Date'] || f['Application Date'] || '').sort()[0] || '';
+                return dateA.localeCompare(dateB);
             });
 
             let html = '';
 
-            filtered.forEach(r => {
-                const entityName = r['Entity'] || 'Unknown Entity';
-                const regType = (r['Registration Type'] || '').trim();
-                const status = (r['Status'] || '').trim();
-                const appDate = r['Application Date'] || '';
-                const lastUpdated = r['Last Updated'] || '';
-                const updateSummary = r['Last Update Summary'] || '';
-                const sourceUrl = (r['Source URL'] || '').trim();
-                const notes = r['Notes'] || '';
+            const statusClassMap = {
+                'cftc-designated': 'status-designated',
+                'cftc-registered': 'status-designated',
+                'cftc-pending': 'status-pending',
+                'nfa-registered': 'status-registered',
+                'nfa-pending': 'status-pending',
+                'denied': 'status-denied',
+                'withdrawn': 'status-withdrawn',
+                'suspended': 'status-suspended'
+            };
 
-                const typeBadgeClass = 'badge-' + regType;
+            filteredGroups.forEach(g => {
+                // Sort filings: DCM first, then DCO, FCM, IB
+                const typeOrder = { 'DCM': 1, 'DCO': 2, 'FCM': 3, 'IB': 4 };
+                g.filings.sort((a, b) => (typeOrder[a['Registration Type']] || 99) - (typeOrder[b['Registration Type']] || 99));
 
-                const statusKey = status.toLowerCase().replace(/\s+/g, '-');
-                const statusClassMap = {
-                    'applied': 'status-applied',
-                    'under-review': 'status-under-review',
-                    'conditionally-approved': 'status-conditionally-approved',
-                    'denied': 'status-denied',
-                    'withdrawn': 'status-withdrawn',
-                    'suspended': 'status-suspended'
-                };
-                const statusClass = statusClassMap[statusKey] || 'status-under-review';
+                // Use the group key as display name, fall back to first entity name
+                const displayName = g.key || g.filings[0]['Entity'];
+
+                // Build header badges — type badges for each filing, one status badge if uniform
+                const typeBadges = g.filings.map(f => {
+                    const regType = (f['Registration Type'] || '').trim();
+                    return `<span class="text-xs font-bold px-3 sm:px-4 py-2 rounded-full badge-${regType} uppercase tracking-wider whitespace-nowrap">${regType}</span>`;
+                }).join('');
+
+                const uniqueStatuses = [...new Set(g.filings.map(f => (f['Status'] || '').trim()))];
+                const statusBadges = uniqueStatuses.map(status => {
+                    const statusKey = status.toLowerCase().replace(/\s+/g, '-');
+                    return `<span class="text-xs font-bold px-3 sm:px-4 py-2 rounded-full ${statusClassMap[statusKey] || 'status-pending'} uppercase tracking-wider whitespace-nowrap">${status}</span>`;
+                }).join('');
+
+                // Build filing details rows
+                const filingRows = g.filings.map(f => {
+                    const regType = (f['Registration Type'] || '').trim();
+                    const entityName = (f['Entity'] || '').trim();
+                    const status = (f['Status'] || '').trim();
+                    const appDate = f['Application Date'] || '';
+                    const effDate = f['Effective Date'] || '';
+                    const sourceUrl = (f['Source URL'] || '').trim();
+                    const isApproved = status === 'CFTC Designated' || status === 'CFTC Registered' || status === 'NFA Registered';
+                    const dateLabel = isApproved ? (effDate ? `${status.split(' ')[1]} ${effDate}` : '') : (appDate ? `Filed ${appDate}` : '');
+                    const statusKey = status.toLowerCase().replace(/\s+/g, '-');
+                    return `<div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                                <span class="text-xs font-bold px-2 py-1 rounded badge-${regType} uppercase tracking-wider w-12 text-center inline-block">${regType}</span>
+                                <span class="text-xs font-bold px-2 py-1 rounded-full ${statusClassMap[statusKey] || 'status-pending'} uppercase tracking-wider w-36 text-center inline-block">${status}</span>
+                                <span class="text-sm text-slate-600 dark:text-slate-300">${entityName}</span>
+                                ${dateLabel ? `<span class="text-sm text-slate-500 dark:text-slate-400">${dateLabel}</span>` : ''}
+                                ${sourceUrl ? `<a href="${sourceUrl}" target="_blank" class="text-sm text-blue-600 dark:text-blue-400 hover:underline ml-auto">Source ↗</a>` : ''}
+                            </div>`;
+                }).join('');
+
+                // Collect notes — filter out "Also filed" cross-references since grouping handles that
+                const allNotes = [...new Set(g.filings.map(f => (f['Notes'] || '').trim()).filter(Boolean))]
+                    .filter(n => !n.match(/^Also filed (DCM|DCO|FCM|IB)/i));
+
+                // Only show update summary if it's meaningful (not just "application filed" or "designation granted")
+                const meaningfulUpdates = g.filings
+                    .filter(f => {
+                        const summary = (f['Last Update Summary'] || '').trim().toLowerCase();
+                        return summary && !summary.match(/^(dcm|dco|fcm|ib) (application filed|designation granted|registration granted)$/i);
+                    })
+                    .map(f => ({ summary: f['Last Update Summary'], date: f['Last Updated'] }));
+                const latestMeaningful = meaningfulUpdates.sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0];
 
                 html += `
                     <div class="partnership-card rounded-2xl overflow-hidden shadow-lg">
                         <div class="p-8 pb-6">
                             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
-                                <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 flex-1">${entityName}</h3>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="text-xs font-bold px-3 sm:px-4 py-2 rounded-full ${typeBadgeClass} uppercase tracking-wider whitespace-nowrap">${regType}</span>
-                                    <span class="text-xs font-bold px-3 sm:px-4 py-2 rounded-full ${statusClass} uppercase tracking-wider whitespace-nowrap">${status}</span>
-                                </div>
+                                <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 flex-1">${displayName}</h3>
                             </div>
 
-                            <div class="regulatory-box mb-6 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                    ${appDate ? `
-                                    <div>
-                                        <div class="reg-label mb-2">Application Date</div>
-                                        <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">${appDate}</div>
-                                    </div>
-                                    ` : ''}
-                                    ${lastUpdated ? `
-                                    <div>
-                                        <div class="reg-label mb-2">Last Updated</div>
-                                        <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">${lastUpdated}</div>
-                                    </div>
-                                    ` : ''}
-                                </div>
+                            <div class="regulatory-box mb-6 rounded-xl p-5 border border-slate-200 dark:border-slate-700 space-y-3">
+                                ${filingRows}
                             </div>
 
-                            ${updateSummary ? `
+                            ${latestMeaningful ? `
                             <div class="mb-6">
                                 <div class="flex items-start gap-3">
                                     <span class="info-icon material-icons-outlined text-sm mt-0.5 flex-shrink-0">update</span>
                                     <div class="flex-1">
-                                        <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Last Update</span>
-                                        <p class="text-sm text-slate-700 dark:text-slate-200 mt-2 leading-relaxed">${updateSummary}</p>
+                                        <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Latest Update</span>
+                                        <p class="text-sm text-slate-700 dark:text-slate-200 mt-2 leading-relaxed">${latestMeaningful.summary}</p>
+                                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">${latestMeaningful.date}</p>
                                     </div>
                                 </div>
                             </div>
                             ` : ''}
 
-                            ${notes ? `
+                            ${allNotes.length ? `
                             <div class="mb-2">
                                 <div class="flex items-start gap-3">
                                     <span class="info-icon material-icons-outlined text-sm mt-0.5 flex-shrink-0">info</span>
                                     <div class="flex-1">
                                         <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Notes</span>
-                                        <p class="text-sm text-slate-700 dark:text-slate-200 mt-2 leading-relaxed">${notes}</p>
+                                        ${allNotes.map(n => `<p class="text-sm text-slate-700 dark:text-slate-200 mt-2 leading-relaxed">${n}</p>`).join('')}
                                     </div>
                                 </div>
                             </div>
                             ` : ''}
                         </div>
-
-                        ${sourceUrl ? `
-                        <div class="px-8 pb-6">
-                            <a href="${sourceUrl}" target="_blank" class="announcement-link">
-                                <span>Source</span>
-                                <span class="material-icons-outlined">arrow_forward</span>
-                            </a>
-                        </div>
-                        ` : ''}
                     </div>
                 `;
             });
@@ -2316,7 +2387,11 @@
         var _regSearchTimer = null;
         function filterRegStatus() {
             renderRegStatus();
+            var status = document.getElementById('regStatusFilter').value;
             var type = document.getElementById('regTypeFilter').value;
+            if (status) {
+                gtag('event', 'regulatory_filter', { filter_type: status });
+            }
             if (type) {
                 gtag('event', 'regulatory_filter', { filter_type: type });
             }
@@ -3716,7 +3791,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
             var hash = location.hash.replace('#','');
-            var valid = ['terminology','tracker','network','simulation','about','contact'];
+            var valid = ['terminology','tracker','regulatory','network','simulation','about','contact'];
             switchView(valid.indexOf(hash) !== -1 ? hash : 'terminology');
 
             // GA4: Contact form submission
