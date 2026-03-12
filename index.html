@@ -2319,7 +2319,7 @@
                     const isApproved = status === 'CFTC Designated' || status === 'CFTC Registered' || status === 'NFA Registered';
                     const dateLabel = isApproved ? (effDate ? `${status.split(' ')[1]} ${effDate}` : '') : (appDate ? `Filed ${appDate}` : '');
                     return `<div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                                <span class="text-xs font-bold px-2 py-1 rounded badge-${regType} uppercase tracking-wider w-fit">${regType}</span>
+                                <span class="text-xs font-bold px-2 py-1 rounded badge-${regType} uppercase tracking-wider w-12 text-center inline-block">${regType}</span>
                                 <span class="text-sm text-slate-600 dark:text-slate-300">${entityName}</span>
                                 ${dateLabel ? `<span class="text-sm text-slate-500 dark:text-slate-400">${dateLabel}</span>` : ''}
                                 ${sourceUrl ? `<a href="${sourceUrl}" target="_blank" class="text-sm text-blue-600 dark:text-blue-400 hover:underline ml-auto">Source ↗</a>` : ''}
