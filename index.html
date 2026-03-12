@@ -356,6 +356,20 @@
         }
 
         /* Regulatory Status Badges */
+        .status-pending {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #78350f;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+        .status-designated {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            color: white;
+        }
+        .status-registered {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
         .status-applied {
             background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
             color: #78350f;
@@ -1609,10 +1623,21 @@
 
             <div id="view-regulatory" class="view-content">
                 <div class="mb-10">
-                    <h1 class="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-3">Regulatory <span class="hero-gradient">Pipeline</span></h1>
-                    <p class="text-slate-700 dark:text-slate-100 mb-8 text-lg">CFTC and NFA registration applications currently in review.</p>
+                    <h1 class="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-3">Regulatory <span class="hero-gradient">Tracker</span></h1>
+                    <p class="text-slate-700 dark:text-slate-100 mb-8 text-lg">CFTC and NFA prediction market designations, registrations, and applications.</p>
 
                     <div class="flex gap-4 items-center flex-wrap">
+                        <select id="regStatusFilter" onchange="filterRegStatus()" class="filter-select px-5 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm font-medium shadow-sm hover:border-indigo-300 transition-all focus:ring-2 focus:ring-indigo-500">
+                            <option value="">All Statuses</option>
+                            <option value="Approved">Approved (all)</option>
+                            <option value="Pending">Pending (all)</option>
+                            <option value="CFTC Designated">CFTC Designated</option>
+                            <option value="CFTC Registered">CFTC Registered</option>
+                            <option value="CFTC Pending">CFTC Pending</option>
+                            <option value="NFA Registered">NFA Registered</option>
+                            <option value="NFA Pending">NFA Pending</option>
+                        </select>
+
                         <select id="regTypeFilter" onchange="filterRegStatus()" class="filter-select px-5 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm font-medium shadow-sm hover:border-indigo-300 transition-all focus:ring-2 focus:ring-indigo-500">
                             <option value="">All Types</option>
                             <option value="DCM">DCM</option>
@@ -1681,6 +1706,7 @@
                         <div class="legend-item" style="cursor:default;"><svg width="20" height="12"><line x1="0" y1="6" x2="20" y2="6" stroke="#f97316" stroke-width="2"/></svg><span>Marketing</span></div>
                         <div class="legend-item" style="cursor:default;"><svg width="20" height="12"><line x1="0" y1="6" x2="20" y2="6" stroke="#e11d48" stroke-width="2"/></svg><span>Acquisition</span></div>
                         <div class="legend-item" style="cursor:default;"><svg width="20" height="12"><line x1="0" y1="6" x2="20" y2="6" stroke="#facc15" stroke-width="2"/></svg><span>Government</span></div>
+                        <div class="legend-item" style="cursor:default;"><svg width="20" height="12"><line x1="0" y1="6" x2="20" y2="6" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3"/></svg><span>Regulatory</span></div>
                     </div>
                     <div class="graph-tooltip" id="graphTooltip"></div>
                     <div class="graph-detail-panel" id="graphDetailPanel">
@@ -1894,10 +1920,14 @@
             if (nav) { nav.classList.add('text-primary'); nav.classList.add('nav-active'); }
         })();
 
-        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1UiZ-MlqAgQ5MexL9BgwAzXWfTZHCYUj6-1F1sm7ZJBw/gviz/tq?tqx=out:csv&sheet=Model%20Layout%20(%3F)';
+        const PARTNERSHIPS_CSV_URL = 'https://docs.google.com/spreadsheets/d/1UiZ-MlqAgQ5MexL9BgwAzXWfTZHCYUj6-1F1sm7ZJBw/gviz/tq?tqx=out:csv&sheet=Partnerships';
+        const NETWORK_ENTITIES_CSV_URL = 'https://docs.google.com/spreadsheets/d/1UiZ-MlqAgQ5MexL9BgwAzXWfTZHCYUj6-1F1sm7ZJBw/gviz/tq?tqx=out:csv&sheet=Network%20Entities';
+        const ACQUISITIONS_CSV_URL = 'https://docs.google.com/spreadsheets/d/1UiZ-MlqAgQ5MexL9BgwAzXWfTZHCYUj6-1F1sm7ZJBw/gviz/tq?tqx=out:csv&sheet=Acquisitions';
         const REG_STATUS_CSV_URL = 'https://docs.google.com/spreadsheets/d/1hOyJ7yLCTGPhHV7T7HKj3N6KrVcv2BKDdJ4Tue9QI4o/gviz/tq?tqx=out:csv&sheet=Regulatory%20Status';
 
         let partnershipsData = [];
+        let networkEntitiesData = [];
+        let acquisitionsData = [];
         let regStatusData = [];
         let regDataLoaded = false;
 
@@ -1905,22 +1935,34 @@
             const container = document.getElementById('tracker-content');
             container.innerHTML = '<p class="text-center text-slate-500 py-8">Loading partnerships...</p>';
 
-            Papa.parse(SHEET_CSV_URL, {
-                download: true,
-                header: true,
-                skipEmptyLines: 'greedy',
-                complete: function(results) {
-                    partnershipsData = results.data.filter(row => row.Partnership && row.Partnership.trim() && String(row.Published || '').trim().toLowerCase() === 'yes');
-                    renderTracker();
-                    // If network view is already active (direct navigation via hash), init the graph now
-                    if (!networkGraphInitialized && document.getElementById('view-network').classList.contains('active')) {
-                        setTimeout(initNetworkGraph, 300);
-                    }
-                },
-                error: function(err) {
-                    console.error('Failed to fetch sheet data:', err);
-                    container.innerHTML = '<p class="text-center text-red-500 dark:text-red-400 py-8">Unable to load partnership data. Please try refreshing.</p>';
+            function parseCsv(url) {
+                return new Promise((resolve, reject) => {
+                    Papa.parse(url, {
+                        download: true,
+                        header: true,
+                        skipEmptyLines: 'greedy',
+                        complete: function(results) { resolve(results.data); },
+                        error: function(err) { reject(err); }
+                    });
+                });
+            }
+
+            Promise.all([
+                parseCsv(PARTNERSHIPS_CSV_URL),
+                parseCsv(NETWORK_ENTITIES_CSV_URL),
+                parseCsv(ACQUISITIONS_CSV_URL)
+            ]).then(([partnerships, entities, acquisitions]) => {
+                partnershipsData = partnerships.filter(row => row.Partnership && row.Partnership.trim() && String(row.Published || '').trim().toLowerCase() === 'yes');
+                networkEntitiesData = entities.filter(row => (row['Entity Name'] || '').trim() && String(row.Published || '').trim().toLowerCase() === 'yes');
+                acquisitionsData = acquisitions.filter(row => (row['Acquirer'] || '').trim() && String(row.Published || '').trim().toLowerCase() === 'yes');
+                renderTracker();
+                // If network view is already active (direct navigation via hash), init the graph now
+                if (!networkGraphInitialized && document.getElementById('view-network').classList.contains('active')) {
+                    setTimeout(initNetworkGraph, 300);
                 }
+            }).catch(function(err) {
+                console.error('Failed to fetch sheet data:', err);
+                container.innerHTML = '<p class="text-center text-red-500 dark:text-red-400 py-8">Unable to load partnership data. Please try refreshing.</p>';
             });
         }
 
@@ -1959,7 +2001,7 @@
             history.replaceState(null, '', '#' + viewName);
 
             // Lazy init network graph
-            if (viewName === 'network' && !networkGraphInitialized && partnershipsData.length) {
+            if (viewName === 'network' && !networkGraphInitialized && partnershipsData.length && networkEntitiesData.length) {
                 setTimeout(initNetworkGraph, 300);
             }
 
@@ -2029,10 +2071,12 @@
             const searchQuery = document.getElementById('searchInput')?.value.toLowerCase() || '';
 
             const filtered = partnershipsData.filter(p => {
-                const matchesType = !typeFilter || p['Type of Partnership'] === typeFilter;
-                const matchesSearch = !searchQuery || 
+                const pType = p['Type'] || p['Type of Partnership'] || '';
+                const pDetails = p['Details'] || p['Additional Details'] || '';
+                const matchesType = !typeFilter || pType === typeFilter;
+                const matchesSearch = !searchQuery ||
                     p.Partnership?.toLowerCase().includes(searchQuery) ||
-                    (p['Additional Details'] || '').toLowerCase().includes(searchQuery);
+                    pDetails.toLowerCase().includes(searchQuery);
                 return matchesType && matchesSearch;
             });
 
@@ -2053,8 +2097,8 @@
             };
 
             filtered.sort((a, b) => {
-                const typeA = a['Type of Partnership'] || 'Other';
-                const typeB = b['Type of Partnership'] || 'Other';
+                const typeA = a['Type'] || a['Type of Partnership'] || 'Other';
+                const typeB = b['Type'] || b['Type of Partnership'] || 'Other';
                 const orderA = typeOrder[typeA] || 99;
                 const orderB = typeOrder[typeB] || 99;
                 return orderA - orderB;
@@ -2063,19 +2107,18 @@
             let html = '';
             
             filtered.forEach(p => {
-                const type = p['Type of Partnership'] || 'Other';
+                const type = p['Type'] || p['Type of Partnership'] || 'Other';
                 const typeClass = type.includes('Data') ? 'Data' :
                                  type.includes('Operational') ? 'Operational' :
                                  type.includes('Acquisition') ? 'Acquisition' :
                                  type.includes('Investment') || type.includes('Capital') ? 'Capital' :
                                  type.includes('Government') ? 'Government' :
                                  type === 'Marketing/Athlete Sponsorship' ? 'Marketing' : 'Other';
-                
+
                 const badgeColor = 'badge-' + typeClass;
-                
-                const details = p['Additional Details'] || '';
-                const hasRegulatory = !type.includes('Data') && !type.includes('Investment') && !type.includes('Capital') && !type.includes('Government') && (p.IB || p.FCM || p.DCM || p.DCO);
-                
+
+                const details = p['Details'] || p['Additional Details'] || '';
+
                 html += `
                     <div class="partnership-card rounded-2xl overflow-hidden shadow-lg">
                         <div class="p-8 pb-6">
@@ -2083,39 +2126,7 @@
                                 <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 flex-1">${(p.Partnership || 'Untitled Partnership').replace(/\//g, ' <span class="material-icons-outlined text-indigo-400 text-lg mx-1" style="vertical-align: middle;">arrow_forward</span> ')}</h3>
                                 <span class="text-xs font-bold px-3 sm:px-4 py-2 rounded-full ${badgeColor} uppercase tracking-wider text-center break-words whitespace-normal sm:whitespace-nowrap inline-block">${type}</span>
                             </div>
-                            
-                            ${hasRegulatory ? `
-                            <div class="regulatory-box mb-6 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
-                                <h4 class="reg-label mb-4">Regulatory Structure</h4>
-                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-5">
-                                    ${p.IB && p.IB !== 'N/A' ? `
-                                    <div>
-                                        <div class="reg-label mb-2">IB</div>
-                                        <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">${p.IB}</div>
-                                    </div>
-                                    ` : ''}
-                                    ${p.FCM && p.FCM !== 'N/A' ? `
-                                    <div>
-                                        <div class="reg-label mb-2">FCM</div>
-                                        <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">${p.FCM}</div>
-                                    </div>
-                                    ` : ''}
-                                    ${p.DCM && p.DCM !== 'N/A' ? `
-                                    <div>
-                                        <div class="reg-label mb-2">DCM</div>
-                                        <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">${p.DCM}</div>
-                                    </div>
-                                    ` : ''}
-                                    ${p.DCO && p.DCO !== 'N/A' ? `
-                                    <div>
-                                        <div class="reg-label mb-2">DCO</div>
-                                        <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">${p.DCO}</div>
-                                    </div>
-                                    ` : ''}
-                                </div>
-                            </div>
-                            ` : ''}
-                            
+
                             ${details && details.trim() ? `
                             <div class="mb-6">
                                 <div class="flex items-start gap-3">
@@ -2191,6 +2202,15 @@
             });
         }
 
+        // Normalize entity names to group related DCM/DCO/FCM/IB filings
+        function regGroupKey(entity) {
+            return (entity || '').trim()
+                .replace(/\s+(DCM|DCO|FCM|IB),?\s*(LLC|Inc\.?|LP)?$/i, '')
+                .replace(/\s+(Exchange\s+and\s+Clearing|Board\s+of\s+Trade\s+Exchange|Board\s+of\s+Trade\s+Clearing|Markets|Clearing|Exchange),?\s*(LLC|Inc\.?|LP)?$/i, '')
+                .replace(/,?\s*(LLC|Inc\.?|LP)$/i, '')
+                .trim();
+        }
+
         function renderRegStatus() {
             const container = document.getElementById('regulatory-content');
 
@@ -2199,113 +2219,154 @@
                 return;
             }
 
+            const statusFilter = document.getElementById('regStatusFilter')?.value || '';
             const typeFilter = document.getElementById('regTypeFilter')?.value || '';
             const searchQuery = document.getElementById('regSearchInput')?.value.toLowerCase() || '';
 
-            const filtered = regStatusData.filter(r => {
-                const regType = (r['Registration Type'] || '').trim();
-                const matchesType = !typeFilter || regType === typeFilter;
-                const matchesSearch = !searchQuery ||
-                    (r['Entity'] || '').toLowerCase().includes(searchQuery) ||
-                    (r['Last Update Summary'] || '').toLowerCase().includes(searchQuery) ||
-                    (r['Notes'] || '').toLowerCase().includes(searchQuery);
-                return matchesType && matchesSearch;
+            // Group rows by normalized entity name
+            const groups = {};
+            regStatusData.forEach(r => {
+                const entity = (r['Entity'] || '').trim();
+                if (!entity) return;
+                const key = regGroupKey(entity);
+                if (!groups[key]) groups[key] = { key, filings: [] };
+                groups[key].filings.push(r);
             });
 
-            const typeOrder = { 'DCM': 1, 'DCO': 2, 'FCM': 3, 'IB': 4 };
-            filtered.sort((a, b) => {
-                const orderA = typeOrder[a['Registration Type']] || 99;
-                const orderB = typeOrder[b['Registration Type']] || 99;
-                if (orderA !== orderB) return orderA - orderB;
-                return (a['Entity'] || '').localeCompare(b['Entity'] || '');
+            // Filter groups
+            const approvedStatuses = ['CFTC Designated', 'CFTC Registered', 'NFA Registered'];
+            const pendingStatuses = ['CFTC Pending', 'NFA Pending'];
+            const filteredGroups = Object.values(groups).filter(g => {
+                let matchesStatus;
+                if (statusFilter === 'Approved') {
+                    matchesStatus = g.filings.some(f => approvedStatuses.includes((f['Status'] || '').trim()));
+                } else if (statusFilter === 'Pending') {
+                    matchesStatus = g.filings.some(f => pendingStatuses.includes((f['Status'] || '').trim()));
+                } else {
+                    matchesStatus = !statusFilter || g.filings.some(f => (f['Status'] || '').trim() === statusFilter);
+                }
+                const matchesType = !typeFilter || g.filings.some(f => (f['Registration Type'] || '').trim() === typeFilter);
+                const matchesSearch = !searchQuery || g.filings.some(f =>
+                    (f['Entity'] || '').toLowerCase().includes(searchQuery) ||
+                    (f['Last Update Summary'] || '').toLowerCase().includes(searchQuery) ||
+                    (f['Notes'] || '').toLowerCase().includes(searchQuery)
+                );
+                return matchesStatus && matchesType && matchesSearch;
+            });
+
+            // Sort: Approved first, then Pending; within each, by earliest date
+            const statusOrder = { 'CFTC Designated': 0, 'CFTC Registered': 0, 'NFA Registered': 0, 'CFTC Pending': 1, 'NFA Pending': 1 };
+            filteredGroups.sort((a, b) => {
+                const statusA = Math.min(...a.filings.map(f => statusOrder[(f['Status'] || '').trim()] ?? 2));
+                const statusB = Math.min(...b.filings.map(f => statusOrder[(f['Status'] || '').trim()] ?? 2));
+                if (statusA !== statusB) return statusA - statusB;
+                const dateA = a.filings.map(f => f['Effective Date'] || f['Application Date'] || '').sort()[0] || '';
+                const dateB = b.filings.map(f => f['Effective Date'] || f['Application Date'] || '').sort()[0] || '';
+                return dateA.localeCompare(dateB);
             });
 
             let html = '';
 
-            filtered.forEach(r => {
-                const entityName = r['Entity'] || 'Unknown Entity';
-                const regType = (r['Registration Type'] || '').trim();
-                const status = (r['Status'] || '').trim();
-                const appDate = r['Application Date'] || '';
-                const lastUpdated = r['Last Updated'] || '';
-                const updateSummary = r['Last Update Summary'] || '';
-                const sourceUrl = (r['Source URL'] || '').trim();
-                const notes = r['Notes'] || '';
+            const statusClassMap = {
+                'cftc-designated': 'status-designated',
+                'cftc-registered': 'status-designated',
+                'cftc-pending': 'status-pending',
+                'nfa-registered': 'status-registered',
+                'nfa-pending': 'status-pending',
+                'denied': 'status-denied',
+                'withdrawn': 'status-withdrawn',
+                'suspended': 'status-suspended'
+            };
 
-                const typeBadgeClass = 'badge-' + regType;
+            filteredGroups.forEach(g => {
+                // Sort filings: DCM first, then DCO, FCM, IB
+                const typeOrder = { 'DCM': 1, 'DCO': 2, 'FCM': 3, 'IB': 4 };
+                g.filings.sort((a, b) => (typeOrder[a['Registration Type']] || 99) - (typeOrder[b['Registration Type']] || 99));
 
-                const statusKey = status.toLowerCase().replace(/\s+/g, '-');
-                const statusClassMap = {
-                    'applied': 'status-applied',
-                    'under-review': 'status-under-review',
-                    'conditionally-approved': 'status-conditionally-approved',
-                    'denied': 'status-denied',
-                    'withdrawn': 'status-withdrawn',
-                    'suspended': 'status-suspended'
-                };
-                const statusClass = statusClassMap[statusKey] || 'status-under-review';
+                // Use the group key as display name, fall back to first entity name
+                const displayName = g.key || g.filings[0]['Entity'];
+
+                // Build header badges — type badges for each filing, one status badge if uniform
+                const typeBadges = g.filings.map(f => {
+                    const regType = (f['Registration Type'] || '').trim();
+                    return `<span class="text-xs font-bold px-3 sm:px-4 py-2 rounded-full badge-${regType} uppercase tracking-wider whitespace-nowrap">${regType}</span>`;
+                }).join('');
+
+                const uniqueStatuses = [...new Set(g.filings.map(f => (f['Status'] || '').trim()))];
+                const statusBadges = uniqueStatuses.map(status => {
+                    const statusKey = status.toLowerCase().replace(/\s+/g, '-');
+                    return `<span class="text-xs font-bold px-3 sm:px-4 py-2 rounded-full ${statusClassMap[statusKey] || 'status-pending'} uppercase tracking-wider whitespace-nowrap">${status}</span>`;
+                }).join('');
+
+                // Build filing details rows
+                const filingRows = g.filings.map(f => {
+                    const regType = (f['Registration Type'] || '').trim();
+                    const entityName = (f['Entity'] || '').trim();
+                    const status = (f['Status'] || '').trim();
+                    const appDate = f['Application Date'] || '';
+                    const effDate = f['Effective Date'] || '';
+                    const sourceUrl = (f['Source URL'] || '').trim();
+                    const isApproved = status === 'CFTC Designated' || status === 'CFTC Registered' || status === 'NFA Registered';
+                    const dateLabel = isApproved ? (effDate ? `${status.split(' ')[1]} ${effDate}` : '') : (appDate ? `Filed ${appDate}` : '');
+                    const statusKey = status.toLowerCase().replace(/\s+/g, '-');
+                    return `<div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                                <span class="text-xs font-bold px-2 py-1 rounded badge-${regType} uppercase tracking-wider w-12 text-center inline-block">${regType}</span>
+                                <span class="text-xs font-bold px-2 py-1 rounded-full ${statusClassMap[statusKey] || 'status-pending'} uppercase tracking-wider w-36 text-center inline-block">${status}</span>
+                                <span class="text-sm text-slate-600 dark:text-slate-300">${entityName}</span>
+                                ${dateLabel ? `<span class="text-sm text-slate-500 dark:text-slate-400">${dateLabel}</span>` : ''}
+                                ${sourceUrl ? `<a href="${sourceUrl}" target="_blank" class="text-sm text-blue-600 dark:text-blue-400 hover:underline ml-auto">Source ↗</a>` : ''}
+                            </div>`;
+                }).join('');
+
+                // Collect notes — filter out "Also filed" cross-references since grouping handles that
+                const allNotes = [...new Set(g.filings.map(f => (f['Notes'] || '').trim()).filter(Boolean))]
+                    .filter(n => !n.match(/^Also filed (DCM|DCO|FCM|IB)/i));
+
+                // Only show update summary if it's meaningful (not just "application filed" or "designation granted")
+                const meaningfulUpdates = g.filings
+                    .filter(f => {
+                        const summary = (f['Last Update Summary'] || '').trim().toLowerCase();
+                        return summary && !summary.match(/^(dcm|dco|fcm|ib) (application filed|designation granted|registration granted)$/i);
+                    })
+                    .map(f => ({ summary: f['Last Update Summary'], date: f['Last Updated'] }));
+                const latestMeaningful = meaningfulUpdates.sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0];
 
                 html += `
                     <div class="partnership-card rounded-2xl overflow-hidden shadow-lg">
                         <div class="p-8 pb-6">
                             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
-                                <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 flex-1">${entityName}</h3>
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="text-xs font-bold px-3 sm:px-4 py-2 rounded-full ${typeBadgeClass} uppercase tracking-wider whitespace-nowrap">${regType}</span>
-                                    <span class="text-xs font-bold px-3 sm:px-4 py-2 rounded-full ${statusClass} uppercase tracking-wider whitespace-nowrap">${status}</span>
-                                </div>
+                                <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 flex-1">${displayName}</h3>
                             </div>
 
-                            <div class="regulatory-box mb-6 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                    ${appDate ? `
-                                    <div>
-                                        <div class="reg-label mb-2">Application Date</div>
-                                        <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">${appDate}</div>
-                                    </div>
-                                    ` : ''}
-                                    ${lastUpdated ? `
-                                    <div>
-                                        <div class="reg-label mb-2">Last Updated</div>
-                                        <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">${lastUpdated}</div>
-                                    </div>
-                                    ` : ''}
-                                </div>
+                            <div class="regulatory-box mb-6 rounded-xl p-5 border border-slate-200 dark:border-slate-700 space-y-3">
+                                ${filingRows}
                             </div>
 
-                            ${updateSummary ? `
+                            ${latestMeaningful ? `
                             <div class="mb-6">
                                 <div class="flex items-start gap-3">
                                     <span class="info-icon material-icons-outlined text-sm mt-0.5 flex-shrink-0">update</span>
                                     <div class="flex-1">
-                                        <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Last Update</span>
-                                        <p class="text-sm text-slate-700 dark:text-slate-200 mt-2 leading-relaxed">${updateSummary}</p>
+                                        <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Latest Update</span>
+                                        <p class="text-sm text-slate-700 dark:text-slate-200 mt-2 leading-relaxed">${latestMeaningful.summary}</p>
+                                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">${latestMeaningful.date}</p>
                                     </div>
                                 </div>
                             </div>
                             ` : ''}
 
-                            ${notes ? `
+                            ${allNotes.length ? `
                             <div class="mb-2">
                                 <div class="flex items-start gap-3">
                                     <span class="info-icon material-icons-outlined text-sm mt-0.5 flex-shrink-0">info</span>
                                     <div class="flex-1">
                                         <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Notes</span>
-                                        <p class="text-sm text-slate-700 dark:text-slate-200 mt-2 leading-relaxed">${notes}</p>
+                                        ${allNotes.map(n => `<p class="text-sm text-slate-700 dark:text-slate-200 mt-2 leading-relaxed">${n}</p>`).join('')}
                                     </div>
                                 </div>
                             </div>
                             ` : ''}
                         </div>
-
-                        ${sourceUrl ? `
-                        <div class="px-8 pb-6">
-                            <a href="${sourceUrl}" target="_blank" class="announcement-link">
-                                <span>Source</span>
-                                <span class="material-icons-outlined">arrow_forward</span>
-                            </a>
-                        </div>
-                        ` : ''}
                     </div>
                 `;
             });
@@ -2316,7 +2377,11 @@
         var _regSearchTimer = null;
         function filterRegStatus() {
             renderRegStatus();
+            var status = document.getElementById('regStatusFilter').value;
             var type = document.getElementById('regTypeFilter').value;
+            if (status) {
+                gtag('event', 'regulatory_filter', { filter_type: status });
+            }
             if (type) {
                 gtag('event', 'regulatory_filter', { filter_type: type });
             }
@@ -2598,7 +2663,7 @@
             ['Coinbase Financial Markets', 'Coinbase Financial Markets'],
             ['FANDUEL PREDICTION MARKETS', 'FanDuel Prediction Markets'],
             ['Fanduel Predicts', 'FanDuel'],
-            ['DraftKings Predictions', 'DraftKings Predictions'],
+            ['DraftKings Predictions', 'DraftKings'],
             ['PrizePicks (Performance', 'PrizePicks Predictions'],
             ['Robinhood Derivatives', 'Robinhood Derivatives'],
             // True aliases — same entity, different spellings
@@ -2612,16 +2677,21 @@
             ['Kalshi Klear', 'Kalshi Klear'],
             ['Kalshi (TBC)', 'Kalshi'],
             ['Kraken Derivatives', 'Kraken Derivatives'],
+            ['Aristotle Exchange DCM', 'Aristotle Exchange DCM'],
+            ['Aristotle Exchange DCO', 'Aristotle Exchange DCO'],
+            ['Aristotle Exchange', 'Aristotle Exchange DCM'],
+            ['Aristotle', 'Aristotle Exchange DCM'],
             ['Railbird Exchange', 'Railbird Exchange'],
             ['Gemini Titan', 'Gemini Titan'],
             ['TBC (NinjaTrader', 'NinjaTrader'],
             ['Chicago Mercantile Exchang', 'CME'],
             ['Options Clearing Corporati', 'OCC'],
             ['Sleeper Markets', 'Sleeper'],
-            ['Webull Financial', 'WeBull Financial'],
+            ['Webull Financial', 'WeBull'],
             ['Small Exchange', 'Small Exchange'],
-            ['MIAX Derivatives Exchange', 'MIAX Derivatives Exchange'],
-            ['MIAXdx', 'MIAX Derivatives Exchange'],
+            ['MIAX Derivatives Exchange', 'Rothera'],
+            ['MIAXdx', 'Rothera'],
+            ['Rothera Exchange and Clearing', 'Rothera'],
         ];
 
         function normalizeEntityName(raw) {
@@ -2669,78 +2739,64 @@
             const nodeMap = {};
             const edgeMap = {};
 
-            // Pre-scan to build alias table for duplicate entities
-            // Collect all raw entity names first, then group by normalized form
+            // Pre-scan to build alias table for duplicate entities from partnership names
             const rawNames = new Set();
             partnershipsData.forEach(p => {
                 const partnershipName = (p.Partnership || '').trim();
                 if (!partnershipName) return;
                 partnershipName.split('/').map(s => s.trim()).filter(Boolean).forEach(n => rawNames.add(n));
-                ['IB', 'FCM', 'DCM', 'DCO'].forEach(col => {
-                    const v = (p[col] || '').trim();
-                    if (v && v !== 'N/A') rawNames.add(v);
-                });
             });
 
-            // Build canonical name map: strip parentheticals, group similar names
             const canonicalGroups = {};
             rawNames.forEach(raw => {
                 const norm = normalizeEntityName(raw);
                 if (!norm) return;
-                // Create a simple key: lowercase, strip "LLC", "Inc", commas, periods
                 const simpleKey = norm.toLowerCase().replace(/[,.]| llc| inc| ltd| group/gi, '').replace(/\s+/g, ' ').trim();
                 if (!canonicalGroups[simpleKey]) canonicalGroups[simpleKey] = [];
                 canonicalGroups[simpleKey].push({ raw, norm });
             });
 
-            // For each group, pick the shortest normalized name as canonical
             Object.values(canonicalGroups).forEach(group => {
                 if (group.length <= 1) return;
                 const canonical = group.reduce((a, b) => a.norm.length <= b.norm.length ? a : b).norm;
                 group.forEach(entry => {
-                    if (entry.raw !== canonical) {
-                        registerAlias(entry.raw, canonical);
-                    }
+                    if (entry.raw !== canonical) registerAlias(entry.raw, canonical);
                 });
             });
 
-            function ensureNode(rawName, role) {
+            function ensureNode(rawName, role, opts = {}) {
                 const normalized = normalizeEntityName(rawName);
                 if (!normalized) return null;
                 const key = resolveEntity(normalized);
                 if (!nodeMap[key]) {
-                    nodeMap[key] = { id: key, name: key, roles: new Set(), partnerships: [], connections: 0 };
+                    nodeMap[key] = { id: key, name: key, roles: new Set(), partnerships: [], connections: 0, isBrand: false, parentBrand: null };
                 }
                 if (role) nodeMap[key].roles.add(role);
+                if (opts.isBrand) nodeMap[key].isBrand = true;
+                if (opts.parentBrand && !nodeMap[key].parentBrand) nodeMap[key].parentBrand = opts.parentBrand;
                 return key;
             }
 
-            function resolveRaw(raw) {
-                const norm = normalizeEntityName(raw);
-                if (!norm) return null;
-                return resolveEntity(norm);
+            function ensureEdge(sourceKey, targetKey, edgeType, partnership) {
+                if (!sourceKey || !targetKey || sourceKey === targetKey) return;
+                const edgeKey = [sourceKey, targetKey].sort().join('|||');
+                if (!edgeMap[edgeKey]) {
+                    edgeMap[edgeKey] = { source: sourceKey, target: targetKey, partnerships: [], weight: 0, edgeType: edgeType || 'Partnership' };
+                }
+                // Upgrade edge type: Regulatory > RegChain > Partnership
+                if (edgeType === 'Regulatory' && edgeMap[edgeKey].edgeType !== 'Regulatory') {
+                    edgeMap[edgeKey].edgeType = 'Regulatory';
+                }
+                if (partnership && !edgeMap[edgeKey].partnerships.some(ep => ep.name === partnership.name)) {
+                    edgeMap[edgeKey].partnerships.push(partnership);
+                    edgeMap[edgeKey].weight++;
+                }
             }
 
-            // Known prediction market platforms (get Platform type; everything else defaults to Other)
-            const KNOWN_PLATFORMS = new Set([
-                'Kalshi', 'Polymarket', 'Crypto.com', 'DraftKings', 'FanDuel',
-                'Robinhood', 'Coinbase', 'Interactive Brokers', 'PrizePicks',
-                'Sleeper', 'Sporttrade', 'ProphetX', 'Mojo Interactive',
-                'Plus500', 'Galactic Markets', 'Novig', 'Matchbook', 'RSBIX',
-                'Onyx Odds', 'High Roller Technologies', 'ForecastEx', 'MyPrize',
-                'Gemini', 'WeBull', 'Phantom', 'DAZN', 'Kraken',
-            ]);
-
             const KNOWN_TSPS = new Set([
-                'Underdog Fantasy', 'Dome',
+                'Dome',
             ]);
 
-            // Entities with known regulatory roles when they appear as partners
-            const KNOWN_ROLES = {
-                'The Clearing Company': 'DCO',
-            };
-
-            // Compound entity names containing "&" that should NOT be split
             const COMPOUND_NAMES = new Set([
                 'trump media & tech group',
                 'madison square garden & new york rangers',
@@ -2748,184 +2804,304 @@
             ]);
 
             function splitPartnerNames(partnershipName) {
-                // Filter out junk rows
                 if (/^additional notes$/i.test(partnershipName)) return [];
-                // Filter out comma-separated note-style entries
                 if (partnershipName.includes(',') && !partnershipName.includes('/')) return [];
-
-                // First split on "/"
                 const parts = partnershipName.split('/').map(s => s.trim()).filter(Boolean);
-
-                // Then handle "&" within each part (but not inside parentheses)
                 const result = [];
                 parts.forEach(part => {
-                    // Check if " & " exists outside of parentheses
                     const ampIdx = part.indexOf(' & ');
-                    if (ampIdx === -1) {
-                        result.push(part);
-                        return;
-                    }
-                    // Don't split if the & is inside parentheses
+                    if (ampIdx === -1) { result.push(part); return; }
                     const beforeAmp = part.substring(0, ampIdx);
                     if ((beforeAmp.match(/\(/g) || []).length > (beforeAmp.match(/\)/g) || []).length) {
-                        result.push(part);
-                        return;
+                        result.push(part); return;
                     }
-                    // Check if this is a known compound name
                     if (COMPOUND_NAMES.has(part.toLowerCase())) {
                         result.push(part);
                     } else {
-                        // Split on " & "
                         part.split(' & ').map(s => s.trim()).filter(Boolean).forEach(s => result.push(s));
                     }
                 });
                 return result;
             }
 
+            // ── Phase 1: Read Network Entities ──
+            // Build brand set and entity lookup from networkEntitiesData
+            const brands = new Set();
+            const entityRows = [];
+            networkEntitiesData.forEach(row => {
+                const brand = (row['Brand'] || '').trim();
+                const entityName = (row['Entity Name'] || '').trim();
+                const legalName = (row['Legal Name'] || '').trim();
+                const type = (row['Type'] || '').trim();
+                const routesTo = (row['Routes To'] || '').trim();
+                if (!entityName || !type) return;
+                entityRows.push({ brand, entityName, legalName, type, routesTo });
+                if (brand) brands.add(brand);
+            });
+
+            // Create brand hub nodes
+            brands.forEach(brand => {
+                ensureNode(brand, 'Platform', { isBrand: true });
+            });
+
+            // Create entity nodes and edges
+            const entityNameToNodes = {}; // entity name → [{key, type, brand}] for multi-type lookup
+            entityRows.forEach(({ brand, entityName, legalName, type, routesTo }) => {
+                const isDualRole = brand && brand === entityName;
+
+                // For entities that appear as both DCM and DCO (same name, same brand),
+                // create disambiguated nodes: "EntityName DCM" and "EntityName DCO"
+                const sameNameRows = entityRows.filter(r => r.entityName === entityName && r.brand === brand);
+                let nodeKey;
+
+                if (sameNameRows.length > 1 && !isDualRole) {
+                    // Disambiguate: append type suffix
+                    const disambigName = entityName + ' ' + type;
+                    nodeKey = ensureNode(disambigName, type, isDualRole ? { isBrand: true } : { parentBrand: brand || null });
+                    if (legalName && nodeMap[nodeKey]) nodeMap[nodeKey].legalName = legalName;
+                } else if (isDualRole) {
+                    // Brand IS the entity — just set the role on the brand node
+                    nodeKey = ensureNode(brand, type, { isBrand: true });
+                    if (legalName && nodeMap[nodeKey]) nodeMap[nodeKey].legalName = legalName;
+                } else {
+                    nodeKey = ensureNode(entityName, type, brand ? { parentBrand: brand } : {});
+                    if (legalName && nodeMap[nodeKey]) nodeMap[nodeKey].legalName = legalName;
+                }
+
+                // Track for lookup
+                if (!entityNameToNodes[entityName]) entityNameToNodes[entityName] = [];
+                entityNameToNodes[entityName].push({ key: nodeKey, type, brand });
+
+                // Brand → satellite edge
+                if (brand && !isDualRole) {
+                    ensureEdge(brand, nodeKey, 'Regulatory', null);
+                }
+            });
+
+            // Create sibling edges (same brand, same entity name, different types — e.g., DCM↔DCO)
+            Object.values(entityNameToNodes).forEach(nodes => {
+                if (nodes.length <= 1) return;
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        if (nodes[i].brand && nodes[i].brand === nodes[j].brand) {
+                            ensureEdge(nodes[i].key, nodes[j].key, 'RegChain', null);
+                        }
+                    }
+                }
+            });
+
+            // Create routing edges from "Routes To" column
+            entityRows.forEach(({ brand, entityName, type, routesTo }) => {
+                if (!routesTo) return;
+                const sameNameRows = entityRows.filter(r => r.entityName === entityName && r.brand === brand);
+                const isDualRole = brand && brand === entityName;
+                let sourceKey;
+                if (sameNameRows.length > 1 && !isDualRole) {
+                    sourceKey = resolveEntity(entityName + ' ' + type);
+                } else if (isDualRole) {
+                    sourceKey = resolveEntity(brand);
+                } else {
+                    sourceKey = resolveEntity(entityName);
+                }
+                if (!sourceKey || !nodeMap[sourceKey]) return;
+
+                routesTo.split(',').map(s => s.trim()).filter(Boolean).forEach(targetName => {
+                    // Find target in entityNameToNodes
+                    const targets = entityNameToNodes[targetName];
+                    if (targets && targets.length > 0) {
+                        targets.forEach(t => {
+                            ensureEdge(sourceKey, t.key, 'RegChain', null);
+                        });
+                    }
+                });
+            });
+
+            // ── Phase 2: Read Partnerships (simplified — no reg columns) ──
+            // Build a reverse lookup: entity name → brand (from Network Entities data)
+            const entityToBrand = {};
+            entityRows.forEach(({ brand, entityName }) => {
+                if (brand && brand !== entityName) entityToBrand[entityName] = brand;
+            });
+
             partnershipsData.forEach(p => {
                 const partnershipName = (p.Partnership || '').trim();
                 if (!partnershipName) return;
 
-                const type = p['Type of Partnership'] || 'Other';
+                const type = (p['Type'] || p['Type of Partnership'] || 'Other').trim();
                 const dateAdded = (p['Date Added'] || '').trim();
-                const rawAcquirer = (p['Acquirer'] || '').trim();
-                const rawAcqTarget = (p['Acquisition Target'] || '').trim();
-                const isAcquisition = !!(rawAcquirer || rawAcqTarget);
+                const details = (p['Details'] || p['Additional Details'] || '').trim();
+
                 const rawPartners = splitPartnerNames(partnershipName);
 
-                // Resolve all names — assign Platform, TSP, specific role, or no role
                 const partners = rawPartners.map(n => {
                     const resolved = normalizeEntityName(n);
+                    if (!resolved) return null;
+                    const key = resolveEntity(resolved);
+
+                    // If this resolves to a known entity with a parent brand, redirect to brand
+                    if (entityToBrand[key]) {
+                        ensureNode(entityToBrand[key], 'Platform', { isBrand: true });
+                        return entityToBrand[key];
+                    }
+
+                    // Check if it's a brand
+                    if (brands.has(key)) {
+                        return ensureNode(key, 'Platform', { isBrand: true });
+                    }
+
+                    // Check if it's a known TSP
                     let role = null;
-                    if (resolved && KNOWN_ROLES[resolved]) role = KNOWN_ROLES[resolved];
-                    else if (resolved && KNOWN_PLATFORMS.has(resolved)) role = 'Platform';
-                    else if (resolved && KNOWN_TSPS.has(resolved)) role = 'TSP';
+                    if (KNOWN_TSPS.has(key)) role = 'TSP';
+
                     return ensureNode(n, role);
                 }).filter(Boolean);
 
-                const ibKey = (p.IB || '').trim() && (p.IB || '').trim() !== 'N/A' ? ensureNode(p.IB, 'IB') : null;
-                const fcmKey = (p.FCM || '').trim() && (p.FCM || '').trim() !== 'N/A' ? ensureNode(p.FCM, 'FCM') : null;
-                const dcmKey = (p.DCM || '').trim() && (p.DCM || '').trim() !== 'N/A' ? ensureNode(p.DCM, 'DCM') : null;
-                const dcoKey = (p.DCO || '').trim() && (p.DCO || '').trim() !== 'N/A' ? ensureNode(p.DCO, 'DCO') : null;
+                const uniquePartners = [...new Set(partners)];
 
-                // Collect all resolved entities in this partnership
-                const allEntities = new Set(partners);
-                [ibKey, fcmKey, dcmKey, dcoKey].forEach(k => { if (k) allEntities.add(k); });
+                const pEntry = { name: partnershipName, type, acquisition: false, dateAdded, details };
 
-                // Resolve explicit acquirer/target node IDs for acquisitions
-                const acquirerIds = new Set();
-                const acqTargetIds = new Set();
-                if (isAcquisition) {
-                    rawAcquirer.split(',').map(s => s.trim()).filter(Boolean).forEach(name => {
-                        const key = resolveRaw(name);
-                        if (key) { ensureNode(name, null); acquirerIds.add(key); }
-                    });
-                    rawAcqTarget.split(',').map(s => s.trim()).filter(Boolean).forEach(name => {
-                        const key = resolveRaw(name);
-                        if (key) { ensureNode(name, null); acqTargetIds.add(key); }
-                    });
-                }
-
-                // Create edges between partners (the main partnership relationship)
-                for (let i = 0; i < partners.length; i++) {
-                    for (let j = i + 1; j < partners.length; j++) {
-                        const edgeKey = [partners[i], partners[j]].sort().join('|||');
-                        if (!edgeMap[edgeKey]) {
-                            edgeMap[edgeKey] = { source: partners[i], target: partners[j], partnerships: [], weight: 0 };
-                        }
-                        const pEntry = { name: partnershipName, type: type, acquisition: isAcquisition, dateAdded };
-                        edgeMap[edgeKey].partnerships.push(pEntry);
-                        edgeMap[edgeKey].weight++;
+                // Create edges between all partner pairs
+                for (let i = 0; i < uniquePartners.length; i++) {
+                    for (let j = i + 1; j < uniquePartners.length; j++) {
+                        ensureEdge(uniquePartners[i], uniquePartners[j], 'Partnership', { ...pEntry });
                     }
                 }
 
-                // Create explicit acquirer → target edges for acquisitions
-                if (isAcquisition) {
-                    acquirerIds.forEach(acqId => {
-                        acqTargetIds.forEach(tgtId => {
-                            if (acqId === tgtId) return;
-                            const edgeKey = [acqId, tgtId].sort().join('|||');
-                            if (!edgeMap[edgeKey]) {
-                                edgeMap[edgeKey] = { source: acqId, target: tgtId, partnerships: [], weight: 0 };
-                            }
-                            // Tag this edge with acquisition direction info
-                            const existing = edgeMap[edgeKey].partnerships.find(ep => ep.name === partnershipName);
-                            if (existing) {
-                                existing.acquirerIds = acquirerIds;
-                                existing.acqTargetIds = acqTargetIds;
-                                existing.isAcqEdge = true;
-                            } else {
-                                edgeMap[edgeKey].partnerships.push({
-                                    name: partnershipName, type: type, acquisition: true,
-                                    dateAdded, acquirerIds, acqTargetIds, isAcqEdge: true
-                                });
-                                edgeMap[edgeKey].weight++;
-                            }
-                        });
-                    });
+                // Record partnership on each node
+                uniquePartners.forEach(key => {
+                    if (nodeMap[key]) {
+                        nodeMap[key].partnerships.push(pEntry);
+                    }
+                });
+            });
+
+            // ── Phase 3: Read Acquisitions ──
+            acquisitionsData.forEach(a => {
+                const acquirerRaw = (a['Acquirer'] || '').trim();
+                const targetRaw = (a['Target'] || '').trim();
+                const status = (a['Status'] || '').trim();
+                const date = (a['Date'] || '').trim();
+                const details = (a['Details'] || '').trim();
+                if (!acquirerRaw || !targetRaw) return;
+
+                // Resolve acquirer(s) — split on "/" for multiple acquirers
+                const acquirerKeys = [];
+                splitPartnerNames(acquirerRaw).forEach(name => {
+                    const resolved = normalizeEntityName(name);
+                    if (!resolved) return;
+                    const key = resolveEntity(resolved);
+
+                    // Redirect to brand if this is a known entity with a parent brand
+                    if (entityToBrand[key]) {
+                        ensureNode(entityToBrand[key], 'Platform', { isBrand: true });
+                        acquirerKeys.push(entityToBrand[key]);
+                    } else if (brands.has(key)) {
+                        ensureNode(key, 'Platform', { isBrand: true });
+                        acquirerKeys.push(key);
+                    } else {
+                        const nodeKey = ensureNode(name, null);
+                        if (nodeKey) acquirerKeys.push(nodeKey);
+                    }
+                });
+
+                // Resolve target — may match multiple entity nodes (e.g., "Rothera" → DCM + DCO)
+                const targetKeys = [];
+                const resolvedTarget = normalizeEntityName(targetRaw);
+                if (resolvedTarget) {
+                    const rKey = resolveEntity(resolvedTarget);
+                    const entityNodes = entityNameToNodes[rKey];
+                    if (entityNodes && entityNodes.length > 0) {
+                        entityNodes.forEach(t => targetKeys.push(t.key));
+                    } else {
+                        // Redirect to brand if known
+                        if (entityToBrand[rKey]) {
+                            ensureNode(entityToBrand[rKey], 'Platform', { isBrand: true });
+                            targetKeys.push(entityToBrand[rKey]);
+                        } else if (brands.has(rKey)) {
+                            ensureNode(rKey, 'Platform', { isBrand: true });
+                            targetKeys.push(rKey);
+                        } else {
+                            // Not in Network Entities — just create a node
+                            const key = ensureNode(targetRaw, null);
+                            if (key) targetKeys.push(key);
+                        }
+                    }
                 }
 
-                // Create edges between partners and their regulatory entities
-                // FCM/IB are broker-level: only connect to the partner that owns them
-                // DCM/DCO are exchange/clearing-level: all partners route through them
-                const regEntries = [
-                    { key: ibKey,  level: 'broker' },
-                    { key: fcmKey, level: 'broker' },
-                    { key: dcmKey, level: 'exchange' },
-                    { key: dcoKey, level: 'exchange' },
-                ];
-                partners.forEach(partner => {
-                    regEntries.forEach(({ key: regKey, level }) => {
-                        if (!regKey || regKey === partner) return;
-                        // For broker-level entities (FCM/IB): skip if entity belongs to another partner
-                        if (level === 'broker') {
-                            const regLower = regKey.toLowerCase();
-                            const ownedByThisPartner = regLower.includes(partner.toLowerCase());
-                            const ownedByAnyPartner = partners.some(p => regLower.includes(p.toLowerCase()));
-                            if (ownedByAnyPartner && !ownedByThisPartner) return;
-                        }
-                        const edgeKey = [partner, regKey].sort().join('|||');
+                const pEntry = {
+                    name: `${acquirerRaw} → ${targetRaw}`,
+                    type: 'Acquisition',
+                    acquisition: true,
+                    dateAdded: date,
+                    details,
+                    status
+                };
+
+                // Create acquisition edges
+                const acquirerIdSet = new Set(acquirerKeys);
+                const acqTargetIdSet = new Set(targetKeys);
+                acquirerKeys.forEach(acqKey => {
+                    targetKeys.forEach(tgtKey => {
+                        const edgeKey = [acqKey, tgtKey].sort().join('|||');
                         if (!edgeMap[edgeKey]) {
-                            edgeMap[edgeKey] = { source: partner, target: regKey, partnerships: [], weight: 0 };
+                            edgeMap[edgeKey] = { source: acqKey, target: tgtKey, partnerships: [], weight: 0, edgeType: 'Partnership' };
                         }
-                        if (!edgeMap[edgeKey].partnerships.some(ep => ep.name === partnershipName)) {
-                            edgeMap[edgeKey].partnerships.push({ name: partnershipName, type: type, acquisition: isAcquisition, dateAdded });
+                        const existing = edgeMap[edgeKey].partnerships.find(ep => ep.name === pEntry.name);
+                        if (existing) {
+                            existing.acquirerIds = acquirerIdSet;
+                            existing.acqTargetIds = acqTargetIdSet;
+                            existing.isAcqEdge = true;
+                        } else {
+                            edgeMap[edgeKey].partnerships.push({
+                                ...pEntry,
+                                acquirerIds: acquirerIdSet,
+                                acqTargetIds: acqTargetIdSet,
+                                isAcqEdge: true
+                            });
                             edgeMap[edgeKey].weight++;
                         }
                     });
                 });
 
-                // Create regulatory chain edges: IB → FCM → DCM → DCO
-                const regChain = [ibKey, fcmKey, dcmKey, dcoKey].filter(Boolean);
-                for (let i = 0; i < regChain.length - 1; i++) {
-                    if (regChain[i] === regChain[i + 1]) continue;
-                    const edgeKey = [regChain[i], regChain[i + 1]].sort().join('|||');
-                    if (!edgeMap[edgeKey]) {
-                        edgeMap[edgeKey] = { source: regChain[i], target: regChain[i + 1], partnerships: [], weight: 0 };
-                    }
-                    if (!edgeMap[edgeKey].partnerships.some(ep => ep.name === partnershipName)) {
-                        edgeMap[edgeKey].partnerships.push({ name: partnershipName, type: 'Operational', acquisition: false, dateAdded });
-                        edgeMap[edgeKey].weight++;
-                    }
-                }
-
-                // Record partnership on each involved node
-                allEntities.forEach(eName => {
-                    if (nodeMap[eName]) {
-                        nodeMap[eName].partnerships.push({ name: partnershipName, type: type, acquisition: isAcquisition, dateAdded, details: p['Additional Details'] || '' });
+                // Record on nodes
+                [...new Set([...acquirerKeys, ...targetKeys])].forEach(key => {
+                    if (nodeMap[key]) {
+                        nodeMap[key].partnerships.push(pEntry);
                     }
                 });
             });
 
-            // Determine primary type for each node
-            const typePriority = ['DCM', 'DCO', 'FCM', 'IB', 'TSP', 'Platform'];
+            // ── Phase 4: Determine primary type for each node ──
             Object.values(nodeMap).forEach(node => {
-                node.type = 'Other';
-                for (const tp of typePriority) {
-                    if (node.roles.has(tp)) { node.type = tp; break; }
+                if (node.isBrand) {
+                    // Brand nodes are always Platform type (even if they also have regulatory roles)
+                    node.type = 'Platform';
+                    // Dual-role brands show their reg role in the label
+                    const regRoles = Array.from(node.roles).filter(r => r !== 'Platform');
+                    const ROLE_LABELS = { Platform: 'Prediction Market' };
+                    if (regRoles.length > 0) {
+                        node.rolesStr = `Prediction Market (${regRoles.join(', ')})`;
+                    } else {
+                        node.rolesStr = 'Prediction Market';
+                    }
+                } else if (node.parentBrand) {
+                    // Satellite nodes get their regulatory type
+                    const typePriority = ['DCM', 'DCO', 'FCM', 'IB'];
+                    node.type = 'Other';
+                    for (const tp of typePriority) {
+                        if (node.roles.has(tp)) { node.type = tp; break; }
+                    }
+                    node.rolesStr = node.type + ' — ' + node.parentBrand;
+                } else {
+                    // Everything else
+                    const typePriority = ['DCM', 'DCO', 'FCM', 'IB', 'TSP', 'Platform'];
+                    node.type = 'Other';
+                    for (const tp of typePriority) {
+                        if (node.roles.has(tp)) { node.type = tp; break; }
+                    }
+                    const ROLE_LABELS = { Platform: 'Prediction Market' };
+                    node.rolesStr = Array.from(node.roles).map(r => ROLE_LABELS[r] || r).join(', ') || 'Partner';
                 }
-                const ROLE_LABELS = { Platform: 'Prediction Market' };
-                node.rolesStr = Array.from(node.roles).map(r => ROLE_LABELS[r] || r).join(', ') || 'Partner';
             });
 
             // Count connections
@@ -2939,6 +3115,10 @@
         }
 
         function nodeRadius(d) {
+            // Satellite regulatory nodes are smaller
+            if (d.parentBrand) {
+                return Math.max(6, Math.min(18, 5 + d.connections * 1.5));
+            }
             if (d.type === 'Other') {
                 return Math.max(5, Math.min(16, 3 + d.connections * 1.8));
             }
@@ -2967,6 +3147,17 @@
                         .attr('stroke-width', 1.5)
                         .attr('stroke-opacity', 0.3)
                         .attr('class', 'hub-halo');
+                }
+
+                // Brand ring — subtle outer ring for all brand hub nodes
+                if (d.isBrand && !(d.connections >= 8)) {
+                    g.append('circle')
+                        .attr('r', r + 4)
+                        .attr('fill', 'none')
+                        .attr('stroke', fillColor)
+                        .attr('stroke-width', 1.2)
+                        .attr('stroke-opacity', 0.25)
+                        .attr('class', 'brand-ring');
                 }
 
                 let shape;
@@ -3011,7 +3202,7 @@
 
         function initNetworkGraph() {
             if (networkGraphInitialized) return;
-            if (!partnershipsData.length) return;
+            if (!partnershipsData.length || !networkEntitiesData.length) return;
             networkGraphInitialized = true;
 
             buildGraphData();
@@ -3131,9 +3322,10 @@
                                     (tgtNode && tgtNode.type === 'Other' && tgtNode.connections <= 1);
                     return 'edge-line' + (isMinor ? ' edge-minor' : '');
                 })
-                .attr('stroke', d => `url(#edgeGrad-${d._gradIdx})`)
-                .attr('stroke-width', d => Math.max(1, Math.min(4, 0.8 + d.weight * 1.2)))
-                .attr('stroke-opacity', d => Math.min(0.55, 0.2 + d.weight * 0.1));
+                .attr('stroke', d => d.edgeType === 'Regulatory' ? '#94a3b8' : `url(#edgeGrad-${d._gradIdx})`)
+                .attr('stroke-width', d => d.edgeType === 'Regulatory' ? 1.5 : Math.max(1, Math.min(4, 0.8 + d.weight * 1.2)))
+                .attr('stroke-opacity', d => d.edgeType === 'Regulatory' ? 0.35 : Math.min(0.55, 0.2 + d.weight * 0.1))
+                .attr('stroke-dasharray', d => d.edgeType === 'Regulatory' ? '4,3' : d.edgeType === 'RegChain' ? '6,3' : null);
 
             // === Nodes ===
             const nodeGroup = graphG.append('g').attr('class', 'nodes');
@@ -3255,13 +3447,17 @@
 
             // === Force simulation ===
             graphSimulation = d3.forceSimulation(graphNodes)
-                .force('link', d3.forceLink(graphEdges).id(d => d.id).distance(d => {
-                    const cat = getEdgeCategory(d.partnerships[0]?.type);
-                    if (cat === 'Operational') return 80;
-                    if (cat === 'Data' || cat === 'Marketing') return 140;
-                    return 110;
-                }))
-                .force('charge', d3.forceManyBody().strength(-350))
+                .force('link', d3.forceLink(graphEdges).id(d => d.id)
+                    .distance(d => {
+                        if (d.edgeType === 'Regulatory') return 35;
+                        if (d.edgeType === 'RegChain') return 65;
+                        const cat = getEdgeCategory(d.partnerships[0]?.type);
+                        if (cat === 'Operational') return 80;
+                        if (cat === 'Data' || cat === 'Marketing') return 140;
+                        return 110;
+                    })
+                    .strength(d => d.edgeType === 'Regulatory' ? 2 : 1))
+                .force('charge', d3.forceManyBody().strength(d => d.parentBrand ? -150 : -350))
                 .force('center', d3.forceCenter(width / 2, height / 2))
                 .force('collision', d3.forceCollide().radius(d => nodeRadius(d) + 20))
                 .force('x', d3.forceX(width / 2).strength(0.08))
@@ -3461,7 +3657,7 @@
             tooltip.innerHTML = `
                 <div class="tt-name">
                     <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${colors.fill};box-shadow:0 0 6px ${colors.fill}40;flex-shrink:0;"></span>
-                    ${d.name}
+                    ${d.legalName || d.name}
                 </div>
                 <div class="tt-role" style="background:${colors.fill}18;color:${colors.fill};">${d.rolesStr}</div>
                 <div class="tt-count">
@@ -3513,7 +3709,7 @@
                 <div style="background:linear-gradient(135deg, ${colors.fill}15, ${colors.fill}05);padding:1.5rem 1.5rem 1.25rem;border-bottom:1px solid var(--color-border-light);">
                     <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.375rem;">
                         <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${colors.fill};box-shadow:0 0 8px ${colors.fill}50;"></span>
-                        <div class="dp-name" style="padding-right:2rem;">${d.name}</div>
+                        <div class="dp-name" style="padding-right:2rem;">${d.legalName || d.name}</div>
                     </div>
                     <div class="dp-role" style="color:${colors.fill};">${d.rolesStr}</div>
                     <div style="font-size:0.8rem;color:var(--color-text-secondary);margin-top:0.25rem;">
@@ -3522,6 +3718,44 @@
                     </div>
                 </div>
                 <div style="padding:1.25rem 1.5rem;">
+                    ${(() => {
+                        if (!d.isBrand) return '';
+                        // Collect reg entities from connected nodes with regulatory roles
+                        const regEntries = [];
+                        const seenLabels = new Set();
+                        const regTypes = new Set(['DCM', 'DCO', 'FCM', 'IB']);
+                        graphEdges.forEach(edge => {
+                            const src = typeof edge.source === 'object' ? edge.source : graphNodes.find(n => n.id === edge.source);
+                            const tgt = typeof edge.target === 'object' ? edge.target : graphNodes.find(n => n.id === edge.target);
+                            if (!src || !tgt) return;
+                            let other = null;
+                            if (src.id === d.id) other = tgt;
+                            else if (tgt.id === d.id) other = src;
+                            if (!other || !regTypes.has(other.type)) return;
+                            const label = other.legalName || other.name;
+                            if (!seenLabels.has(label)) {
+                                seenLabels.add(label);
+                                regEntries.push({ type: other.type, label });
+                            }
+                        });
+                        if (regEntries.length === 0) return '';
+                        return `<div style="font-weight:600;font-size:0.75rem;color:var(--color-text-tertiary);margin-bottom:0.625rem;text-transform:uppercase;letter-spacing:0.06em;">
+                            Regulatory Entities
+                        </div>
+                        ${regEntries.map(e => {
+                            const c = NODE_COLORS[e.type] || NODE_COLORS.Other;
+                            return `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.375rem;font-size:0.8rem;">
+                                <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${c.fill};"></span>
+                                <span style="font-weight:600;color:${c.fill};font-size:0.7rem;">${e.type}</span>
+                                <span style="color:var(--color-text-secondary);">${e.label}</span>
+                            </div>`;
+                        }).join('')}
+                        <div style="height:0.75rem;"></div>`;
+                    })()}
+                    ${d.parentBrand ? `
+                    <div style="font-size:0.8rem;color:var(--color-text-secondary);margin-bottom:0.75rem;">
+                        <span style="color:${(NODE_COLORS.Platform).fill};font-weight:600;">●</span> Part of <strong>${d.parentBrand}</strong>
+                    </div>` : ''}
                     <div style="font-weight:600;font-size:0.75rem;color:var(--color-text-tertiary);margin-bottom:0.625rem;text-transform:uppercase;letter-spacing:0.06em;">
                         Partnerships (${unique.length})
                     </div>
@@ -3584,7 +3818,7 @@
                 return;
             }
 
-            const matches = graphNodes.filter(n => n.name.toLowerCase().includes(query));
+            const matches = graphNodes.filter(n => n.name.toLowerCase().includes(query) || (n.legalName && n.legalName.toLowerCase().includes(query)));
             if (matches.length === 1) {
                 updateGraphHighlight(matches[0]);
             } else if (matches.length > 1) {
