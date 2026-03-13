@@ -2663,14 +2663,14 @@
             ['Coinbase Financial Markets', 'Coinbase Financial Markets'],
             ['FANDUEL PREDICTION MARKETS', 'FanDuel Prediction Markets'],
             ['Fanduel Predicts', 'FanDuel'],
-            ['DraftKings Predictions', 'DraftKings'],
+            ['DraftKings Predictions', 'DraftKings Predictions'],
             ['PrizePicks (Performance', 'PrizePicks Predictions'],
             ['Robinhood Derivatives', 'Robinhood Derivatives'],
             // True aliases — same entity, different spellings
             ['Crypto.com (CDNA)', 'Crypto.com'],
             ['d/b/a Crypto.com', 'Crypto.com'],
             ['Paragon Global Markets LLC d/b/a Fanatics', 'Fanatics'],
-            ['Fanatics Markets', 'Fanatics'],
+            ['Fanatics Markets', 'Fanatics Markets'],
             ['QCEX', 'Polymarket'],
             ['QCX LLC', 'Polymarket US (QCX)'],
             ['QC Clearing LLC', 'Polymarket Clearing'],
@@ -2876,6 +2876,7 @@
                 if (brand && !isDualRole) {
                     ensureEdge(brand, nodeKey, 'Regulatory', null);
                 }
+
             });
 
             // Create sibling edges (same brand, same entity name, different types — e.g., DCM↔DCO)
@@ -3591,6 +3592,26 @@
                 if (tgtId === d.id) connectedIds.add(srcId);
             });
 
+            // For brand nodes, also include neighbors of satellite nodes
+            // (e.g., clicking Crypto.com → CDNA DCM/DCO → Fanatics Markets, DraftKings Predictions)
+            if (d.isBrand) {
+                const satellites = new Set();
+                graphEdges.forEach(e => {
+                    const srcId = typeof e.source === 'object' ? e.source.id : e.source;
+                    const tgtId = typeof e.target === 'object' ? e.target.id : e.target;
+                    if (e.edgeType === 'Regulatory' || e.edgeType === 'RegChain') {
+                        if (srcId === d.id && connectedIds.has(tgtId)) satellites.add(tgtId);
+                        if (tgtId === d.id && connectedIds.has(srcId)) satellites.add(srcId);
+                    }
+                });
+                graphEdges.forEach(e => {
+                    const srcId = typeof e.source === 'object' ? e.source.id : e.source;
+                    const tgtId = typeof e.target === 'object' ? e.target.id : e.target;
+                    if (satellites.has(srcId)) connectedIds.add(tgtId);
+                    if (satellites.has(tgtId)) connectedIds.add(srcId);
+                });
+            }
+
             // Apply glow filter per node type on highlighted nodes
             graphG.selectAll('.node-group')
                 .classed('highlighted', n => connectedIds.has(n.id))
@@ -3608,12 +3629,12 @@
                 .classed('highlighted', e => {
                     const srcId = typeof e.source === 'object' ? e.source.id : e.source;
                     const tgtId = typeof e.target === 'object' ? e.target.id : e.target;
-                    return srcId === d.id || tgtId === d.id;
+                    return connectedIds.has(srcId) && connectedIds.has(tgtId);
                 })
                 .classed('dimmed', e => {
                     const srcId = typeof e.source === 'object' ? e.source.id : e.source;
                     const tgtId = typeof e.target === 'object' ? e.target.id : e.target;
-                    return srcId !== d.id && tgtId !== d.id;
+                    return !(connectedIds.has(srcId) && connectedIds.has(tgtId));
                 });
 
             // Animate particles on highlighted edges (max 6, skip on mobile)
