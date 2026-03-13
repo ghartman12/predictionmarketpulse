@@ -1,0 +1,36 @@
+name: Test CFTC/NFA Access
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-access:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test CFTC Trading Organizations page
+        run: |
+          echo "--- CFTC Trading Org (Kalshi) ---"
+          curl -s -o /dev/null -w "HTTP Status: %{http_code}\nRedirect URL: %{redirect_url}\n" \
+            -A "Mozilla/5.0" \
+            "https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/42993"
+
+      - name: Test CFTC Clearing Organizations page
+        run: |
+          echo "--- CFTC Clearing Org ---"
+          curl -s -o /dev/null -w "HTTP Status: %{http_code}\nRedirect URL: %{redirect_url}\n" \
+            -A "Mozilla/5.0" \
+            "https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/38"
+
+      - name: Test NFA Basic Profile page
+        run: |
+          echo "--- NFA Profile (Kalshi) ---"
+          curl -s -o /dev/null -w "HTTP Status: %{http_code}\nRedirect URL: %{redirect_url}\n" \
+            -A "Mozilla/5.0" \
+            "https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=0560285"
+
+      - name: Test CFTC Industry Filings landing page
+        run: |
+          echo "--- CFTC Industry Filings ---"
+          curl -s -o /dev/null -w "HTTP Status: %{http_code}\nRedirect URL: %{redirect_url}\n" \
+            -A "Mozilla/5.0" \
+            "https://www.cftc.gov/IndustryOversight/IndustryFilings"
