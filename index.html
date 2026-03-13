@@ -1611,6 +1611,7 @@
                             <option value="Operational">Operational</option>
                             <option value="Operational/B2B">Operational/B2B</option>
                             <option value="Operational/Data">Operational/Data</option>
+                            <option value="Payments">Payments</option>
                             <option value="Other">Other</option>
                         </select>
                         
@@ -2086,7 +2087,8 @@
                 'Acquisition': 9,
                 'Marketing/Athlete Sponsorship': 10,
                 'Government Affairs': 11,
-                'Other': 12
+                'Payments': 12,
+                'Other': 13
             };
 
             filtered.sort((a, b) => {
@@ -2628,6 +2630,7 @@
             Marketing: '#f97316',
             Acquisition: '#e11d48',
             Government: '#facc15',
+            Payments: '#06b6d4',
             Other: '#64748b'
         };
 
@@ -2647,6 +2650,7 @@
             if (type.includes('Marketing') || type.includes('Sponsorship')) return 'Marketing';
             if (type.includes('Acquisition')) return 'Acquisition';
             if (type.includes('Government')) return 'Government';
+            if (type.includes('Payments')) return 'Payments';
             return 'Other';
         }
 
