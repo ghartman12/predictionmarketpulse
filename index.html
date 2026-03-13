@@ -3754,8 +3754,9 @@
                             else if (tgt.id === d.id) other = src;
                             if (!other || !regTypes.has(other.type)) return;
                             const label = other.legalName || other.name;
-                            if (!seenLabels.has(label)) {
-                                seenLabels.add(label);
+                            const dedupKey = other.type + '|||' + label;
+                            if (!seenLabels.has(dedupKey)) {
+                                seenLabels.add(dedupKey);
                                 regEntries.push({ type: other.type, label });
                             }
                         });
