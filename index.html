@@ -502,6 +502,24 @@
             background-clip: text;
         }
 
+        .pulse-glow {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .dark .pulse-glow {
+            background: none;
+            -webkit-background-clip: unset;
+            -webkit-text-fill-color: #fff;
+            background-clip: unset;
+            text-shadow:
+                0 0 7px rgba(255, 255, 255, 0.7),
+                0 0 20px rgba(124, 111, 247, 0.5),
+                0 0 40px rgba(124, 111, 247, 0.3);
+        }
+
         .dark .hero-gradient {
             background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
             -webkit-background-clip: text;
@@ -1104,7 +1122,7 @@
                     <div class="icon-badge p-2.5 rounded-xl w-10 h-10 flex items-center justify-center transition-transform group-hover:scale-110">
                         <span class="material-icons-outlined text-white">trending_up</span>
                     </div>
-                    <span class="ml-3 font-bold text-xl bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">PredictionMarketPulse</span>
+                    <span class="ml-3 font-bold text-xl bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">PredictionMarket</span><span class="ml-0 font-bold text-xl pulse-glow">Pulse</span>
                 </div>
 
                 <!-- Desktop Navigation -->
@@ -1739,7 +1757,7 @@
             <div id="view-about" class="view-content">
                 <div class="text-center mb-12">
                     <h1 class="text-4xl sm:text-6xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-6">
-                        About <span class="hero-gradient">PredictionMarketPulse</span>
+                        About <span class="hero-gradient">PredictionMarket</span><span class="pulse-glow">Pulse</span>
                     </h1>
                 </div>
                 
