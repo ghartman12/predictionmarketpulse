@@ -139,7 +139,7 @@ function getRegSeedData_() {
     // NFA PENDING — FCM/IB Applications
     // ══════════════════════════════════════
     ['Gus III LLC (DraftKings Predictions)', 'FCM', 'NFA Pending', '2026-02-27', '', '2026-03-11', 'FCM application pending; upgrading from IB', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=5AIFEr/FlzA%3D', 'Already registered as IB (12/04/2025); acquired Railbird Exchange DCM'],
-    ['Splash (BetterPool)', 'FCM', 'NFA Pending', '2025-08-01', '', '2026-03-11', 'FCM application pending', 'https://www.nfa.futures.org/BasicNet/basic-search-landing.aspx', 'Stealth VC-funded sports betting tech company']
+    ['Splash (BetterPool)', 'IB', 'NFA Pending', '2025-08-20', '', '2026-03-13', 'IB application pending', 'https://www.nfa.futures.org/BasicNet/basic-search-landing.aspx', 'Stealth VC-funded sports betting tech company']
   ];
 }
 

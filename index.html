@@ -40,15 +40,17 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website"/>
     <meta property="og:url" content="https://predictionmarketpulse.com"/>
-    <meta property="og:title" content="PredictionMarketPulse — US Prediction Market Partnerships & Regulatory Tracker"/>
-    <meta property="og:description" content="Independent tracker of prediction market partnerships and CFTC registration filings. Covers Polymarket, Kalshi, Crypto.com, and more."/>
+    <meta property="og:title" content="PredictionMarketPulse — US Prediction Market Partnership Tracker"/>
+    <meta property="og:description" content="Track partnerships, regulatory structures, and key players across the US prediction markets ecosystem."/>
+    <meta property="og:image" content="https://predictionmarketpulse.com/og-image.png"/>
     <meta property="og:site_name" content="PredictionMarketPulse"/>
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image"/>
     <meta name="twitter:url" content="https://predictionmarketpulse.com"/>
-    <meta name="twitter:title" content="PredictionMarketPulse — US Prediction Market Partnerships & Regulatory Tracker"/>
-    <meta name="twitter:description" content="Independent tracker of prediction market partnerships and CFTC registration filings. Covers Polymarket, Kalshi, Crypto.com, and more."/>
+    <meta name="twitter:title" content="PredictionMarketPulse — US Prediction Market Partnership Tracker"/>
+    <meta name="twitter:description" content="Track partnerships, regulatory structures, and key players across the US prediction markets ecosystem."/>
+    <meta name="twitter:image" content="https://predictionmarketpulse.com/og-image.png"/>
     
     <!-- Structured Data (JSON-LD) for Generative Engine Optimization -->
     <script type="application/ld+json">
@@ -1115,12 +1117,10 @@
                         <span class="material-icons-outlined text-base mr-2">trending_up</span>
                         Partnerships
                     </button>
-                    <!-- Regulatory nav hidden while page is disabled
                     <button onclick="switchView('regulatory')" id="nav-regulatory" class="nav-btn flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
                         <span class="material-icons-outlined text-base mr-2">gavel</span>
                         Regulatory
                     </button>
-                    -->
                     <button onclick="switchView('network')" id="nav-network" class="nav-btn flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
                         <span class="material-icons-outlined text-base mr-2">hub</span>
                         Network Map
@@ -1168,12 +1168,10 @@
                         <span class="material-icons-outlined text-base mr-3">trending_up</span>
                         Partnerships
                     </button>
-                    <!-- Regulatory nav hidden while page is disabled
                     <button onclick="switchView('regulatory'); toggleMobileMenu()" class="nav-btn-mobile flex items-center text-sm font-medium text-slate-700 dark:text-slate-200 px-4 py-3 rounded-lg transition-all hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 w-full text-left dark:text-slate-200">
                         <span class="material-icons-outlined text-base mr-3">gavel</span>
                         Regulatory
                     </button>
-                    -->
                     <button onclick="switchView('network'); toggleMobileMenu()" class="nav-btn-mobile flex items-center text-sm font-medium text-slate-700 dark:text-slate-200 px-4 py-3 rounded-lg transition-all hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 w-full text-left dark:text-slate-200">
                         <span class="material-icons-outlined text-base mr-3">hub</span>
                         Network Map
@@ -1611,6 +1609,7 @@
                             <option value="Operational">Operational</option>
                             <option value="Operational/B2B">Operational/B2B</option>
                             <option value="Operational/Data">Operational/Data</option>
+                            <option value="Payments">Payments</option>
                             <option value="Other">Other</option>
                         </select>
                         
@@ -1905,7 +1904,7 @@
         // Set correct view immediately to prevent flash of wrong content
         (function() {
             var hash = location.hash.replace('#','');
-            var valid = ['terminology','tracker','network','simulation','about','contact'];
+            var valid = ['terminology','tracker','regulatory','network','simulation','about','contact'];
             var view = valid.indexOf(hash) !== -1 ? hash : 'terminology';
             var el = document.getElementById('view-' + view);
             if (el) el.classList.add('active');
@@ -2086,7 +2085,8 @@
                 'Acquisition': 9,
                 'Marketing/Athlete Sponsorship': 10,
                 'Government Affairs': 11,
-                'Other': 12
+                'Payments': 12,
+                'Other': 13
             };
 
             filtered.sort((a, b) => {
@@ -2628,6 +2628,7 @@
             Marketing: '#f97316',
             Acquisition: '#e11d48',
             Government: '#facc15',
+            Payments: '#06b6d4',
             Other: '#64748b'
         };
 
@@ -2647,6 +2648,7 @@
             if (type.includes('Marketing') || type.includes('Sponsorship')) return 'Marketing';
             if (type.includes('Acquisition')) return 'Acquisition';
             if (type.includes('Government')) return 'Government';
+            if (type.includes('Payments')) return 'Payments';
             return 'Other';
         }
 
@@ -3971,7 +3973,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
             var hash = location.hash.replace('#','');
-            var valid = ['terminology','tracker','network','simulation','about','contact'];
+            var valid = ['terminology','tracker','regulatory','network','simulation','about','contact'];
             switchView(valid.indexOf(hash) !== -1 ? hash : 'terminology');
 
             // GA4: Contact form submission
