@@ -85,7 +85,7 @@ function getNetworkEntitiesSeedData_() {
     ['Underdog Fantasy', 'Aristotle Exchange DCO', 'Aristotle Exchange DCO, Inc.', 'DCO', '', 'Yes'],
 
     // Interactive Brokers Group — ForecastEx DCM/DCO + IB LLC FCM
-    ['Interactive Brokers Group', 'ForecastEx', 'ForecastEx LLC', 'DCM', '', 'Yes'],
+    ['Interactive Brokers Group', 'ForecastEx', 'ForecastEx LLC', 'DCM', 'ForecastEx', 'Yes'],
     ['Interactive Brokers Group', 'ForecastEx', 'ForecastEx LLC', 'DCO', '', 'Yes'],
     ['Interactive Brokers Group', 'Interactive Brokers LLC', 'Interactive Brokers LLC', 'FCM', 'ForecastEx', 'Yes'],
 
