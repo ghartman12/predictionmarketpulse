@@ -84,8 +84,10 @@ function getNetworkEntitiesSeedData_() {
     ['Underdog Fantasy', 'Aristotle Exchange DCM', 'Aristotle Exchange DCM, Inc.', 'DCM', '', 'Yes'],
     ['Underdog Fantasy', 'Aristotle Exchange DCO', 'Aristotle Exchange DCO, Inc.', 'DCO', '', 'Yes'],
 
-    // ForecastEx
-    ['ForecastEx', 'ForecastEx', 'ForecastEx LLC', 'DCM', '', 'Yes'],
+    // Interactive Brokers Group — ForecastEx DCM/DCO + IB LLC FCM
+    ['Interactive Brokers Group', 'ForecastEx', 'ForecastEx LLC', 'DCM', '', 'Yes'],
+    ['Interactive Brokers Group', 'ForecastEx', 'ForecastEx LLC', 'DCO', '', 'Yes'],
+    ['Interactive Brokers Group', 'Interactive Brokers LLC', 'Interactive Brokers LLC', 'FCM', 'ForecastEx', 'Yes'],
 
     // CME
     ['CME', 'CME', 'Chicago Mercantile Exchange Inc.', 'DCM', '', 'Yes'],
@@ -93,7 +95,6 @@ function getNetworkEntitiesSeedData_() {
     // ══════════════════════════════════════
     // DUAL-ROLE BRANDS — Brand IS the regulatory entity (no separate satellite)
     // ══════════════════════════════════════
-    ['Interactive Brokers', 'Interactive Brokers', 'Interactive Brokers LLC', 'FCM', 'ForecastEx', 'Yes'],
     ['WeBull', 'WeBull', 'Webull Financial LLC', 'FCM', 'Kalshi', 'Yes'],
 
     // ══════════════════════════════════════

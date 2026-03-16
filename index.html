@@ -2911,11 +2911,14 @@
                 const isDualRole = brand && brand === entityName;
                 let sourceKey;
                 if (sameNameRows.length > 1 && !isDualRole) {
-                    sourceKey = resolveEntity(entityName + ' ' + type);
+                    const norm = normalizeEntityName(entityName + ' ' + type);
+                    sourceKey = norm ? resolveEntity(norm) : null;
                 } else if (isDualRole) {
-                    sourceKey = resolveEntity(brand);
+                    const norm = normalizeEntityName(brand);
+                    sourceKey = norm ? resolveEntity(norm) : null;
                 } else {
-                    sourceKey = resolveEntity(entityName);
+                    const norm = normalizeEntityName(entityName);
+                    sourceKey = norm ? resolveEntity(norm) : null;
                 }
                 if (!sourceKey || !nodeMap[sourceKey]) return;
 
@@ -3340,8 +3343,8 @@
                     return 'edge-line' + (isMinor ? ' edge-minor' : '');
                 })
                 .attr('stroke', d => d.edgeType === 'Regulatory' ? '#94a3b8' : `url(#edgeGrad-${d._gradIdx})`)
-                .attr('stroke-width', d => d.edgeType === 'Regulatory' ? 1.5 : Math.max(1, Math.min(4, 0.8 + d.weight * 1.2)))
-                .attr('stroke-opacity', d => d.edgeType === 'Regulatory' ? 0.35 : Math.min(0.55, 0.2 + d.weight * 0.1))
+                .attr('stroke-width', d => d.edgeType === 'Regulatory' ? 1.5 : d.edgeType === 'RegChain' ? 1.5 : Math.max(1, Math.min(4, 0.8 + d.weight * 1.2)))
+                .attr('stroke-opacity', d => d.edgeType === 'Regulatory' ? 0.35 : d.edgeType === 'RegChain' ? 0.35 : Math.min(0.55, 0.2 + d.weight * 0.1))
                 .attr('stroke-dasharray', d => d.edgeType === 'Regulatory' ? '4,3' : d.edgeType === 'RegChain' ? '6,3' : null);
 
             // === Nodes ===
