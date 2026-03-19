@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>PredictionMarketPulse — US Prediction Market Tracker | Partnerships & CFTC Regulatory Guide</title>
+
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-BQGMFEFQJ1"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'G-BQGMFEFQJ1');
+      if (window.location.hostname === 'predictionmarketpulse.com') {
+        gtag('config', 'G-BQGMFEFQJ1');
+      }
     </script>
-    
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>PredictionMarketPulse — US Prediction Market Tracker | Partnerships & CFTC Regulatory Guide</title>
     
     <!-- SEO Meta Tags -->
     <meta name="description" content="The independent tracker for the US prediction markets ecosystem. Comprehensive partnership database (Polymarket, Kalshi, Crypto.com), CFTC/NFA registration pipeline, and a complete guide to FCM, DCM, DCO & IB regulatory structures. Updated weekly."/>
@@ -2011,7 +2013,6 @@
 
             // GA4 section tracking
             gtag('event', 'section_view', { section_name: viewName });
-            gtag('event', 'page_view', { page_title: viewName, page_location: window.location.origin + '/' + viewName });
         }
 
         function toggleMobileMenu() {
