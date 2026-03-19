@@ -5,6 +5,7 @@ function onOpen() {
     .createMenu('PredictionMarketPulse')
     .addItem('Generate X Post', 'generateXPost')
     .addItem('Generate Thread', 'generateThread')
+    .addItem('Generate X Posts for Selected Rows', 'generateBatchXPosts')
     .addToUi();
 }
 
@@ -58,8 +59,17 @@ function generateDraft_(mode) {
     return;
   }
 
+  // Auto-add Draft X Post and Date X Post Generated columns if missing
+  if (headers.indexOf('Draft X Post') === -1) {
+    var nextCol = sheet.getLastColumn() + 1;
+    sheet.getRange(1, nextCol).setValue('Draft X Post');
+    sheet.getRange(1, nextCol + 1).setValue('Date X Post Generated');
+    HEADERS = null; // reset cached headers
+    headers = getHeaders_(sheet);
+  }
+
   var draftCol = colIndex_(headers, 'Draft X Post') + 1;
-  var existingDraft = String(data['Draft X Post']).trim();
+  var existingDraft = String(data['Draft X Post'] || '').trim();
 
   if (existingDraft) {
     var overwrite = ui.alert(
@@ -96,6 +106,74 @@ function generateDraft_(mode) {
   ui.alert('Draft generated successfully!');
 }
 
+function generateBatchXPosts() {
+  var ui = SpreadsheetApp.getUi();
+  var sheet = SpreadsheetApp.getActiveSheet();
+  var range = sheet.getActiveRange();
+  var startRow = range.getRow();
+  var numRows = range.getNumRows();
+
+  if (startRow <= 1) {
+    ui.alert('Please select data rows (not the header).');
+    return;
+  }
+
+  var headers = getHeaders_(sheet);
+
+  // Auto-add Draft X Post and Date X Post Generated columns if missing
+  if (headers.indexOf('Draft X Post') === -1) {
+    var nextCol = sheet.getLastColumn() + 1;
+    sheet.getRange(1, nextCol).setValue('Draft X Post');
+    sheet.getRange(1, nextCol + 1).setValue('Date X Post Generated');
+    HEADERS = null;
+    headers = getHeaders_(sheet);
+  }
+
+  var draftCol = colIndex_(headers, 'Draft X Post') + 1;
+  var dateCol = colIndex_(headers, 'Date X Post Generated') + 1;
+
+  var generated = 0;
+  var skipped = 0;
+  var errors = 0;
+
+  for (var i = 0; i < numRows; i++) {
+    var row = startRow + i;
+    if (row <= 1) continue;
+
+    var values = sheet.getRange(row, 1, 1, headers.length).getValues()[0];
+    var data = rowToObject_(headers, values);
+
+    if (!data['Partnership'] || !String(data['Partnership']).trim()) {
+      skipped++;
+      continue;
+    }
+
+    // Skip rows that already have a draft
+    if (String(data['Draft X Post'] || '').trim()) {
+      skipped++;
+      continue;
+    }
+
+    var userPrompt = buildUserPrompt_(data, 'single');
+
+    try {
+      var draft = callClaude_(userPrompt);
+      sheet.getRange(row, draftCol).setValue(draft);
+      sheet.getRange(row, dateCol).setValue(
+        Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd')
+      );
+      generated++;
+      if (i < numRows - 1) Utilities.sleep(1000); // rate limit buffer
+    } catch (e) {
+      errors++;
+      sheet.getRange(row, draftCol).setValue('ERROR: ' + e.message);
+    }
+  }
+
+  SpreadsheetApp.flush();
+  ui.alert('Batch complete: ' + generated + ' generated, ' + skipped + ' skipped, ' + errors + ' errors.');
+}
+
 function buildUserPrompt_(data, mode) {
   var lines = [];
   if (mode === 'thread') {
@@ -104,13 +182,9 @@ function buildUserPrompt_(data, mode) {
     lines.push('Generate a single X post (under 280 characters) for this partnership:');
   }
   lines.push('Partnership: ' + data['Partnership']);
-  lines.push('Type: ' + data['Type of Partnership']);
+  lines.push('Type: ' + data['Type']);
   if (data['Announcement Link']) lines.push('Announcement Link: ' + data['Announcement Link']);
-  if (data['IB']) lines.push('IB: ' + data['IB']);
-  if (data['FCM']) lines.push('FCM: ' + data['FCM']);
-  if (data['DCM']) lines.push('DCM: ' + data['DCM']);
-  if (data['DCO']) lines.push('DCO: ' + data['DCO']);
-  if (data['Additional Details']) lines.push('Additional Details: ' + data['Additional Details']);
+  if (data['Details']) lines.push('Details: ' + data['Details']);
   return lines.join('\n');
 }
 

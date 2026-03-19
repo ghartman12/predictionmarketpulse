@@ -1616,19 +1616,6 @@
                     <div class="flex gap-4 items-center flex-wrap">
                         <select id="typeFilter" onchange="filterPartnerships()" class="filter-select px-5 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm font-medium shadow-sm hover:border-indigo-300 transition-all focus:ring-2 focus:ring-indigo-500">
                             <option value="">All Types</option>
-                            <option value="Acquisition">Acquisition</option>
-                            <option value="Capital/Collaboration">Capital/Collaboration</option>
-                            <option value="Capital/Marketing">Capital/Marketing</option>
-                            <option value="Data/Integration">Data/Integration</option>
-                            <option value="Data/Marketing">Data/Marketing</option>
-                            <option value="Data/Marketing/Sponsorship">Data/Marketing/Sponsorship</option>
-                            <option value="Government Affairs">Government Affairs</option>
-                            <option value="Marketing/Athlete Sponsorship">Marketing/Athlete Sponsorship</option>
-                            <option value="Operational">Operational</option>
-                            <option value="Operational/B2B">Operational/B2B</option>
-                            <option value="Operational/Data">Operational/Data</option>
-                            <option value="Payments">Payments</option>
-                            <option value="Other">Other</option>
                         </select>
                         
                         <input type="text" id="searchInput" oninput="filterPartnerships()" placeholder="Search partnerships..." class="search-input flex-1 min-w-[200px] px-5 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm shadow-sm hover:border-indigo-300 transition-all">
@@ -1966,6 +1953,7 @@
                 partnershipsData = partnerships.filter(row => row.Partnership && row.Partnership.trim() && String(row.Published || '').trim().toLowerCase() === 'yes');
                 networkEntitiesData = entities.filter(row => (row['Entity Name'] || '').trim() && String(row.Published || '').trim().toLowerCase() === 'yes');
                 acquisitionsData = acquisitions.filter(row => (row['Acquirer'] || '').trim() && String(row.Published || '').trim().toLowerCase() === 'yes');
+                populateTypeFilter();
                 renderTracker();
                 // If network view is already active (direct navigation via hash), init the graph now
                 if (!networkGraphInitialized && document.getElementById('view-network').classList.contains('active')) {
@@ -2069,6 +2057,38 @@
 
         // Call this immediately
         initDarkMode();
+
+        function populateTypeFilter() {
+            const select = document.getElementById('typeFilter');
+            if (!select) return;
+
+            // Preserve current selection
+            const current = select.value;
+
+            // Remove all options except "All Types"
+            while (select.options.length > 1) select.remove(1);
+
+            // Extract unique types from data, sorted by typeOrder then alphabetically
+            const typeOrder = {
+                'Operational': 1, 'Operational/Data': 2, 'Operational/B2B': 3,
+                'Data/Marketing': 4, 'Data/Marketing/Sponsorship': 5, 'Data/Integration': 6,
+                'Capital/Collaboration': 7, 'Capital/Marketing': 8, 'Acquisition': 9,
+                'Marketing/Athlete Sponsorship': 10, 'Government Affairs': 11, 'Payments': 12
+            };
+
+            const types = [...new Set(partnershipsData.map(p => (p['Type'] || p['Type of Partnership'] || '').trim()).filter(Boolean))];
+            types.sort((a, b) => (typeOrder[a] || 98) - (typeOrder[b] || 98) || a.localeCompare(b));
+
+            types.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t;
+                opt.textContent = t;
+                select.appendChild(opt);
+            });
+
+            // Restore selection if still valid
+            if (current && types.includes(current)) select.value = current;
+        }
 
         function renderTracker() {
             const container = document.getElementById('tracker-content');
