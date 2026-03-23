@@ -1,0 +1,26 @@
+{
+  "name": "predictionmarketpulse",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "npx tailwindcss -i src/input.css -o dist/tailwind.css --minify",
+    "watch:css": "npx tailwindcss -i src/input.css -o dist/tailwind.css --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ghartman12/predictionmarketpulse.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ghartman12/predictionmarketpulse/issues"
+  },
+  "homepage": "https://github.com/ghartman12/predictionmarketpulse#readme",
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  }
+}

@@ -1,4 +1,5 @@
 .env
+node_modules/
 
 # Working copies for pasting into Apps Script editor
 apps-script/*.txt
