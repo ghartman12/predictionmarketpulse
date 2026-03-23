@@ -596,6 +596,13 @@
             white-space: nowrap;
         }
 
+        #recentToggle.recent-active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        }
+
         .hero-gradient {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
@@ -1240,9 +1247,9 @@
                         <span class="material-icons-outlined text-base mr-2">gavel</span>
                         Regulatory
                     </button>
-                    <button onclick="switchView('network')" id="nav-network" class="nav-btn flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <button onclick="switchView('network')" id="nav-network" class="nav-btn flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap">
                         <span class="material-icons-outlined text-base mr-2">hub</span>
-                        Network Map
+                        Network
                     </button>
                     <button onclick="switchView('simulation')" id="nav-simulation" class="nav-btn flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
                         <span class="material-icons-outlined text-base mr-2">sports_esports</span>
@@ -1727,7 +1734,12 @@
                         <select id="typeFilter" onchange="filterPartnerships()" class="filter-select px-5 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm font-medium shadow-sm hover:border-indigo-300 transition-all focus:ring-2 focus:ring-indigo-500">
                             <option value="">All Types</option>
                         </select>
-                        
+
+                        <button id="recentToggle" onclick="toggleRecentSort()" class="flex items-center gap-2 px-5 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm font-medium shadow-sm hover:border-indigo-300 transition-all whitespace-nowrap">
+                            <span class="material-icons-outlined text-base">schedule</span>
+                            <span id="recentToggleLabel">Recent</span>
+                        </button>
+
                         <input type="text" id="searchInput" oninput="filterPartnerships()" placeholder="Search partnerships..." class="search-input flex-1 min-w-[200px] px-5 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm shadow-sm hover:border-indigo-300 transition-all">
                     </div>
                 </div>
@@ -2265,13 +2277,26 @@
                 'Other': 13
             };
 
-            filtered.sort((a, b) => {
-                const typeA = a['Type'] || a['Type of Partnership'] || 'Other';
-                const typeB = b['Type'] || b['Type of Partnership'] || 'Other';
-                const orderA = typeOrder[typeA] || 99;
-                const orderB = typeOrder[typeB] || 99;
-                return orderA - orderB;
-            });
+            const sortOrder = document.getElementById('recentToggle')?.classList.contains('recent-active') ? 'recent' : 'type';
+            if (sortOrder === 'recent') {
+                filtered.sort((a, b) => {
+                    const dateA = (a['Date Added'] || '').trim();
+                    const dateB = (b['Date Added'] || '').trim();
+                    // Sort descending — newest first; entries without dates go last
+                    if (!dateA && !dateB) return 0;
+                    if (!dateA) return 1;
+                    if (!dateB) return -1;
+                    return new Date(dateB) - new Date(dateA);
+                });
+            } else {
+                filtered.sort((a, b) => {
+                    const typeA = a['Type'] || a['Type of Partnership'] || 'Other';
+                    const typeB = b['Type'] || b['Type of Partnership'] || 'Other';
+                    const orderA = typeOrder[typeA] || 99;
+                    const orderB = typeOrder[typeB] || 99;
+                    return orderA - orderB;
+                });
+            }
 
             let html = '';
             
@@ -2288,11 +2313,18 @@
 
                 const details = p['Details'] || p['Additional Details'] || '';
 
+                const dateAdded = (p['Date Added'] || '').trim();
+                const showDate = sortOrder === 'recent' && dateAdded;
+                const formattedDate = showDate ? new Date(dateAdded).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+
                 html += `
                     <div class="partnership-card rounded-2xl overflow-hidden shadow-lg">
                         <div class="p-8 pb-6">
                             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
-                                <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 flex-1">${(p.Partnership || 'Untitled Partnership').replace(/\//g, ' <span class="material-icons-outlined text-indigo-400 text-lg mx-1" style="vertical-align: middle;">arrow_forward</span> ')}</h3>
+                                <div class="flex-1">
+                                    <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100">${(p.Partnership || 'Untitled Partnership').replace(/\//g, ' <span class="material-icons-outlined text-indigo-400 text-lg mx-1" style="vertical-align: middle;">arrow_forward</span> ')}</h3>
+                                    ${showDate ? `<p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Added ${formattedDate}</p>` : ''}
+                                </div>
                                 <span class="text-xs font-bold px-3 sm:px-4 py-2 rounded-full ${badgeColor} uppercase tracking-wider text-center break-words whitespace-normal sm:whitespace-nowrap inline-block">${type}</span>
                             </div>
 
@@ -2332,6 +2364,13 @@
         }
 
         var _partnerSearchTimer = null;
+        function toggleRecentSort() {
+            const btn = document.getElementById('recentToggle');
+            const isActive = btn.classList.toggle('recent-active');
+            document.getElementById('recentToggleLabel').textContent = isActive ? 'Recent' : 'Recent';
+            filterPartnerships();
+        }
+
         function filterPartnerships() {
             renderTracker();
             var type = document.getElementById('typeFilter').value;
