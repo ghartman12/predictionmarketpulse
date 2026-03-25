@@ -1117,13 +1117,14 @@
         }
         .network-legend .legend-item {
             display: flex; align-items: center; gap: 0.3rem; white-space: nowrap;
-            cursor: pointer; user-select: none; transition: opacity 0.2s ease;
+            cursor: pointer; user-select: none; transition: all 0.2s ease;
+            padding: 2px 6px; border-radius: 4px;
         }
         .network-legend .legend-item.legend-inactive {
             opacity: 0.35; text-decoration: line-through;
         }
-        .network-legend .legend-item:hover { opacity: 0.75; }
-        .network-legend .legend-item.legend-inactive:hover { opacity: 0.5; }
+        .network-legend .legend-item:hover { background: rgba(99,102,241,0.12); transform: scale(1.05); }
+        .network-legend .legend-item.legend-inactive:hover { opacity: 0.5; background: rgba(99,102,241,0.08); transform: scale(1.05); }
         .network-legend .legend-divider {
             width: 100%; height: 0; border-top: 1px solid var(--color-border-light); margin: 0.15rem 0;
         }
@@ -1840,6 +1841,10 @@
                     <button class="btn-reset" onclick="resetGraphView()">
                         <span class="material-icons-outlined text-base">refresh</span>
                         Reset View
+                    </button>
+                    <button class="btn-reset" id="shareViewBtn" onclick="shareView()">
+                        <span class="material-icons-outlined text-base">ios_share</span>
+                        <span id="shareViewLabel">Share View</span>
                     </button>
                 </div>
 
@@ -3678,7 +3683,6 @@
                 hideGraphTooltip();
             }).on('click', (event, d) => {
                 event.stopPropagation();
-                if (activeGuidedQuestion) { clearGuidedQuestion(); clearGraphHighlight(); }
                 if (selectedNode === d.id) {
                     selectedNode = null;
                     clearGraphHighlight();
@@ -4120,6 +4124,9 @@
             const params = new URLSearchParams();
             if (selectedNode) params.set('entity', entityToSlug(selectedNode));
             if (activeGuidedQuestion) params.set('view', activeGuidedQuestion);
+            if (hiddenNodeTypes.size > 0) params.set('hide', [...hiddenNodeTypes].sort().join(','));
+            const query = (document.getElementById('graphSearchInput')?.value || '').trim();
+            if (query) params.set('q', query);
             const qs = params.toString();
             history.replaceState(null, '', '#network' + (qs ? '?' + qs : ''));
         }
@@ -4132,7 +4139,9 @@
             const params = new URLSearchParams(hash.substring(qIdx));
             return {
                 entitySlug: params.get('entity') || null,
-                view: params.get('view') || null
+                view: params.get('view') || null,
+                hide: params.get('hide') || null,
+                q: params.get('q') || null
             };
         }
 
@@ -4177,6 +4186,47 @@
             });
         }
 
+        function shareView() {
+            updateNetworkURL();
+            const url = location.href;
+            const btn = document.getElementById('shareViewBtn');
+            const icon = btn.querySelector('.material-icons-outlined');
+            const label = document.getElementById('shareViewLabel');
+            const tooltip = document.getElementById('copyTooltip');
+            function showCopied() {
+                const rect = btn.getBoundingClientRect();
+                tooltip.style.top = (rect.bottom + 6) + 'px';
+                tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+                tooltip.style.transform = 'translateX(-50%)';
+                icon.textContent = 'check';
+                label.textContent = 'Copied!';
+                tooltip.classList.add('visible');
+                setTimeout(() => {
+                    icon.textContent = 'ios_share';
+                    label.textContent = 'Share View';
+                    tooltip.classList.remove('visible');
+                }, 1500);
+            }
+            navigator.clipboard.writeText(url).then(() => {
+                showCopied();
+            }).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = url;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showCopied();
+            });
+            gtag('event', 'share_view', {
+                view: activeGuidedQuestion || 'custom',
+                hidden_types: hiddenNodeTypes.size > 0 ? [...hiddenNodeTypes].join(',') : 'none',
+                search_query: document.getElementById('graphSearchInput')?.value || ''
+            });
+        }
+
         function showShareToast() {
             const toast = document.getElementById('shareToast');
             toast.classList.add('visible');
@@ -4186,8 +4236,27 @@
         let isSharedLinkLanding = false;
 
         function applyDeepLink() {
-            const { entitySlug, view } = parseNetworkURL();
-            if (!entitySlug && !view) return;
+            const { entitySlug, view, hide, q } = parseNetworkURL();
+            if (!entitySlug && !view && !hide && !q) return;
+
+            // Apply hidden type filters
+            if (hide) {
+                const validTypes = new Set(['Platform', 'DCM', 'DCO', 'FCM', 'IB', 'TSP', 'Other']);
+                hide.split(',').forEach(t => {
+                    if (validTypes.has(t)) {
+                        hiddenNodeTypes.add(t);
+                        const legendEl = document.querySelector(`.legend-item[data-node-type="${t}"]`);
+                        if (legendEl) legendEl.classList.add('legend-inactive');
+                    }
+                });
+                applyShowAllState();
+            }
+
+            // Apply search query
+            if (q) {
+                document.getElementById('graphSearchInput').value = q;
+                searchGraph();
+            }
 
             if (view && GUIDED_QUESTIONS[view]) {
                 handleGuidedQuestion(view);
@@ -4197,8 +4266,6 @@
                 const node = slugToEntity(entitySlug);
                 if (node) {
                     isSharedLinkLanding = true;
-                    // Clear any guided question state so entity selection takes precedence
-                    if (activeGuidedQuestion) { clearGuidedQuestion(); clearGraphHighlight(); }
                     selectedNode = node.id;
                     updateGraphHighlight(node);
                     showDetailPanel(node);
@@ -4275,10 +4342,12 @@
             if (!query) {
                 clearGraphHighlight();
                 graphG.selectAll('.node-group').classed('search-match', false);
+                updateNetworkURL();
                 return;
             }
 
-            const matches = graphNodes.filter(n => n.name.toLowerCase().includes(query) || (n.legalName && n.legalName.toLowerCase().includes(query)));
+            const typeLabels = { Platform: 'prediction market', DCM: 'dcm', DCO: 'dco', FCM: 'fcm', IB: 'ib', TSP: 'tsp', Other: 'partner' };
+            const matches = graphNodes.filter(n => n.name.toLowerCase().includes(query) || (n.legalName && n.legalName.toLowerCase().includes(query)) || (n.type && n.type.toLowerCase().includes(query)) || (typeLabels[n.type] && typeLabels[n.type].includes(query)));
             if (matches.length === 1) {
                 updateGraphHighlight(matches[0]);
             } else if (matches.length > 1) {
@@ -4293,6 +4362,7 @@
                 graphG.selectAll('.node-group').classed('dimmed', true);
                 graphG.selectAll('.edge-line').classed('dimmed', true);
             }
+            updateNetworkURL();
         }
 
         function applyShowAllState() {
@@ -4353,6 +4423,7 @@
                 gtag('event', 'network_filter', { filter_type: type, action: 'hide' });
             }
             applyShowAllState();
+            updateNetworkURL();
         }
 
         // Pan to center clicked node in visible area, keeping current zoom level
