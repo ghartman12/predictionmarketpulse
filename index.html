@@ -1032,8 +1032,21 @@
             border-color: rgba(99,102,241,0.1);
         }
         .network-controls select,
+        .network-controls .search-wrapper {
+            position: relative; display: flex; align-items: center;
+        }
+        .network-controls .search-clear {
+            position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer;
+            color: var(--color-text-tertiary); padding: 2px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; transition: all 0.2s;
+        }
+        .network-controls .search-clear:hover {
+            color: var(--color-text-primary); background: rgba(99,102,241,0.1);
+        }
         .network-controls input {
-            padding: 0.4rem 0.85rem;
+            padding: 0.4rem 1.75rem 0.4rem 0.85rem;
             border: 1.5px solid var(--color-border-light);
             border-radius: 0.5rem;
             background: var(--color-bg-secondary);
@@ -1833,7 +1846,12 @@
                 </div>
 
                 <div class="network-controls">
-                    <input type="text" id="graphSearchInput" oninput="searchGraph()" placeholder="Search entities...">
+                    <div class="search-wrapper">
+                        <input type="text" id="graphSearchInput" oninput="searchGraph(); toggleSearchClear();" placeholder="Search entities...">
+                        <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none;">
+                            <span class="material-icons-outlined" style="font-size:14px;">close</span>
+                        </button>
+                    </div>
                     <button class="btn-reset" id="graphToggleAll" onclick="toggleShowAll()">
                         <span class="material-icons-outlined text-base">visibility_off</span>
                         <span id="toggleAllLabel">Focused</span>
@@ -3157,7 +3175,9 @@
                 if (nodes.length <= 1) return;
                 for (let i = 0; i < nodes.length; i++) {
                     for (let j = i + 1; j < nodes.length; j++) {
-                        if (nodes[i].brand && nodes[i].brand === nodes[j].brand) {
+                        const sameBrand = nodes[i].brand && nodes[i].brand === nodes[j].brand;
+                        const bothBrandless = !nodes[i].brand && !nodes[j].brand;
+                        if (sameBrand || bothBrandless) {
                             ensureEdge(nodes[i].key, nodes[j].key, 'RegChain', null);
                         }
                     }
@@ -3224,6 +3244,11 @@
                     // Check if it's a brand
                     if (brands.has(key)) {
                         return ensureNode(key, 'Platform', { isBrand: true });
+                    }
+
+                    // Check if it's a known brandless infrastructure entity (e.g., CME → CME DCM)
+                    if (entityNameToNodes[key] && entityNameToNodes[key].every(n => !n.brand)) {
+                        return entityNameToNodes[key][0].key;
                     }
 
                     // Check if it's a known TSP
@@ -4333,6 +4358,17 @@
             graphG.selectAll('.node-group').each(function(d) {
                 d3.select(this).style('display', isNodeHidden(d) ? 'none' : null);
             });
+        }
+
+        function toggleSearchClear() {
+            const input = document.getElementById('graphSearchInput');
+            document.getElementById('searchClear').style.display = input.value ? '' : 'none';
+        }
+
+        function clearSearch() {
+            document.getElementById('graphSearchInput').value = '';
+            document.getElementById('searchClear').style.display = 'none';
+            searchGraph();
         }
 
         function searchGraph() {
