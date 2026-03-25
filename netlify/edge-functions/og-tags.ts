@@ -1,3 +1,5 @@
+import type { Context } from "https://edge.netlify.com";
+
 const VIEW_META: Record<string, { title: string; description: string }> = {
   mostConnected: {
     title: "Most Connected Entities",
@@ -36,20 +38,19 @@ const VIEW_META: Record<string, { title: string; description: string }> = {
 const DEFAULT_TITLE = "PredictionMarketPulse — US Prediction Market Partnership Tracker";
 const DEFAULT_DESCRIPTION = "Track partnerships, regulatory structures, and key players across the US prediction markets ecosystem.";
 
-export default async (request: Request) => {
+export default async (request: Request, context: Context) => {
   const url = new URL(request.url);
 
-  // Only process requests to the root page with a #network hash
-  // Social crawlers send the fragment via the _escaped_fragment_ param or we check referer
-  // But OG scrapers strip the hash — so we use a query param fallback
   const view = url.searchParams.get("view");
   const entity = url.searchParams.get("entity");
 
+  // No query params — pass through unchanged
   if (!view && !entity) {
     return;
   }
 
-  const response = await fetch(request);
+  // Use context.next() to get the origin response without re-triggering this edge function
+  const response = await context.next();
   const html = await response.text();
 
   let newTitle = DEFAULT_TITLE;
@@ -77,7 +78,7 @@ export default async (request: Request) => {
     )
     .replace(
       /<meta property="og:url" content="[^"]*"\/>/,
-      `<meta property="og:url" content="${url.origin}/${url.search}#network"/>`
+      `<meta property="og:url" content="${url.origin}${url.search}#network"/>`
     );
 
   return new Response(updatedHtml, {
