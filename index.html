@@ -967,6 +967,17 @@
         }
         .graph-detail-panel .dp-close { right: 1rem; }
         .graph-detail-panel .dp-share { right: 3rem; }
+        .dp-share .copy-tooltip {
+            position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+            background: var(--color-bg-tertiary); color: var(--color-text-primary);
+            border: 1px solid var(--color-border-light);
+            padding: 4px 8px; border-radius: 6px;
+            font-size: 0.75rem; font-weight: 500; white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .dp-share .copy-tooltip.visible { opacity: 1; }
         .graph-detail-panel .dp-close:hover,
         .graph-detail-panel .dp-share:hover {
             background: var(--color-primary); color: white; border-color: var(--color-primary);
@@ -1864,7 +1875,7 @@
                     </div>
                     <div class="graph-tooltip" id="graphTooltip"></div>
                     <div class="graph-detail-panel" id="graphDetailPanel">
-                        <button class="dp-share" onclick="shareEntity()" title="Share this entity"><span class="material-icons-outlined" style="font-size:16px;">ios_share</span></button>
+                        <button class="dp-share" onclick="shareEntity()" title="Share this entity"><span class="material-icons-outlined" style="font-size:16px;">ios_share</span><span class="copy-tooltip" id="copyTooltip">Copied to clipboard</span></button>
                         <button class="dp-close" onclick="closeDetailPanel()"><span class="material-icons-outlined" style="font-size:16px;">close</span></button>
                         <div id="graphDetailContent"></div>
                     </div>
@@ -4126,8 +4137,19 @@
             if (!node) return;
             updateNetworkURL();
             const url = location.href;
+            const btn = document.querySelector('.dp-share');
+            const icon = btn.querySelector('.material-icons-outlined');
+            const tooltip = document.getElementById('copyTooltip');
+            function showCopied() {
+                icon.textContent = 'check';
+                tooltip.classList.add('visible');
+                setTimeout(() => {
+                    icon.textContent = 'ios_share';
+                    tooltip.classList.remove('visible');
+                }, 1500);
+            }
             navigator.clipboard.writeText(url).then(() => {
-                showShareToast();
+                showCopied();
             }).catch(() => {
                 // Fallback for older browsers
                 const ta = document.createElement('textarea');
@@ -4138,7 +4160,7 @@
                 ta.select();
                 document.execCommand('copy');
                 document.body.removeChild(ta);
-                showShareToast();
+                showCopied();
             });
             gtag('event', 'share_entity', {
                 entity_name: node.id,
