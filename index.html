@@ -4793,6 +4793,14 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
+
+            // If arriving via OG share link (?entity=... or ?view=...), redirect to #network
+            var sp = new URLSearchParams(location.search);
+            if (sp.has('entity') || sp.has('view')) {
+                var qs = sp.toString();
+                history.replaceState(null, '', location.pathname + '#network?' + qs);
+            }
+
             var hash = location.hash.replace('#','').split('?')[0];
             var valid = ['terminology','tracker','regulatory','network','simulation','about','contact'];
             switchView(valid.indexOf(hash) !== -1 ? hash : 'terminology');
