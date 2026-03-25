@@ -2854,6 +2854,10 @@
             clearGraphHighlight();
             closeDetailPanel();
             document.getElementById('graphSearchInput').value = '';
+            if (!showAllNodes) {
+                showAllNodes = true;
+                applyShowAllState();
+            }
             filterGraph();
             // Set active chip
             document.querySelectorAll('.graph-chip').forEach(c => c.classList.remove('active'));
@@ -4198,11 +4202,8 @@
                     selectedNode = node.id;
                     updateGraphHighlight(node);
                     showDetailPanel(node);
-                    // Enable focused mode for clean shared view
-                    if (showAllNodes) {
-                        showAllNodes = false;
-                        applyShowAllState();
-                    }
+                    // Keep show-all mode so all nodes remain accessible
+                    // Entity highlight + dimming provides sufficient visual focus
                     setTimeout(() => {
                         panToNode(node);
                         fitHighlightedToView();
