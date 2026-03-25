@@ -955,8 +955,9 @@
             box-shadow: -8px 0 32px rgba(0,0,0,0.4);
         }
         .graph-detail-panel.open { transform: translateX(0); }
-        .graph-detail-panel .dp-close {
-            position: absolute; top: 1rem; right: 1rem;
+        .graph-detail-panel .dp-close,
+        .graph-detail-panel .dp-share {
+            position: absolute; top: 1rem;
             background: var(--color-bg-tertiary);
             border: 1px solid var(--color-border-light);
             cursor: pointer; color: var(--color-text-tertiary);
@@ -964,8 +965,35 @@
             display: flex; align-items: center; justify-content: center;
             border-radius: 0.5rem; transition: all 0.2s; z-index: 2;
         }
-        .graph-detail-panel .dp-close:hover {
+        .graph-detail-panel .dp-close { right: 1rem; }
+        .graph-detail-panel .dp-share { right: 3rem; }
+        .copy-tooltip {
+            position: fixed;
+            background: var(--color-bg-tertiary); color: var(--color-text-primary);
+            border: 1px solid var(--color-border-light);
+            padding: 4px 8px; border-radius: 6px;
+            font-size: 0.75rem; font-weight: 500; white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.2s; z-index: 1000;
+        }
+        .copy-tooltip.visible { opacity: 1; }
+        .graph-detail-panel .dp-close:hover,
+        .graph-detail-panel .dp-share:hover {
             background: var(--color-primary); color: white; border-color: var(--color-primary);
+        }
+        .share-toast {
+            position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(1rem);
+            background: var(--color-bg-tertiary); color: var(--color-text-primary);
+            border: 1px solid var(--color-border-light);
+            padding: 0.625rem 1.25rem; border-radius: 0.75rem;
+            font-size: 0.85rem; font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.25s, transform 0.25s; z-index: 1000;
+        }
+        .share-toast.visible {
+            opacity: 1; transform: translateX(-50%) translateY(0);
         }
         .graph-detail-panel .dp-name {
             font-size: 1.125rem; font-weight: 700;
@@ -1847,9 +1875,12 @@
                     </div>
                     <div class="graph-tooltip" id="graphTooltip"></div>
                     <div class="graph-detail-panel" id="graphDetailPanel">
+                        <button class="dp-share" onclick="shareEntity()" title="Share this entity"><span class="material-icons-outlined" style="font-size:16px;">ios_share</span></button>
                         <button class="dp-close" onclick="closeDetailPanel()"><span class="material-icons-outlined" style="font-size:16px;">close</span></button>
                         <div id="graphDetailContent"></div>
                     </div>
+                    <div class="copy-tooltip" id="copyTooltip">Copied to clipboard</div>
+                    <div class="share-toast" id="shareToast">Link copied to clipboard</div>
                 </div>
             </div>
 
@@ -2152,7 +2183,12 @@
             if (navBtnMobile) {
                 navBtnMobile.classList.add('text-primary', 'nav-active');
             }
-            history.replaceState(null, '', '#' + viewName);
+            // Preserve query params for network deep links
+            if (viewName === 'network' && location.hash.startsWith('#network?')) {
+                // Don't overwrite — deep link params are already in the hash
+            } else {
+                history.replaceState(null, '', '#' + viewName);
+            }
 
             // Lazy-load D3.js and init network graph
             if (viewName === 'network' && !networkGraphInitialized) {
@@ -2825,6 +2861,7 @@
             activeGuidedQuestion = key;
             // Execute the question action
             GUIDED_QUESTIONS[key].action();
+            updateNetworkURL();
             // Fit view to highlighted nodes after a short delay
             setTimeout(() => fitHighlightedToView(), 50);
         }
@@ -2832,6 +2869,7 @@
         function clearGuidedQuestion() {
             activeGuidedQuestion = null;
             document.querySelectorAll('.graph-chip').forEach(c => c.classList.remove('active'));
+            updateNetworkURL();
         }
 
         // Attach click handlers to chips
@@ -3647,6 +3685,7 @@
                     showDetailPanel(d);
                     // Pan to center the clicked node at the current zoom level
                     panToNode(d);
+                    updateNetworkURL();
                     gtag('event', 'network_node_click', { node_name: d.id, node_type: d.type });
                 }
                 hideGraphTooltip();
@@ -3718,6 +3757,9 @@
             graphSimulation.alpha(1).restart();
             graphSimulation.on('end', () => { if (!activeGuidedQuestion && !selectedNode) fitGraphToView(width, height); });
             setTimeout(() => { if (!activeGuidedQuestion && !selectedNode) fitGraphToView(width, height); }, 2500);
+
+            // Apply deep link after simulation settles
+            setTimeout(() => applyDeepLink(), 2600);
         }
 
         function fitHighlightedToView() {
@@ -3921,9 +3963,16 @@
                     ${d.partnerships.length} partnership${d.partnerships.length !== 1 ? 's' : ''} &middot; ${d.connections} connection${d.connections !== 1 ? 's' : ''}
                 </div>
             `;
-            tooltip.style.left = x + 'px';
-            tooltip.style.top = y + 'px';
+            // Clamp tooltip within container bounds
+            tooltip.style.left = '0px';
+            tooltip.style.top = '0px';
             tooltip.classList.add('visible');
+            const tw = tooltip.offsetWidth;
+            const th = tooltip.offsetHeight;
+            const clampedX = Math.min(x, rect.width - tw - 8);
+            const clampedY = Math.max(8, Math.min(y, rect.height - th - 8));
+            tooltip.style.left = clampedX + 'px';
+            tooltip.style.top = clampedY + 'px';
         }
 
         function showEdgeTooltip(event, d) {
@@ -3940,9 +3989,16 @@
                 <div class="tt-name">${srcName} &harr; ${tgtName}</div>
                 ${d.partnerships.map(p => `<div class="tt-count" style="margin-top:2px">${p.name} <span style="opacity:0.6">(${p.type})</span></div>`).join('')}
             `;
-            tooltip.style.left = x + 'px';
-            tooltip.style.top = y + 'px';
+            // Clamp tooltip within container bounds
+            tooltip.style.left = '0px';
+            tooltip.style.top = '0px';
             tooltip.classList.add('visible');
+            const tw = tooltip.offsetWidth;
+            const th = tooltip.offsetHeight;
+            const clampedX = Math.min(x, rect.width - tw - 8);
+            const clampedY = Math.max(8, Math.min(y, rect.height - th - 8));
+            tooltip.style.left = clampedX + 'px';
+            tooltip.style.top = clampedY + 'px';
         }
 
         function hideGraphTooltip() {
@@ -4041,7 +4097,153 @@
 
         function closeDetailPanel() {
             document.getElementById('graphDetailPanel').classList.remove('open');
+            selectedNode = null;
+            updateNetworkURL();
         }
+
+        // --- Shareable deep links ---
+
+        function entityToSlug(name) {
+            return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        }
+
+        function slugToEntity(slug) {
+            if (!slug) return null;
+            return graphNodes.find(n => entityToSlug(n.id) === slug) || null;
+        }
+
+        function updateNetworkURL() {
+            const params = new URLSearchParams();
+            if (selectedNode) params.set('entity', entityToSlug(selectedNode));
+            if (activeGuidedQuestion) params.set('view', activeGuidedQuestion);
+            const qs = params.toString();
+            history.replaceState(null, '', '#network' + (qs ? '?' + qs : ''));
+        }
+
+        function parseNetworkURL() {
+            const hash = location.hash || '';
+            if (!hash.startsWith('#network')) return {};
+            const qIdx = hash.indexOf('?');
+            if (qIdx === -1) return {};
+            const params = new URLSearchParams(hash.substring(qIdx));
+            return {
+                entitySlug: params.get('entity') || null,
+                view: params.get('view') || null
+            };
+        }
+
+        function shareEntity() {
+            if (!selectedNode) return;
+            const node = graphNodes.find(n => n.id === selectedNode);
+            if (!node) return;
+            updateNetworkURL();
+            const url = location.href;
+            const btn = document.querySelector('.dp-share');
+            const icon = btn.querySelector('.material-icons-outlined');
+            const tooltip = document.getElementById('copyTooltip');
+            function showCopied() {
+                const rect = btn.getBoundingClientRect();
+                tooltip.style.top = (rect.bottom + 6) + 'px';
+                tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+                tooltip.style.transform = 'translateX(-50%)';
+                icon.textContent = 'check';
+                tooltip.classList.add('visible');
+                setTimeout(() => {
+                    icon.textContent = 'ios_share';
+                    tooltip.classList.remove('visible');
+                }, 1500);
+            }
+            navigator.clipboard.writeText(url).then(() => {
+                showCopied();
+            }).catch(() => {
+                // Fallback for older browsers
+                const ta = document.createElement('textarea');
+                ta.value = url;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showCopied();
+            });
+            gtag('event', 'share_entity', {
+                entity_name: node.id,
+                entity_type: node.type
+            });
+        }
+
+        function showShareToast() {
+            const toast = document.getElementById('shareToast');
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 2000);
+        }
+
+        let isSharedLinkLanding = false;
+
+        function applyDeepLink() {
+            const { entitySlug, view } = parseNetworkURL();
+            if (!entitySlug && !view) return;
+
+            if (view && GUIDED_QUESTIONS[view]) {
+                handleGuidedQuestion(view);
+            }
+
+            if (entitySlug) {
+                const node = slugToEntity(entitySlug);
+                if (node) {
+                    isSharedLinkLanding = true;
+                    // Clear any guided question state so entity selection takes precedence
+                    if (activeGuidedQuestion) { clearGuidedQuestion(); clearGraphHighlight(); }
+                    selectedNode = node.id;
+                    updateGraphHighlight(node);
+                    showDetailPanel(node);
+                    // Enable focused mode for clean shared view
+                    if (showAllNodes) {
+                        showAllNodes = false;
+                        applyShowAllState();
+                    }
+                    setTimeout(() => {
+                        panToNode(node);
+                        fitHighlightedToView();
+                    }, 100);
+                    gtag('event', 'shared_link_landing', {
+                        entity_name: node.id,
+                        entity_type: node.type,
+                        referrer: document.referrer || 'direct'
+                    });
+                    // Track if shared-link visitor explores beyond initial entity
+                    let exploreTracked = false;
+                    const trackExplore = () => {
+                        if (!exploreTracked && isSharedLinkLanding) {
+                            exploreTracked = true;
+                            gtag('event', 'shared_link_explore', {
+                                landing_entity: node.id
+                            });
+                        }
+                    };
+                    // Listen for signs of further exploration
+                    document.getElementById('networkContainer')?.addEventListener('click', trackExplore, { once: true });
+                    document.querySelectorAll('.graph-chip').forEach(c => c.addEventListener('click', trackExplore, { once: true }));
+                } else {
+                    // Entity not found — show prominent notice
+                    const toast = document.getElementById('shareToast');
+                    toast.innerHTML = '<span class="material-icons-outlined" style="font-size:18px;vertical-align:-3px;margin-right:6px;">warning</span>Entity not found';
+                    toast.style.fontSize = '1rem';
+                    toast.classList.add('visible');
+                    setTimeout(() => {
+                        toast.classList.remove('visible');
+                        // Reset after fade-out transition completes
+                        setTimeout(() => {
+                            toast.textContent = 'Link copied to clipboard';
+                            toast.style.fontSize = '';
+                        }, 300);
+                    }, 3500);
+                }
+            }
+        }
+
+        // --- End shareable deep links ---
 
         function filterGraph() {
             if (!networkGraphInitialized) return;
@@ -4457,9 +4659,20 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
-            var hash = location.hash.replace('#','');
+            var hash = location.hash.replace('#','').split('?')[0];
             var valid = ['terminology','tracker','regulatory','network','simulation','about','contact'];
             switchView(valid.indexOf(hash) !== -1 ? hash : 'terminology');
+
+            // Handle hash changes (e.g. pasting a deep link while already on the page)
+            window.addEventListener('hashchange', function() {
+                var newHash = location.hash.replace('#','').split('?')[0];
+                if (valid.indexOf(newHash) !== -1) {
+                    switchView(newHash);
+                    if (newHash === 'network' && networkGraphInitialized) {
+                        applyDeepLink();
+                    }
+                }
+            });
 
             // GA4: Contact form submission
             var contactForm = document.querySelector('form[name="contact"]');
