@@ -4156,7 +4156,33 @@
             history.replaceState(null, '', '#network' + (qs ? '?' + qs : ''));
         }
 
+        function buildShareURL() {
+            const params = new URLSearchParams();
+            if (selectedNode) params.set('entity', entityToSlug(selectedNode));
+            if (activeGuidedQuestion) params.set('view', activeGuidedQuestion);
+            if (hiddenNodeTypes.size > 0) params.set('hide', [...hiddenNodeTypes].sort().join(','));
+            const query = (document.getElementById('graphSearchInput')?.value || '').trim();
+            if (query) params.set('q', query);
+            const qs = params.toString();
+            return location.origin + location.pathname + (qs ? '?' + qs : '');
+        }
+
         function parseNetworkURL() {
+            // Check query params first (shared links from OG-friendly URLs)
+            const searchParams = new URLSearchParams(location.search);
+            const fromQuery = searchParams.get('entity') || searchParams.get('view') || searchParams.get('hide') || searchParams.get('q');
+            if (fromQuery) {
+                // Redirect to hash-based URL for in-page navigation
+                const qs = searchParams.toString();
+                history.replaceState(null, '', location.pathname + '#network?' + qs);
+                return {
+                    entitySlug: searchParams.get('entity') || null,
+                    view: searchParams.get('view') || null,
+                    hide: searchParams.get('hide') || null,
+                    q: searchParams.get('q') || null
+                };
+            }
+            // Fall back to hash params (in-page navigation)
             const hash = location.hash || '';
             if (!hash.startsWith('#network')) return {};
             const qIdx = hash.indexOf('?');
@@ -4175,7 +4201,7 @@
             const node = graphNodes.find(n => n.id === selectedNode);
             if (!node) return;
             updateNetworkURL();
-            const url = location.href;
+            const url = buildShareURL();
             const btn = document.querySelector('.dp-share');
             const icon = btn.querySelector('.material-icons-outlined');
             const tooltip = document.getElementById('copyTooltip');
@@ -4213,7 +4239,7 @@
 
         function shareView() {
             updateNetworkURL();
-            const url = location.href;
+            const url = buildShareURL();
             const btn = document.getElementById('shareViewBtn');
             const icon = btn.querySelector('.material-icons-outlined');
             const label = document.getElementById('shareViewLabel');
