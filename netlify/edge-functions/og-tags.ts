@@ -35,6 +35,37 @@ const VIEW_META: Record<string, { title: string; description: string }> = {
   },
 };
 
+const PAGE_META: Record<string, { title: string; description: string }> = {
+  tracker: {
+    title: "Partnership Tracker — PredictionMarketPulse",
+    description: "Track every partnership and deal across the US prediction markets ecosystem — Kalshi, Polymarket, DraftKings, Robinhood, and more.",
+  },
+  regulatory: {
+    title: "Regulatory Tracker — PredictionMarketPulse",
+    description: "Every CFTC and NFA filing in US prediction markets — DCM, DCO, FCM, and IB designations, pending applications, and regulatory milestones.",
+  },
+  network: {
+    title: "Network Map — PredictionMarketPulse",
+    description: "Interactive network graph of every partnership, acquisition, and regulatory connection across US prediction markets.",
+  },
+  terminology: {
+    title: "Prediction Markets Terminology — PredictionMarketPulse",
+    description: "A plain-language guide to prediction market terms — DCM, DCO, FCM, IB, CFTC, NFA, and more.",
+  },
+  simulation: {
+    title: "Trading Simulator — PredictionMarketPulse",
+    description: "Try prediction market trading in a risk-free simulator. Learn how event contracts work before trading real money.",
+  },
+  about: {
+    title: "About — PredictionMarketPulse",
+    description: "PredictionMarketPulse tracks partnerships, regulatory filings, and market infrastructure across the US prediction markets ecosystem.",
+  },
+  contact: {
+    title: "Contact — PredictionMarketPulse",
+    description: "Get in touch with the PredictionMarketPulse team — feedback, corrections, and collaboration welcome.",
+  },
+};
+
 const DEFAULT_TITLE = "PredictionMarketPulse — US Prediction Market Partnership Tracker";
 const DEFAULT_DESCRIPTION = "Track partnerships, regulatory structures, and key players across the US prediction markets ecosystem.";
 
@@ -43,9 +74,10 @@ export default async (request: Request, context: Context) => {
 
   const view = url.searchParams.get("view");
   const entity = url.searchParams.get("entity");
+  const page = url.searchParams.get("page");
 
   // No query params — pass through unchanged
-  if (!view && !entity) {
+  if (!view && !entity && !page) {
     return;
   }
 
@@ -56,7 +88,10 @@ export default async (request: Request, context: Context) => {
   let newTitle = DEFAULT_TITLE;
   let newDescription = DEFAULT_DESCRIPTION;
 
-  if (view && VIEW_META[view]) {
+  if (page && PAGE_META[page]) {
+    newTitle = PAGE_META[page].title;
+    newDescription = PAGE_META[page].description;
+  } else if (view && VIEW_META[view]) {
     newTitle = `${VIEW_META[view].title} — PredictionMarketPulse`;
     newDescription = VIEW_META[view].description;
   } else if (entity) {
@@ -78,7 +113,7 @@ export default async (request: Request, context: Context) => {
     )
     .replace(
       /<meta property="og:url" content="[^"]*"\/>/,
-      `<meta property="og:url" content="${url.origin}${url.search}#network"/>`
+      `<meta property="og:url" content="${url.origin}${url.search}${page ? `#${page}` : '#network'}"/>`
     );
 
   return new Response(updatedHtml, {

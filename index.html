@@ -2243,6 +2243,11 @@
                 history.replaceState(null, '', '#' + viewName);
             }
 
+            // Reset network graph state when returning to it
+            if (viewName === 'network' && networkGraphInitialized && !location.hash.startsWith('#network?')) {
+                resetGraphView();
+            }
+
             // Lazy-load D3.js and init network graph
             if (viewName === 'network' && !networkGraphInitialized) {
                 if (typeof d3 === 'undefined') {
@@ -4906,6 +4911,10 @@
             if (sp.has('entity') || sp.has('view')) {
                 var qs = sp.toString();
                 history.replaceState(null, '', location.pathname + '#network?' + qs);
+            } else if (sp.has('page')) {
+                var targetPage = sp.get('page');
+                sp.delete('page');
+                history.replaceState(null, '', location.pathname + '#' + targetPage);
             }
 
             var hash = location.hash.replace('#','').split('?')[0];
