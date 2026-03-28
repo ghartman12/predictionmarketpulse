@@ -2540,6 +2540,7 @@
                 complete: function(results) {
                     regStatusData = results.data.filter(row => row['Entity'] && row['Entity'].trim());
                     regDataLoaded = true;
+                    applyRegDeepLink();
                     renderRegStatus();
                 },
                 error: function(err) {
@@ -2584,6 +2585,10 @@
             const approvedStatuses = ['CFTC Designated', 'CFTC Registered', 'NFA Registered'];
             const pendingStatuses = ['CFTC Pending', 'NFA Pending'];
             const filteredGroups = Object.values(groups).filter(g => {
+                // Deep link filter: show only the linked entity
+                if (_regDeepLinkSlug) {
+                    return entityToSlug(g.key) === _regDeepLinkSlug;
+                }
                 let matchesStatus;
                 if (statusFilter === 'Approved') {
                     matchesStatus = g.filings.some(f => approvedStatuses.includes((f['Status'] || '').trim()));
@@ -2730,10 +2735,16 @@
                 `;
             });
 
+            if (_regDeepLinkSlug) {
+                html += '<div class="text-center mt-8"><button onclick="clearRegDeepLink()" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-lg transition-all">← View all filings</button></div>';
+            }
             container.innerHTML = html || '<p class="text-center text-slate-600 dark:text-slate-200 py-8">No regulatory filings found</p>';
+        }
 
-            // Deep link: scroll to entity card if URL has ?entity= on regulatory page
-            applyRegDeepLink();
+        function clearRegDeepLink() {
+            _regDeepLinkSlug = null;
+            history.replaceState(null, '', location.pathname + '#regulatory');
+            renderRegStatus();
         }
 
         function shareRegCard(slug, btn) {
@@ -2762,21 +2773,18 @@
             gtag('event', 'share_regulatory_card', { entity_slug: slug });
         }
 
+        var _regDeepLinkSlug = null;
         function applyRegDeepLink() {
-            const params = new URLSearchParams(location.search);
-            const entitySlug = params.get('entity');
-            const page = params.get('page');
+            if (_regDeepLinkSlug !== null) return;
+            var params = new URLSearchParams(location.search);
+            var entitySlug = params.get('entity');
+            var page = params.get('page');
+            if (!page) {
+                var hash = location.hash.replace('#', '').split('?')[0];
+                if (hash === 'regulatory') page = 'regulatory';
+            }
             if (page === 'regulatory' && entitySlug) {
-                const card = document.getElementById('reg-' + entitySlug);
-                if (card) {
-                    setTimeout(function() {
-                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        card.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-slate-900');
-                        setTimeout(function() {
-                            card.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-slate-900');
-                        }, 3000);
-                    }, 300);
-                }
+                _regDeepLinkSlug = entitySlug;
             }
         }
 
@@ -4338,6 +4346,8 @@
         function parseNetworkURL() {
             // Check query params first (shared links from OG-friendly URLs)
             const searchParams = new URLSearchParams(location.search);
+            // Don't intercept entity param if page=regulatory (handled by applyRegDeepLink)
+            if (searchParams.get('page') === 'regulatory') return {};
             const fromQuery = searchParams.get('entity') || searchParams.get('view') || searchParams.get('hide') || searchParams.get('q');
             if (fromQuery) {
                 // Redirect to hash-based URL for in-page navigation
@@ -5066,13 +5076,14 @@
                 sp.delete('embed');
                 sp.delete('theme');
             }
-            if (sp.has('entity') || sp.has('view')) {
+            if ((sp.has('entity') || sp.has('view')) && sp.get('page') !== 'regulatory') {
                 var qs = sp.toString();
                 history.replaceState(null, '', location.pathname + '#network?' + qs);
             } else if (sp.has('page')) {
                 var targetPage = sp.get('page');
+                var entityParam = sp.get('entity') || '';
                 sp.delete('page');
-                history.replaceState(null, '', location.pathname + '#' + targetPage);
+                history.replaceState(null, '', location.pathname + '?' + sp.toString() + '#' + targetPage);
             }
 
             var hash = location.hash.replace('#','').split('?')[0];
