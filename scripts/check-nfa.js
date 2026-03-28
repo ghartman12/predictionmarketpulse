@@ -262,10 +262,16 @@ async function main() {
   if (changes.length > 0) {
     console.log('⚠️  CHANGES DETECTED:\n');
     changes.forEach(c => console.log(`  • ${c}`));
+    console.log('='.repeat(70));
+    process.exit(1);
   } else {
     console.log('✅ No changes detected. All entities match expected status.');
+    console.log('='.repeat(70));
+    process.exit(0);
   }
-  console.log('='.repeat(70));
 }
 
-main().catch(console.error);
+main().catch(err => {
+  console.error('Fatal error:', err);
+  process.exit(2);
+});

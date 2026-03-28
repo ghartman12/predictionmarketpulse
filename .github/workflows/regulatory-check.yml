@@ -1,0 +1,102 @@
+name: Daily Regulatory Check
+
+on:
+  schedule:
+    # 8am ET (12:00 UTC) weekdays
+    - cron: '0 12 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  regulatory-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run NFA check
+        id: nfa
+        run: |
+          set +e
+          output=$(node scripts/check-nfa.js 2>&1)
+          exit_code=$?
+          echo "$output"
+          {
+            echo 'NFA_OUTPUT<<EOFNFA'
+            echo "$output"
+            echo 'EOFNFA'
+          } >> "$GITHUB_OUTPUT"
+          echo "NFA_EXIT_CODE=$exit_code" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
+
+      - name: Run CFTC check
+        id: cftc
+        run: |
+          set +e
+          output=$(node scripts/check-cftc.js 2>&1)
+          exit_code=$?
+          echo "$output"
+          {
+            echo 'CFTC_OUTPUT<<EOFCFTC'
+            echo "$output"
+            echo 'EOFCFTC'
+          } >> "$GITHUB_OUTPUT"
+          echo "CFTC_EXIT_CODE=$exit_code" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
+
+      - name: Create issue if changes detected
+        if: |
+          steps.nfa.outputs.NFA_EXIT_CODE == '1' ||
+          steps.cftc.outputs.CFTC_EXIT_CODE == '1' ||
+          contains(steps.nfa.outputs.NFA_OUTPUT, 'CHANGES DETECTED') ||
+          contains(steps.cftc.outputs.CFTC_OUTPUT, 'CHANGES DETECTED')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const date = new Date().toISOString().split('T')[0];
+            const nfaOutput = `${{ steps.nfa.outputs.NFA_OUTPUT }}`;
+            const cftcOutput = `${{ steps.cftc.outputs.CFTC_OUTPUT }}`;
+
+            // Ensure the label exists
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'regulatory-change',
+              });
+            } catch {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'regulatory-change',
+                color: 'e11d48',
+                description: 'Automated regulatory change detection',
+              });
+            }
+
+            const body = [
+              '## Regulatory Change Detected',
+              '',
+              '### NFA Check',
+              '```',
+              nfaOutput || '(no output)',
+              '```',
+              '',
+              '### CFTC Check',
+              '```',
+              cftcOutput || '(no output)',
+              '```',
+            ].join('\n');
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Regulatory change detected — ${date}`,
+              body,
+              labels: ['regulatory-change'],
+            });
