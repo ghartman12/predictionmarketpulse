@@ -49,6 +49,21 @@ const SEARCH_ENTITIES = [
   'Predictor',
 ];
 
+// Ignored NFA IDs — reviewed, not actionable (holding companies, unrelated entities, etc.)
+const IGNORED_IDS = new Set([
+  '0573105', // Morton St Trading Holdco Inc
+  '0571464', // Morton St Trading Intermediate Holdco LLC
+  '0571225', // Morton St Trading Opco LLC
+  '0573104', // Morton St Trading Topco Inc
+  '0573106', // Fanatics Global Holdco LLC
+  '0573107', // Fanatics Holdings Inc
+  '0574450', // Galactic Markets Inc — not an NFA member, watching
+  '0533860', // Gemini Galactic Markets LLC — unrelated to prediction markets
+  '0574423', // Predictor LLC — pending NFA member, watching
+  '0187681', // Interest Rate Predictor — unrelated
+  '0576587', // Ludlow Exchange LLC — registered NFA ID but no registrations yet
+]);
+
 // Also check DraftKings FCM upgrade status
 const DRAFTKINGS_FCM_CHECK = { name: 'Gus III LLC (DraftKings)', nfaid: '5AIFEr/FlzA=', pendingType: 'FCM' };
 
@@ -234,7 +249,7 @@ async function main() {
 
   for (const searchTerm of SEARCH_ENTITIES) {
     const results = await searchFirm(searchTerm);
-    const unknown = results.filter(r => !knownIds.has(r.ENTITY_ID_decrypted));
+    const unknown = results.filter(r => !knownIds.has(r.ENTITY_ID_decrypted) && !IGNORED_IDS.has(r.ENTITY_ID_decrypted));
 
     if (unknown.length > 0) {
       for (const r of unknown) {
