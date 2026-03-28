@@ -1,0 +1,799 @@
+{
+  "0542717": {
+    "entityName": "Coinbase Financial Markets, Inc.",
+    "principals": [
+      {
+        "name": "BENJAMIN ANANIA",
+        "title": "CHIEF FINANCIAL OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0566536"
+      },
+      {
+        "name": "BRIAN DAVID ARMSTRONG",
+        "title": "INDIRECT OWNER",
+        "tenPercent": "YES",
+        "nfaId": "0542816"
+      },
+      {
+        "name": "COINBASE GLOBAL INC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0542799"
+      },
+      {
+        "name": "VINAYAK DORAISWAMY",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0494011"
+      },
+      {
+        "name": "ALEXANDER EBY",
+        "title": "CHIEF OPERATING OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0565830"
+      },
+      {
+        "name": "EUGENE FERRARA",
+        "title": "CHIEF COMPLIANCE OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0490697"
+      },
+      {
+        "name": "PAUL SINGH GREWAL",
+        "title": "DIRECTOR",
+        "tenPercent": "NO",
+        "nfaId": "0542812"
+      },
+      {
+        "name": "ALESIA JEANNE HAAS",
+        "title": "DIRECTOR",
+        "tenPercent": "NO",
+        "nfaId": "0501556"
+      },
+      {
+        "name": "ISAIAH EDWARD RAMIREZ",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0551288"
+      },
+      {
+        "name": "ANDREW FREDERIC SEARS",
+        "title": "CHIEF EXECUTIVE OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0551130"
+      },
+      {
+        "name": "GREG TUSAR",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0427447"
+      }
+    ]
+  },
+  "0424278": {
+    "entityName": "Robinhood Derivatives, LLC",
+    "principals": [
+      {
+        "name": "BAIJU PRAFULKUMAR BHATT",
+        "title": "INDIRECT OWNER",
+        "tenPercent": "YES",
+        "nfaId": "0532148"
+      },
+      {
+        "name": "ADAM MICHAEL HICKERSON",
+        "title": "CHIEF OPERATING OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0427055"
+      },
+      {
+        "name": "RANDAL SCOTT HOWELL",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0396781"
+      },
+      {
+        "name": "DANIEL T KELATI",
+        "title": "CHIEF FINANCIAL OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0555137"
+      },
+      {
+        "name": "JAMES BRENT MACKENZIE",
+        "title": "CHIEF EXECUTIVE OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0432375"
+      },
+      {
+        "name": "MEGAN MARGARET MCGRATH",
+        "title": "CHIEF COMPLIANCE OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0496265"
+      },
+      {
+        "name": "STEVEN MARK QUIRK",
+        "title": "DIRECTOR",
+        "tenPercent": "NO",
+        "nfaId": "0281940"
+      },
+      {
+        "name": "ROBINHOOD MARKETS INC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0555179"
+      },
+      {
+        "name": "VLADIMIR STOYANOV TENEV",
+        "title": "INDIRECT OWNER",
+        "tenPercent": "YES",
+        "nfaId": "0561043"
+      }
+    ]
+  },
+  "0528018": {
+    "entityName": "Webull Financial LLC",
+    "principals": [
+      {
+        "name": "ANTHONY MICHAEL DENIER",
+        "title": "CHIEF EXECUTIVE OFFICER|",
+        "tenPercent": "NO",
+        "nfaId": "0528170"
+      },
+      {
+        "name": "MOSHE BINYAMIN ENGELSOHN",
+        "title": "CHIEF FINANCIAL OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0289812"
+      },
+      {
+        "name": "BRENDAN PATRICK FULLER",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0507687"
+      },
+      {
+        "name": "SEAN NICHOLAS GRAY",
+        "title": "CHIEF COMPLIANCE OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0520140"
+      },
+      {
+        "name": "SHANIQUA MONIQUE JONES",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0561536"
+      },
+      {
+        "name": "JOHN STEWART KEATING",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0526160"
+      },
+      {
+        "name": "TANMAY SHETH",
+        "title": "CHIEF OPERATING OFFICER|",
+        "tenPercent": "NO",
+        "nfaId": "0513535"
+      },
+      {
+        "name": "ANQUAN WANG",
+        "title": "INDIRECT OWNER|",
+        "tenPercent": "YES",
+        "nfaId": "0528174"
+      },
+      {
+        "name": "WEBULL HOLDINGS US INC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0528143"
+      }
+    ]
+  },
+  "0258600": {
+    "entityName": "Interactive Brokers LLC",
+    "principals": [
+      {
+        "name": "JEFFREY ALEXANDER BAUCH",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0304697"
+      },
+      {
+        "name": "PAUL JONATHAN BRODY",
+        "title": "DIRECTOR|",
+        "tenPercent": "NO",
+        "nfaId": "0031940"
+      },
+      {
+        "name": "JONATHAN CHAIT",
+        "title": "CHIEF OPERATING OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0193637"
+      },
+      {
+        "name": "JEFFREY DAVID FOX",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0517996"
+      },
+      {
+        "name": "DAVID ERIC FRIEDLAND",
+        "title": "DIRECTOR",
+        "tenPercent": "NO",
+        "nfaId": "0296039"
+      },
+      {
+        "name": "MILAN GALIK",
+        "title": "CHIEF EXECUTIVE OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0523632"
+      },
+      {
+        "name": "JONATHAN MICHAEL GELMAN",
+        "title": "CHIEF COMPLIANCE OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0525355"
+      },
+      {
+        "name": "IBG LLC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0275787"
+      },
+      {
+        "name": "MICHAEL W MCCLAIN",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0553375"
+      },
+      {
+        "name": "JAMES MENICUCCI",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0525006"
+      },
+      {
+        "name": "THOMAS FRANZ MOSER",
+        "title": "NO LISTED TITLE",
+        "tenPercent": "NO",
+        "nfaId": "0257377"
+      },
+      {
+        "name": "CHI LING NG",
+        "title": "NO LISTED TITLE",
+        "tenPercent": "NO",
+        "nfaId": "0423888"
+      },
+      {
+        "name": "THOMAS PECHY PETERFFY",
+        "title": "CHAIRMAN/PRESIDENT",
+        "tenPercent": "NO",
+        "nfaId": "0258601"
+      },
+      {
+        "name": "STEVEN JAY SANDERS",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0313438"
+      },
+      {
+        "name": "ANDREA SERVALLI",
+        "title": "NO LISTED TITLE",
+        "tenPercent": "NO",
+        "nfaId": "0507818"
+      },
+      {
+        "name": "KENGNING SHAO CHEN",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0524251"
+      },
+      {
+        "name": "CHRISTOPHER JAMES SORCIC",
+        "title": "NO LISTED TITLE",
+        "tenPercent": "NO",
+        "nfaId": "0465699"
+      },
+      {
+        "name": "ALLAN DOI KI TANG",
+        "title": "NO LISTED TITLE",
+        "tenPercent": "NO",
+        "nfaId": "0423217"
+      }
+    ]
+  },
+  "0571411": {
+    "entityName": "Performance Predictions II, LLC (PrizePicks)",
+    "principals": [
+      {
+        "name": "JASON ROSS BARCLAY",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0571446"
+      },
+      {
+        "name": "DYLAN EDWARD COOPER",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0571448"
+      },
+      {
+        "name": "KAREL KOMAREK",
+        "title": "INDIRECT OWNER",
+        "tenPercent": "YES",
+        "nfaId": "0576396"
+      },
+      {
+        "name": "IGOR RUSEK",
+        "title": "INDIRECT OWNER",
+        "tenPercent": "YES",
+        "nfaId": "0576392"
+      },
+      {
+        "name": "MARCUS EDWARD SANFORD",
+        "title": "CHIEF FINANCIAL OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0571443"
+      },
+      {
+        "name": "NICHOLAS ROBERT SCHENDL",
+        "title": "CHIEF COMPLIANCE OFFICER|",
+        "tenPercent": "NO",
+        "nfaId": "0576816"
+      },
+      {
+        "name": "SIDEPRIZE LLC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0571462"
+      },
+      {
+        "name": "DAVID ADAM WEXLER",
+        "title": "INDIRECT OWNER",
+        "tenPercent": "YES",
+        "nfaId": "0571433"
+      },
+      {
+        "name": "MICHAEL ANTHONY YBARRA",
+        "title": "CHIEF EXECUTIVE OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0571440"
+      }
+    ]
+  },
+  "0570580": {
+    "entityName": "Sleeper Markets LLC",
+    "principals": [
+      {
+        "name": "BLITZ STUDIOS INC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0571526"
+      },
+      {
+        "name": "TIMOTHY LEE JANKE",
+        "title": "CHIEF FINANCIAL OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0570694"
+      },
+      {
+        "name": "ERIC KIM",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0570693"
+      },
+      {
+        "name": "NAN WANG",
+        "title": "CHIEF EXECUTIVE OFFICER|MANAGER-LLC OR LLP|INDIRECT OWNER",
+        "tenPercent": "NO",
+        "nfaId": "0570691"
+      },
+      {
+        "name": "JOHN WARREN WELLENDORF",
+        "title": "CHIEF COMPLIANCE OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0570690"
+      },
+      {
+        "name": "WEIXI YEN",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION|MANAGER-LLC OR LLP|INDIRECT OWNER",
+        "tenPercent": "NO",
+        "nfaId": "0570692"
+      }
+    ]
+  },
+  "0550813": {
+    "entityName": "FanDuel Prediction Markets LLC",
+    "principals": [
+      {
+        "name": "MATTHEW GERALD BEYER",
+        "title": "CHIEF OPERATING OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0573346"
+      },
+      {
+        "name": "MARK ANTHONY BLAZEVIC",
+        "title": "HEAD OF BUSINESS UNIT, DIVISION OR FUNCTION|",
+        "tenPercent": "NO",
+        "nfaId": "0473963"
+      },
+      {
+        "name": "DAVID JASON CALDERON",
+        "title": "CHIEF FINANCIAL OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0521628"
+      },
+      {
+        "name": "MATTHEW ARON ELKUS",
+        "title": "DIRECTOR",
+        "tenPercent": "NO",
+        "nfaId": "0575285"
+      },
+      {
+        "name": "FANDUEL PREDICTION MARKETS HOLDINGS LLC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0550927"
+      },
+      {
+        "name": "JOSEPH BYRON GRAVES",
+        "title": "DIRECTOR",
+        "tenPercent": "NO",
+        "nfaId": "0575195"
+      },
+      {
+        "name": "ELISA MARIE HIRSCHMANN",
+        "title": "CHIEF COMPLIANCE OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0550965"
+      },
+      {
+        "name": "BRYAN PHILLIP MCBLAINE",
+        "title": "PRESIDENT",
+        "tenPercent": "NO",
+        "nfaId": "0550962"
+      },
+      {
+        "name": "TIMOTHY FRANCIS MCCOURT",
+        "title": "DIRECTOR",
+        "tenPercent": "NO",
+        "nfaId": "0577047"
+      }
+    ]
+  },
+  "0570265": {
+    "entityName": "UDM LLC (Underdog)",
+    "principals": [
+      {
+        "name": "AAMIR AZIZ",
+        "title": "CHIEF FINANCIAL OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0572973"
+      },
+      {
+        "name": "DUSTIN TYLER COOPER",
+        "title": "HEAD OF BUSINESS UNIT, DIVISION OR FUNCTION|",
+        "tenPercent": "NO",
+        "nfaId": "0570401"
+      },
+      {
+        "name": "NICHOLAS GLENN GREEN",
+        "title": "CHIEF COMPLIANCE OFFICER|",
+        "tenPercent": "NO",
+        "nfaId": "0570395"
+      },
+      {
+        "name": "KELLAN PAUL GRENIER",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0570389"
+      },
+      {
+        "name": "JEREMY SHOLOM LEVINE",
+        "title": "CHIEF EXECUTIVE OFFICER|\r\nOWNER",
+        "tenPercent": "YES",
+        "nfaId": "0570403"
+      },
+      {
+        "name": "BRANDON ALAN STAKENBORG",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION|\r\nOWNER",
+        "tenPercent": "YES",
+        "nfaId": "0570396"
+      },
+      {
+        "name": "UDM HOLDINGS LLC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0570405"
+      }
+    ]
+  },
+  "0571907": {
+    "entityName": "Gus III LLC (DraftKings Predictions)",
+    "principals": [
+      {
+        "name": "DK CROWN HOLDINGS INC",
+        "title": "",
+        "tenPercent": "NO",
+        "nfaId": "0558705"
+      },
+      {
+        "name": "ROBERT STANTON DODGE",
+        "title": "NO LISTED TITLE",
+        "tenPercent": "NO",
+        "nfaId": "0565736"
+      },
+      {
+        "name": "ALAN WAYNE ELLINGSON",
+        "title": "DIRECTOR|\r\nCHIEF FINANCIAL OFFICER|\r\nMANAGER-LLC OR LLP",
+        "tenPercent": "NO",
+        "nfaId": "0565693"
+      },
+      {
+        "name": "TIMOTHY FEUERBORN",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0358156"
+      },
+      {
+        "name": "GUS HOLDINGS LLC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0571919"
+      },
+      {
+        "name": "JEANINE CHRISTIE HIGHTOWER SELLITTO",
+        "title": "PRESIDENT|\r\nCHIEF EXECUTIVE OFFICER|",
+        "tenPercent": "NO",
+        "nfaId": "0572339"
+      },
+      {
+        "name": "PAUL LIBERMAN",
+        "title": "MANAGER-LLC OR LLP|",
+        "tenPercent": "NO",
+        "nfaId": "0565630"
+      },
+      {
+        "name": "SHANAN THOMAS OMARA",
+        "title": "CHIEF COMPLIANCE OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0564664"
+      },
+      {
+        "name": "JASON DANIEL ROBINS",
+        "title": "INDIRECT OWNER",
+        "tenPercent": "YES",
+        "nfaId": "0566850"
+      }
+    ]
+  },
+  "0474767": {
+    "entityName": "Paragon Global Markets LLC (Fanatics Markets)",
+    "principals": [
+      {
+        "name": "FANATICS GLOBAL HOLDCO LLC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0573106"
+      },
+      {
+        "name": "FANATICS HOLDINGS INC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0573107"
+      },
+      {
+        "name": "RYAN FITZPATRICK",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0504030"
+      },
+      {
+        "name": "STEPHEN JOHN GRADY",
+        "title": "CHIEF OPERATING OFFICER|\r\nCHIEF COMPLIANCE OFFICER|",
+        "tenPercent": "NO",
+        "nfaId": "0225775"
+      },
+      {
+        "name": "MORTON ST TRADING HOLDCO INC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0573105"
+      },
+      {
+        "name": "MORTON ST TRADING INTERMEDIATE HOLDCO LLC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0571464"
+      },
+      {
+        "name": "MORTON ST TRADING OPCO LLC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0571225"
+      },
+      {
+        "name": "MORTON ST TRADING TOPCO INC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0573104"
+      },
+      {
+        "name": "MICHAEL GARY RUBIN",
+        "title": "INDIRECT OWNER",
+        "tenPercent": "YES",
+        "nfaId": "0571524"
+      },
+      {
+        "name": "WILLIAM MICHAEL SEXTON",
+        "title": "CHIEF EXECUTIVE OFFICER|",
+        "tenPercent": "NO",
+        "nfaId": "0243418"
+      },
+      {
+        "name": "JAY SHRENIK SHAH",
+        "title": "CHIEF FINANCIAL OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0574750"
+      },
+      {
+        "name": "ALEX BRYANT SMITH",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0571465"
+      }
+    ]
+  },
+  "0572313": {
+    "entityName": "Splash (BetterPool)",
+    "principals": [
+      {
+        "name": "BETTERPOOL LLC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0575393"
+      },
+      {
+        "name": "CERTAMEN GAMES LLC",
+        "title": "",
+        "tenPercent": "NO",
+        "nfaId": "0575391"
+      },
+      {
+        "name": "CERTAMEN VENTURES",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0573019"
+      },
+      {
+        "name": "JOEL BERNSTEIN MILTON",
+        "title": "CHIEF EXECUTIVE OFFICER|\r\nINDIRECT OWNER",
+        "tenPercent": "NO",
+        "nfaId": "0573515"
+      },
+      {
+        "name": "DANIEL MEYER PORTNOV",
+        "title": "CHIEF COMPLIANCE OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0573511"
+      },
+      {
+        "name": "TAYLOR JAMES ROSS",
+        "title": "CHIEF EXECUTIVE OFFICER|\r\nINDIRECT OWNER|",
+        "tenPercent": "NO",
+        "nfaId": "0573513"
+      }
+    ]
+  },
+  "0573035": {
+    "entityName": "Morton St Trading Investments, LLC (Fanatics Markets FCM)",
+    "principals": [
+      {
+        "name": "FANATICS GLOBAL HOLDCO LLC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0573106"
+      },
+      {
+        "name": "FANATICS HOLDINGS INC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0573107"
+      },
+      {
+        "name": "RYAN FITZPATRICK",
+        "title": "CHIEF COMPLIANCE OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0504030"
+      },
+      {
+        "name": "STEPHEN JOHN GRADY",
+        "title": "CHIEF OPERATING OFFICER|",
+        "tenPercent": "NO",
+        "nfaId": "0225775"
+      },
+      {
+        "name": "MORTON ST TRADING HOLDCO INC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0573105"
+      },
+      {
+        "name": "MORTON ST TRADING INTERMEDIATE HOLDCO LLC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0571464"
+      },
+      {
+        "name": "MORTON ST TRADING OPCO LLC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0571225"
+      },
+      {
+        "name": "MORTON ST TRADING TOPCO INC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0573104"
+      },
+      {
+        "name": "MICHAEL GARY RUBIN",
+        "title": "INDIRECT OWNER",
+        "tenPercent": "YES",
+        "nfaId": "0571524"
+      },
+      {
+        "name": "WILLIAM MICHAEL SEXTON",
+        "title": "CHIEF EXECUTIVE OFFICER|",
+        "tenPercent": "NO",
+        "nfaId": "0243418"
+      },
+      {
+        "name": "JAY SHRENIK SHAH",
+        "title": "CHIEF FINANCIAL OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0574750"
+      },
+      {
+        "name": "ALEX BRYANT SMITH",
+        "title": "HEAD OF A BUSINESS UNIT, DIVISION OR FUNCTION",
+        "tenPercent": "NO",
+        "nfaId": "0571465"
+      }
+    ]
+  },
+  "0574423": {
+    "entityName": "Predictor LLC (Galactic Markets)",
+    "principals": [
+      {
+        "name": "GALACTIC MARKETS INC",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0574450"
+      },
+      {
+        "name": "GALACTIC MEDIA MANAGEMENT LTD",
+        "title": "",
+        "tenPercent": "YES",
+        "nfaId": "0577104"
+      },
+      {
+        "name": "MAJA IGA MARSZALEK",
+        "title": "CHIEF COMPLIANCE OFFICER",
+        "tenPercent": "NO",
+        "nfaId": "0574517"
+      },
+      {
+        "name": "STUART THOMAS STOTT",
+        "title": "CHIEF EXECUTIVE OFFICER|\r\nOWNER",
+        "tenPercent": "YES",
+        "nfaId": "0576376"
+      },
+      {
+        "name": "ALAN MAX VEY",
+        "title": "NO LISTED TITLE",
+        "tenPercent": "YES",
+        "nfaId": "0575936"
+      }
+    ]
+  }
+}

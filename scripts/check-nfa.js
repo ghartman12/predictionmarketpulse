@@ -5,9 +5,15 @@
  * Calls the NFA BASIC JSON-RPC API to:
  * 1. Check registration status of all tracked entities
  * 2. Search for new filings from CFTC-pending entities
+ * 3. Track principal changes (owners + officers)
  *
  * Usage: node scripts/check-nfa.js
+ *        node scripts/check-nfa.js --save-snapshot  (save current principals as baseline)
  */
+
+const fs = require('fs');
+const path = require('path');
+const SNAPSHOT_PATH = path.join(__dirname, 'nfa-principals-snapshot.json');
 
 const SEARCH_URL = 'https://www.nfa.futures.org/BasicNet/basic-api/DataHandlerSearch.ashx';
 const DATA_URL = 'https://www.nfa.futures.org/BasicNet/basic-api/DataHandler.ashx';
@@ -106,6 +112,14 @@ async function getMembershipStatus(decryptedId) {
 
 async function getHistory(decryptedId) {
   const res = await rpc(DATA_URL, 'getHistory', [decryptedId]);
+  if (res.result?.success) {
+    return res.result.result || [];
+  }
+  return [];
+}
+
+async function getPrincipals(decryptedId) {
+  const res = await rpc(DATA_URL, 'getPrincipals', [decryptedId]);
   if (res.result?.success) {
     return res.result.result || [];
   }
@@ -274,7 +288,87 @@ async function main() {
     }
   }
 
-  // 3. Summary
+  // 3. Check principals
+  console.log('\n## PRINCIPAL CHANGES\n');
+
+  let snapshot = {};
+  try {
+    snapshot = JSON.parse(fs.readFileSync(SNAPSHOT_PATH, 'utf-8'));
+  } catch {
+    console.log('  ℹ️  No snapshot file found. Run with --save-snapshot to create baseline.');
+  }
+
+  const currentSnapshot = {};
+  const saveMode = process.argv.includes('--save-snapshot');
+
+  for (const entity of TRACKED) {
+    const vitals = await getVitalSwitches(entity.nfaid);
+    if (!vitals) continue;
+    const decId = vitals.NFA_ID_decrypted;
+    const principals = await getPrincipals(decId);
+
+    const principalList = principals.map(p => ({
+      name: p.NAME,
+      title: (p.TITLE_NAME || '').trim(),
+      tenPercent: p.TEN_PERCENT_IND,
+      nfaId: p.ENTITY_ID_decrypted,
+    }));
+
+    currentSnapshot[decId] = {
+      entityName: entity.name,
+      principals: principalList,
+    };
+
+    // Compare against snapshot
+    const prev = snapshot[decId];
+    if (prev) {
+      const prevIds = new Set(prev.principals.map(p => p.nfaId));
+      const currIds = new Set(principalList.map(p => p.nfaId));
+
+      const added = principalList.filter(p => !prevIds.has(p.nfaId));
+      const removed = prev.principals.filter(p => !currIds.has(p.nfaId));
+
+      // Check for title changes
+      const titleChanges = principalList.filter(p => {
+        const old = prev.principals.find(o => o.nfaId === p.nfaId);
+        return old && old.title !== p.title;
+      });
+
+      if (added.length > 0) {
+        added.forEach(p => {
+          const role = p.tenPercent === 'YES' ? '10%+ Owner' : p.title || 'Principal';
+          console.log(`  🆕 ${entity.name}: Added ${p.name} — ${role}`);
+          changes.push(`${entity.name}: New principal ${p.name} (${role})`);
+        });
+      }
+      if (removed.length > 0) {
+        removed.forEach(p => {
+          const role = p.tenPercent === 'YES' ? '10%+ Owner' : p.title || 'Principal';
+          console.log(`  ⚠️  ${entity.name}: Removed ${p.name} — ${role}`);
+          changes.push(`${entity.name}: Removed principal ${p.name} (${role})`);
+        });
+      }
+      if (titleChanges.length > 0) {
+        titleChanges.forEach(p => {
+          const old = prev.principals.find(o => o.nfaId === p.nfaId);
+          console.log(`  ⚠️  ${entity.name}: ${p.name} title changed: "${old.title}" → "${p.title}"`);
+          changes.push(`${entity.name}: ${p.name} title changed to "${p.title}"`);
+        });
+      }
+      if (added.length === 0 && removed.length === 0 && titleChanges.length === 0) {
+        console.log(`  ✅ ${entity.name} — ${principalList.length} principals, no changes`);
+      }
+    } else if (Object.keys(snapshot).length > 0) {
+      console.log(`  ℹ️  ${entity.name} — ${principalList.length} principals (new entity, no baseline)`);
+    }
+  }
+
+  if (saveMode || Object.keys(snapshot).length === 0) {
+    fs.writeFileSync(SNAPSHOT_PATH, JSON.stringify(currentSnapshot, null, 2));
+    console.log(`\n  💾 Snapshot saved to ${SNAPSHOT_PATH}`);
+  }
+
+  // 4. Summary
   console.log('\n' + '='.repeat(70));
   if (changes.length > 0) {
     console.log('⚠️  CHANGES DETECTED:\n');
