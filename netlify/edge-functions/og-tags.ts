@@ -88,7 +88,14 @@ export default async (request: Request, context: Context) => {
   let newTitle = DEFAULT_TITLE;
   let newDescription = DEFAULT_DESCRIPTION;
 
-  if (page && PAGE_META[page]) {
+  if (page === 'regulatory' && entity) {
+    const acronyms = new Set(['llc', 'inc', 'lp', 'fcm', 'ib', 'dcm', 'dco', 'nfa', 'cftc', 'us']);
+    const entityName = entity
+      .replace(/-/g, " ")
+      .replace(/\b\w+/g, (w) => acronyms.has(w.toLowerCase()) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1));
+    newTitle = `${entityName} — Regulatory Tracker — PredictionMarketPulse`;
+    newDescription = `CFTC and NFA filing details for ${entityName} — registration status, application dates, and regulatory history.`;
+  } else if (page && PAGE_META[page]) {
     newTitle = PAGE_META[page].title;
     newDescription = PAGE_META[page].description;
   } else if (view && VIEW_META[view]) {
