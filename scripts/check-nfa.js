@@ -26,6 +26,7 @@ const TRACKED = [
   { name: 'Paragon Global Markets LLC (Fanatics Markets)', nfaid: 'jHY1Hb7WkB4=', type: 'IB', expectedStatus: 'NFA Registered' },
   { name: 'Splash (BetterPool)', nfaid: 'zDAXVCAc7wQ=', type: 'IB', expectedStatus: 'NFA Registered' },
   { name: 'Morton St Trading Investments, LLC (Fanatics Markets FCM)', nfaid: 'R1CTB9HmQh4=', type: 'FCM', expectedStatus: 'NFA Registered' },
+  { name: 'Predictor LLC (Galactic Markets)', nfaid: 'gfNvP+bD1ik=', type: 'IB', expectedStatus: 'NFA Pending' },
 ];
 
 // Entities to search for — CFTC pending applicants + watch list
@@ -59,7 +60,7 @@ const IGNORED_IDS = new Set([
   '0573107', // Fanatics Holdings Inc
   '0574450', // Galactic Markets Inc — not an NFA member, watching
   '0533860', // Gemini Galactic Markets LLC — unrelated to prediction markets
-  '0574423', // Predictor LLC — pending NFA member, watching
+  // '0574423', // Predictor LLC — moved to TRACKED
   '0187681', // Interest Rate Predictor — unrelated
   '0576587', // Ludlow Exchange LLC — registered NFA ID but no registrations yet
 ]);
@@ -207,8 +208,9 @@ async function main() {
     }
 
     const regDisplay = formatRegCodes(result.allRegCodes);
-    const statusMatch = result.currentMemberStatus.toLowerCase().includes('approved') ||
-      result.currentMemberStatus.toLowerCase().includes('member');
+    const memberLower = result.currentMemberStatus.toLowerCase();
+    const statusMatch = (memberLower.includes('approved') || memberLower.includes('member')) &&
+      !memberLower.includes('pending');
 
     // Check for FCM upgrade (DraftKings)
     const hasFCM = result.allRegCodes?.some(r => r.CAT_TYPE_CODE === 'FCM');

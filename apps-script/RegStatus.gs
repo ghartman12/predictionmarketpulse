@@ -176,7 +176,8 @@ function getRegSeedData_() {
     // ======================================
     // NFA PENDING — FCM/IB Applications
     // ======================================
-    ['Gus III LLC (DraftKings Predictions)', 'FCM', 'NFA Pending', '2026-02-27', '', '2026-03-11', 'FCM application pending; upgrading from IB', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=5AIFEr/FlzA%3D', 'Already registered as IB (12/04/2025); acquired Railbird Exchange DCM']
+    ['Gus III LLC (DraftKings Predictions)', 'FCM', 'NFA Pending', '2026-02-27', '', '2026-03-11', 'FCM application pending; upgrading from IB', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=5AIFEr/FlzA%3D', 'Already registered as IB (12/04/2025); acquired Railbird Exchange DCM'],
+    ['Predictor LLC (Galactic Markets)', 'IB', 'NFA Pending', '2025-11-04', '', '2026-03-28', 'IB application pending', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=gfNvP%2BbD1ik%3D', 'NFA ID 0574423; owned by Galactic Markets Inc (0574450); CEO Stuart Stott']
   ];
 }
 
