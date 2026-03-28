@@ -100,3 +100,62 @@ jobs:
               body,
               labels: ['regulatory-change'],
             });
+
+      - name: Send Slack alert if changes detected
+        if: |
+          steps.nfa.outputs.NFA_EXIT_CODE == '1' ||
+          steps.cftc.outputs.CFTC_EXIT_CODE == '1' ||
+          contains(steps.nfa.outputs.NFA_OUTPUT, 'CHANGES DETECTED') ||
+          contains(steps.cftc.outputs.CFTC_OUTPUT, 'CHANGES DETECTED')
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          # Build change summary from outputs
+          nfa_changes=""
+          cftc_changes=""
+          if echo "${{ steps.nfa.outputs.NFA_OUTPUT }}" | grep -q "CHANGES DETECTED"; then
+            nfa_changes=$(echo "${{ steps.nfa.outputs.NFA_OUTPUT }}" | grep "^  •" | head -10)
+          fi
+          if echo "${{ steps.cftc.outputs.CFTC_OUTPUT }}" | grep -q "CHANGES DETECTED"; then
+            cftc_changes=$(echo "${{ steps.cftc.outputs.CFTC_OUTPUT }}" | grep "^  •" | head -10)
+          fi
+
+          payload=$(cat <<EOFSLACK
+          {
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "🚨 Regulatory Change Detected",
+                  "emoji": true
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Date:* $(date +%Y-%m-%d)\n\n*NFA Changes:*\n${nfa_changes:-No NFA changes}\n\n*CFTC Changes:*\n${cftc_changes:-No CFTC changes}"
+                }
+              },
+              {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View GitHub Issue"
+                    },
+                    "url": "https://github.com/ghartman12/predictionmarketpulse/issues?q=label%3Aregulatory-change+sort%3Acreated-desc"
+                  }
+                ]
+              }
+            ]
+          }
+          EOFSLACK
+          )
+
+          curl -s -X POST "$SLACK_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$payload"
