@@ -65,13 +65,13 @@ function isRegistrationAlert_(text) {
 /**
  * Master seed data for the Regulatory Status tab.
  * Sources: CFTC Industry Filings — Trading Organizations + Clearing Organizations pages
- * Last verified: 2026-03-16
+ * Last verified: 2026-03-27
  */
 function getRegSeedData_() {
   return [
-    // ══════════════════════════════════════
+    // ======================================
     // CFTC DESIGNATED — DCMs
-    // ══════════════════════════════════════
+    // ======================================
     ['Chicago Mercantile Exchange, Inc.', 'DCM', 'CFTC Designated', '', '2000-12-21', '2000-12-21', 'DCM designation granted', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/34528', 'CME Group; event contracts MM program (up to 7 unnamed prop firms)'],
     ['Board of Trade of the City of Chicago, Inc.', 'DCM', 'CFTC Designated', '', '2000-12-21', '2000-12-21', 'DCM designation granted', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/34525', 'CME Group (CBOT)'],
     ['New York Mercantile Exchange, Inc.', 'DCM', 'CFTC Designated', '', '2000-12-21', '2000-12-21', 'DCM designation granted', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/74', 'CME Group (NYMEX)'],
@@ -98,9 +98,9 @@ function getRegSeedData_() {
     ['Gemini Titan, LLC', 'DCM', 'CFTC Designated', '', '2025-12-10', '2025-12-10', 'DCM designation granted', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/44472', 'DCO pending via Gemini Olympus, LLC'],
     ['Xchange Alpha, LLC', 'DCM', 'CFTC Designated', '', '2026-01-30', '2026-01-30', 'DCM designation granted', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/56939', ''],
 
-    // ══════════════════════════════════════
+    // ======================================
     // CFTC REGISTERED — DCOs
-    // ══════════════════════════════════════
+    // ======================================
     ['Chicago Mercantile Exchange, Inc.', 'DCO', 'CFTC Registered', '', '2000-12-21', '2000-12-21', 'DCO registration granted', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations', 'CME Group'],
     ['ICE Clear US, Inc.', 'DCO', 'CFTC Registered', '', '2000-12-21', '2000-12-21', 'DCO registration granted', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/70', 'ICE-owned; clears for ICE Futures U.S.'],
     ['MIAX Futures Exchange, LLC', 'DCO', 'CFTC Registered', '', '2000-12-21', '2000-12-21', 'DCO registration granted', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/58', 'Formerly Minneapolis Grain Exchange'],
@@ -116,9 +116,9 @@ function getRegSeedData_() {
     ['Electron Exchange DCO, LLC', 'DCO', 'CFTC Registered', '', '2025-08-25', '2025-08-25', 'DCO registration granted', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/55359', 'Clearing arm for Electron Exchange DCM, LLC'],
     ['Aristotle Exchange DCO, Inc.', 'DCO', 'CFTC Registered', '', '2025-09-05', '2025-09-05', 'DCO registration granted', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/50763', 'Clearing arm for Aristotle Exchange DCM; acquired by Underdog (3/9/2026)'],
 
-    // ══════════════════════════════════════
+    // ======================================
     // CFTC PENDING — DCM Applications
-    // ══════════════════════════════════════
+    // ======================================
     ['GFI Futures Exchange LLC', 'DCM', 'CFTC Pending', '2013-03-19', '', '2026-03-16', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/25523', 'Application pending since 2013'],
     ['Aqua-Index Exchange, LLC', 'DCM', 'CFTC Pending', '2015-08-10', '', '2026-03-16', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/32722', 'Application pending since 2015'],
     ['American Gas Exchange, LLC', 'DCM', 'CFTC Pending', '2016-09-20', '', '2026-03-16', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/35378', 'Application pending since 2016'],
@@ -136,9 +136,9 @@ function getRegSeedData_() {
     ['PredictCraft Mkt Inc. (DimeTrades)', 'DCM', 'CFTC Pending', '2026-02-11', '', '2026-03-10', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59756', ''],
     ['Smarkets Board of Trade Exchange LLC', 'DCM', 'CFTC Pending', '2026-03-03', '', '2026-03-10', 'DCM application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/TradingOrganizations/59862', 'Also filed DCO via Smarkets Board of Trade Clearing (2026-02-11)'],
 
-    // ══════════════════════════════════════
+    // ======================================
     // CFTC PENDING — DCO Applications
-    // ══════════════════════════════════════
+    // ======================================
     ['tZERO DCO, LLC', 'DCO', 'CFTC Pending', '2025-09-18', '', '2026-03-10', 'DCO application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59186', 'Also filed DCM (2025-11-21)'],
     ['ProphetX LLC', 'DCO', 'CFTC Pending', '2025-11-18', '', '2026-03-10', 'DCO application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59187', 'Also filed DCM (2025-11-07)'],
     ['ICE Direct Clear, Inc.', 'DCO', 'CFTC Pending', '2025-12-02', '', '2026-03-10', 'DCO application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59188', 'ICE subsidiary — dedicated PM clearing'],
@@ -149,29 +149,34 @@ function getRegSeedData_() {
     ['Smarkets Board of Trade Clearing LLC', 'DCO', 'CFTC Pending', '2026-02-11', '', '2026-03-10', 'DCO application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59891', 'Also filed DCM via Smarkets Board of Trade Exchange (2026-03-03)'],
     ['XV Clearing, LLC (STX)', 'DCO', 'CFTC Pending', '2026-02-27', '', '2026-03-10', 'DCO application filed', 'https://www.cftc.gov/IndustryOversight/IndustryFilings/ClearingOrganizations/59886', 'Also filed DCM via XV Exchange (2025-12-09)'],
 
-    // ══════════════════════════════════════
+    // ======================================
     // NFA REGISTERED — FCMs (Futures Commission Merchants)
-    // ══════════════════════════════════════
-    ['Coinbase Financial Markets, Inc.', 'FCM', 'NFA Registered', '', '2023-08-14', '2026-03-10', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=hDSLhKvcHgE%3D', 'Offers Kalshi event contracts'],
-    ['Robinhood Derivatives, LLC', 'FCM', 'NFA Registered', '', '2024-01-01', '2026-03-10', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=FKlW2H4UPq0%3D', 'NFA ID 0424278; Kalshi and ForecastEx clearing member; JV with SIG owns Rothera Exchange DCM/DCO'],
-    ['Webull Financial LLC', 'FCM', 'NFA Registered', '', '', '2026-03-10', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=s1SZsbNB0%2Bo%3D', 'Offers Kalshi event contracts'],
-    ['Interactive Brokers LLC', 'FCM', 'NFA Registered', '', '', '2026-03-10', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=QHPcC3ptg/I%3D', 'ForecastEx parent company; CME Group clearing member'],
-    ['Performance Predictions II, LLC (PrizePicks)', 'FCM', 'NFA Registered', '', '2025-09-23', '2026-03-10', 'First sports entertainment operator to receive FCM registration', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=cq4lPPPq0Ew%3D', 'Offers Kalshi event contracts'],
-    ['Sleeper Markets LLC', 'FCM', 'NFA Registered', '', '2026-01-15', '2026-03-10', 'NFA approved FCM and swap firm registration', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=tlPlEWtBnsQ%3D', 'Offers Kalshi event contracts; previously sued CFTC over delayed approval'],
-    ['FanDuel Prediction Markets LLC', 'FCM', 'NFA Registered', '', '2025-12-22', '2026-03-10', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=pw8YVHX3mNs%3D', 'Offers CME Group event contracts'],
-    ['UDM LLC (Underdog)', 'FCM', 'NFA Registered', '', '2026-01-09', '2026-03-10', 'NFA approved FCM and swap firm registration', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=5BM2rMKqO5w%3D', 'Acquired Aristotle Exchange DCM/DCO (3/9/2026)'],
+    // ======================================
+    ['Coinbase Financial Markets, Inc.', 'FCM', 'NFA Registered', '2021-09-15', '2023-08-15', '2026-03-27', 'FCM registered 08/15/2023; NFA Member approved same day', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=LwP0Tg5Wck0%3D', 'NFA ID 0542717; Offers Kalshi event contracts; Holdings entity (0542799) is separate'],
+    ['Robinhood Derivatives, LLC', 'FCM', 'NFA Registered', '2010-09-01', '2010-11-23', '2026-03-27', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=FKlW2H4UPq0%3D', 'NFA ID 0424278; Kalshi and ForecastEx clearing member; JV with SIG owns Rothera Exchange DCM/DCO'],
+    ['Webull Financial LLC', 'FCM', 'NFA Registered', '2022-05-20', '2024-01-03', '2026-03-27', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=s1SZsbNB0%2Bo%3D', 'Offers Kalshi event contracts'],
+    ['Interactive Brokers LLC', 'FCM', 'NFA Registered', '1994-09-13', '1994-12-02', '2026-03-27', 'FCM registration granted', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=QHPcC3ptg/I%3D', 'ForecastEx parent company; CME Group clearing member'],
+    ['Performance Predictions II, LLC (PrizePicks)', 'FCM', 'NFA Registered', '2025-05-28', '2025-09-22', '2026-03-27', 'First sports entertainment operator to receive FCM registration', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=cq4lPPPq0Ew%3D', 'Offers Kalshi event contracts'],
+    ['Sleeper Markets LLC', 'FCM', 'NFA Registered', '2025-05-30', '2026-01-09', '2026-03-27', 'NFA approved FCM and swap firm registration', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=tlPlEWtBnsQ%3D', 'Offers Kalshi event contracts; previously sued CFTC over delayed approval'],
+    ['FanDuel Prediction Markets LLC', 'FCM', 'NFA Registered', '2022-08-17', '2024-10-25', '2026-03-27', 'FCM registered 10/25/2024; d/b/a FanDuel Predicts', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=BsRvT6gsxO8%3D', 'NFA ID 0550813; Offers CME Group event contracts; Holdings entity (0550927) is separate'],
+    ['UDM LLC (Underdog)', 'FCM', 'NFA Registered', '2025-04-03', '2026-01-09', '2026-03-27', 'NFA approved FCM and swap firm registration', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=5BM2rMKqO5w%3D', 'Acquired Aristotle Exchange DCM/DCO (3/9/2026)'],
 
-    // ══════════════════════════════════════
+    // ======================================
     // NFA REGISTERED — IBs (Introducing Brokers)
-    // ══════════════════════════════════════
-    ['Gus III LLC (DraftKings Predictions)', 'IB', 'NFA Registered', '', '2025-12-04', '2026-03-10', 'IB registration granted; launched DraftKings Predictions in 38 states', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=5AIFEr/FlzA%3D', 'Introduces customers to CME Group event contracts; acquired Railbird Exchange DCM'],
-    ['Paragon Global Markets LLC (Fanatics Markets)', 'IB', 'NFA Registered', '', '2025-07-01', '2026-03-10', 'Fanatics acquired Paragon for NFA IB status; rebranded as Fanatics Markets IB', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=jHY1Hb7WkB4%3D', 'Introduces customers to Crypto.com/CDNA event contracts'],
+    // ======================================
+    ['Gus III LLC (DraftKings Predictions)', 'IB', 'NFA Registered', '2025-06-24', '2025-12-04', '2026-03-27', 'IB registration granted; launched DraftKings Predictions in 38 states', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=5AIFEr/FlzA%3D', 'Introduces customers to CME Group event contracts; acquired Railbird Exchange DCM'],
+    ['Paragon Global Markets LLC (Fanatics Markets)', 'IB', 'NFA Registered', '2014-03-12', '2014-05-13', '2026-03-27', 'Fanatics acquired Paragon for NFA IB status; rebranded as Fanatics Markets IB', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=jHY1Hb7WkB4%3D', 'Introduces customers to Crypto.com/CDNA event contracts'],
+    ['Splash (BetterPool)', 'IB', 'NFA Registered', '2025-08-20', '2026-03-13', '2026-03-27', 'IB registered 03/13/2026; NFA Member approved same day', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=zDAXVCAc7wQ%3D', 'Stealth VC-funded sports betting tech company; applied 08/20/2025, approved 03/13/2026'],
 
-    // ══════════════════════════════════════
+    // ======================================
+    // NFA REGISTERED — FCMs (Fanatics)
+    // ======================================
+    ['Morton St Trading Investments, LLC (Fanatics Markets FCM)', 'FCM', 'NFA Registered', '2025-08-22', '2026-03-18', '2026-03-27', 'FCM registered 03/18/2026; NFA Member approved same day', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=R1CTB9HmQh4%3D', 'NFA ID 0573035; Fanatics affiliate; applied 08/22/2025, approved 03/18/2026'],
+
+    // ======================================
     // NFA PENDING — FCM/IB Applications
-    // ══════════════════════════════════════
-    ['Gus III LLC (DraftKings Predictions)', 'FCM', 'NFA Pending', '2026-02-27', '', '2026-03-11', 'FCM application pending; upgrading from IB', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=5AIFEr/FlzA%3D', 'Already registered as IB (12/04/2025); acquired Railbird Exchange DCM'],
-    ['Splash (BetterPool)', 'IB', 'NFA Pending', '2025-08-20', '', '2026-03-13', 'IB application pending', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=zDAXVCAc7wQ%3D', 'Stealth VC-funded sports betting tech company']
+    // ======================================
+    ['Gus III LLC (DraftKings Predictions)', 'FCM', 'NFA Pending', '2026-02-27', '', '2026-03-11', 'FCM application pending; upgrading from IB', 'https://www.nfa.futures.org/BasicNet/basic-profile.aspx?nfaid=5AIFEr/FlzA%3D', 'Already registered as IB (12/04/2025); acquired Railbird Exchange DCM']
   ];
 }
 

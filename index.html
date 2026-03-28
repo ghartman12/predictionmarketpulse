@@ -1960,11 +1960,11 @@
                         <button class="dp-close" onclick="closeDetailPanel()"><span class="material-icons-outlined" style="font-size:16px;">close</span></button>
                         <div id="graphDetailContent"></div>
                     </div>
-                    <div class="copy-tooltip" id="copyTooltip">Copied to clipboard</div>
-                    <div class="share-toast" id="shareToast">Link copied to clipboard</div>
                     <a class="embed-watermark" id="embedWatermark" href="https://predictionmarketpulse.com" target="_blank" rel="noopener" style="display:none;">PredictionMarketPulse</a>
                 </div>
             </div>
+            <div class="copy-tooltip" id="copyTooltip">Copied to clipboard</div>
+            <div class="share-toast" id="shareToast">Link copied to clipboard</div>
 
             <div id="view-simulation" class="view-content">
                 <div class="mb-6 hidden md:block">
@@ -2601,15 +2601,23 @@
                 return matchesStatus && matchesType && matchesSearch;
             });
 
-            // Sort: Approved first, then Pending; within each, by earliest date
-            const statusOrder = { 'CFTC Designated': 0, 'CFTC Registered': 0, 'NFA Registered': 0, 'CFTC Pending': 1, 'NFA Pending': 1 };
+            // Sort: Approved first (most recent effective date), then Pending (most recent filed date)
+            const approvedSet = new Set(['CFTC Designated', 'CFTC Registered', 'NFA Registered']);
+            const pendingSet = new Set(['CFTC Pending', 'NFA Pending']);
             filteredGroups.sort((a, b) => {
-                const statusA = Math.min(...a.filings.map(f => statusOrder[(f['Status'] || '').trim()] ?? 2));
-                const statusB = Math.min(...b.filings.map(f => statusOrder[(f['Status'] || '').trim()] ?? 2));
-                if (statusA !== statusB) return statusA - statusB;
-                const dateA = a.filings.map(f => f['Effective Date'] || f['Application Date'] || '').sort()[0] || '';
-                const dateB = b.filings.map(f => f['Effective Date'] || f['Application Date'] || '').sort()[0] || '';
-                return dateA.localeCompare(dateB);
+                const isApprovedA = a.filings.some(f => approvedSet.has((f['Status'] || '').trim()));
+                const isApprovedB = b.filings.some(f => approvedSet.has((f['Status'] || '').trim()));
+                if (isApprovedA !== isApprovedB) return isApprovedA ? -1 : 1;
+                if (isApprovedA) {
+                    // Both approved — most recent effective date first
+                    const dateA = a.filings.map(f => f['Effective Date'] || '').sort().pop() || '';
+                    const dateB = b.filings.map(f => f['Effective Date'] || '').sort().pop() || '';
+                    return dateB.localeCompare(dateA);
+                }
+                // Both pending — most recent application date first
+                const dateA = a.filings.map(f => f['Application Date'] || '').sort().pop() || '';
+                const dateB = b.filings.map(f => f['Application Date'] || '').sort().pop() || '';
+                return dateB.localeCompare(dateA);
             });
 
             let html = '';
@@ -2678,11 +2686,15 @@
                     .map(f => ({ summary: f['Last Update Summary'], date: f['Last Updated'] }));
                 const latestMeaningful = meaningfulUpdates.sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0];
 
+                const cardSlug = entityToSlug(displayName);
                 html += `
-                    <div class="partnership-card rounded-2xl overflow-hidden shadow-lg">
+                    <div class="partnership-card rounded-2xl overflow-hidden shadow-lg" id="reg-${cardSlug}">
                         <div class="p-8 pb-6">
                             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
                                 <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 flex-1">${displayName}</h3>
+                                <button class="btn-reset text-slate-400 hover:text-blue-500 dark:text-slate-500 dark:hover:text-blue-400 transition-colors" onclick="shareRegCard('${cardSlug}', this)" title="Copy link to this card">
+                                    <span class="material-icons-outlined" style="font-size:18px;">ios_share</span>
+                                </button>
                             </div>
 
                             <div class="regulatory-box mb-6 rounded-xl p-5 border border-slate-200 dark:border-slate-700 space-y-3">
@@ -2719,6 +2731,53 @@
             });
 
             container.innerHTML = html || '<p class="text-center text-slate-600 dark:text-slate-200 py-8">No regulatory filings found</p>';
+
+            // Deep link: scroll to entity card if URL has ?entity= on regulatory page
+            applyRegDeepLink();
+        }
+
+        function shareRegCard(slug, btn) {
+            var url = location.origin + location.pathname + '?page=regulatory&entity=' + slug;
+            var icon = btn.querySelector('.material-icons-outlined');
+            var tooltip = document.getElementById('copyTooltip');
+            function showCopied() {
+                var rect = btn.getBoundingClientRect();
+                tooltip.style.top = (rect.bottom + 6) + 'px';
+                tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+                tooltip.style.transform = 'translateX(-50%)';
+                tooltip.textContent = 'Copied to clipboard';
+                icon.textContent = 'check';
+                tooltip.classList.add('visible');
+                setTimeout(function() {
+                    icon.textContent = 'ios_share';
+                    tooltip.classList.remove('visible');
+                }, 1500);
+            }
+            navigator.clipboard.writeText(url).then(showCopied).catch(function() {
+                var ta = document.createElement('textarea');
+                ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                document.body.removeChild(ta); showCopied();
+            });
+            gtag('event', 'share_regulatory_card', { entity_slug: slug });
+        }
+
+        function applyRegDeepLink() {
+            const params = new URLSearchParams(location.search);
+            const entitySlug = params.get('entity');
+            const page = params.get('page');
+            if (page === 'regulatory' && entitySlug) {
+                const card = document.getElementById('reg-' + entitySlug);
+                if (card) {
+                    setTimeout(function() {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        card.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-slate-900');
+                        setTimeout(function() {
+                            card.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-slate-900');
+                        }, 3000);
+                    }, 300);
+                }
+            }
         }
 
         var _regSearchTimer = null;
